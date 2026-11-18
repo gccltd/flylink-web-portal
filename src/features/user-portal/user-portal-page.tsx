@@ -22,7 +22,6 @@ import {
   QrCode,
   ReceiptText,
   RefreshCw,
-  Rocket,
   Search,
   Settings,
   ShieldCheck,
@@ -30,7 +29,6 @@ import {
   UserCog,
   WalletCards,
   Wifi,
-  Zap,
   type LucideIcon
 } from "lucide-react";
 import { ModalFrame } from "../../shared/public/modal-frame";
