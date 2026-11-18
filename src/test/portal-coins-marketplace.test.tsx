@@ -2259,6 +2259,72 @@ describe("dashboard marketplace and start-using cards", () => {
     expect(onOpenMarketplace).toHaveBeenCalledTimes(1);
   });
 
+  test("dashboard cards stay buyable with no subscription (S0): unavailable + null reason means ordinary purchase", async () => {
+    const noSubscriptionState: PortalPlanSwitchState = {
+      current: null,
+      pendingSwitch: null,
+      offers: [switchBasic, switchPlus].map((offer) => ({
+        offerRef: offer.offerRef,
+        action: "unavailable",
+        chargeUnits: null,
+        creditUnits: null,
+        effectiveAt: null,
+        reasonCode: null
+      }))
+    };
+    render(createElement(DashboardMarketplaceCard, {
+      commerceClient: switchClient({
+        readPlanSwitchState: vi.fn(async () => noSubscriptionState)
+      }),
+      locale: "zh",
+      onOpenMarketplace: vi.fn(),
+      sessionRef: session.sessionRef ?? null
+    }));
+    expect(await screen.findByRole("heading", { name: "套餐商城" })).toBeInTheDocument();
+    const basicButton = await screen.findByRole("button", { name: "使用 Coins 购买：基础月卡" });
+    const plusButton = screen.getByRole("button", { name: "使用 Coins 购买：进阶月卡" });
+    expect(basicButton).not.toBeDisabled();
+    expect(plusButton).not.toBeDisabled();
+    expect(screen.queryByText("暂不可切换")).toBeNull();
+  });
+
+  test("dashboard disables only the already-scheduled downgrade target (S2)", async () => {
+    const scheduledState: PortalPlanSwitchState = {
+      current: { offerRef: switchPlus.offerRef, validUntil: switchExpiry },
+      pendingSwitch: { toOfferRef: switchBasic.offerRef, effectiveAt: switchExpiry },
+      offers: [
+        {
+          offerRef: switchPlus.offerRef,
+          action: "current_renew",
+          chargeUnits: 10,
+          creditUnits: 20,
+          effectiveAt: null,
+          reasonCode: null
+        },
+        {
+          offerRef: switchBasic.offerRef,
+          action: "unavailable",
+          chargeUnits: null,
+          creditUnits: null,
+          effectiveAt: null,
+          reasonCode: "plan_switch_already_scheduled"
+        }
+      ]
+    };
+    render(createElement(DashboardMarketplaceCard, {
+      commerceClient: switchClient({
+        readPlanSwitchState: vi.fn(async () => scheduledState)
+      }),
+      locale: "zh",
+      onOpenMarketplace: vi.fn(),
+      sessionRef: session.sessionRef ?? null
+    }));
+    expect(await screen.findByRole("heading", { name: "套餐商城" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "续费：进阶月卡" })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "暂不可切换：基础月卡" })).toBeDisabled();
+    expect(screen.getByText("已有待生效的降级，不能再预约一次降级。")).toBeInTheDocument();
+  });
+
   test("dashboard wires the marketplace card and the start-using card opens the start view", async () => {
     // Earlier tests in this file leave a #portal=… hash behind; the
     // dashboard is the initial view only from a clean location.

@@ -20,7 +20,7 @@ import {
 } from "./commerce";
 import { formatPortalDateTime } from "./portal-commerce-presentation";
 import type { PortalWalletFirstCommerceClient } from "./commerce";
-import { MarketplaceOfferCard } from "./marketplace-offer-card";
+import { MarketplaceOfferCard, type MarketplacePlanAction } from "./marketplace-offer-card";
 import { WalletFirstMarketplacePanel } from "./wallet-first-marketplace-panel";
 import { portalCoinCommerceErrorText as safeCommerceErrorText } from "./commerce/commerce-error-presentation";
 import { PortalOwnedDataPacks } from "./commerce/components/portal-owned-data-packs";
@@ -102,6 +102,48 @@ function safeCommerceFailure(error: unknown): {
   return {
     errorCode: "commerce_request_failed",
     retryable: true
+  };
+}
+
+/**
+ * Shared plan-switch gate for the legacy Marketplace view and the
+ * dashboard marketplace card. Switch labels apply only when there is a
+ * current plan or a blocking plan-switch reason. With no subscription (or
+ * an expired plan) the endpoint returns current: null and every offer as
+ * unavailable + reasonCode null, which per the plan-switch contract means
+ * ordinary purchase — not "unavailable". Returning undefined there keeps
+ * the card buyable with its plain purchase label instead of showing every
+ * card as "暂不可切换".
+ */
+function planSwitchActionsVisible(planSwitchState: PortalPlanSwitchState | null): boolean {
+  if (!planSwitchState) return false;
+  if (planSwitchState.current) return true;
+  return planSwitchState.offers.some((item) => (
+    typeof item.reasonCode === "string" && item.reasonCode.startsWith("plan_switch_")
+  ));
+}
+
+function resolvePlanActionFor(
+  offer: PortalCoinOffer,
+  planSwitchState: PortalPlanSwitchState | null,
+  offers: PortalCoinOffer[],
+  locale: PortalCommerceLocale
+): MarketplacePlanAction | undefined {
+  if (!planSwitchActionsVisible(planSwitchState) || !planSwitchState) return undefined;
+  const entry = planSwitchState.offers.find((item) => item.offerRef === offer.offerRef);
+  if (!entry) return undefined;
+  const currentOffer = planSwitchState.current
+    ? offers.find((item) => item.offerRef === planSwitchState.current?.offerRef)
+    : null;
+  return {
+    action: entry.action,
+    chargeUnits: entry.chargeUnits,
+    effectiveAt: entry.effectiveAt,
+    reasonCode: entry.reasonCode,
+    currentTitle: currentOffer
+      ? currentOffer.title[locale]
+      : planSwitchState.current?.offerRef ?? null,
+    currentValidUntil: planSwitchState.current?.validUntil ?? null
   };
 }
 
@@ -357,27 +399,9 @@ function LegacyMarketplacePanel({
 
   const planOffers = catalog.offers.filter((offer) => offer.category === "plan");
   const dataPackOffers = catalog.offers.filter((offer) => offer.category === "data_pack");
-  const planSwitchBlocking = Boolean(planSwitchState?.offers.some((item) => (
-    typeof item.reasonCode === "string" && item.reasonCode.startsWith("plan_switch_")
-  )));
-  const showPlanSwitch = Boolean(planSwitchState?.current) || planSwitchBlocking;
+  const showPlanSwitch = planSwitchActionsVisible(planSwitchState);
   function planActionFor(offer: PortalCoinOffer) {
-    if (!showPlanSwitch || !planSwitchState) return undefined;
-    const entry = planSwitchState.offers.find((item) => item.offerRef === offer.offerRef);
-    if (!entry) return undefined;
-    const currentOffer = planSwitchState.current
-      ? catalog.offers.find((item) => item.offerRef === planSwitchState.current?.offerRef)
-      : null;
-    return {
-      action: entry.action,
-      chargeUnits: entry.chargeUnits,
-      effectiveAt: entry.effectiveAt,
-      reasonCode: entry.reasonCode,
-      currentTitle: currentOffer
-        ? currentOffer.title[locale]
-        : planSwitchState.current?.offerRef ?? null,
-      currentValidUntil: planSwitchState.current?.validUntil ?? null
-    };
+    return resolvePlanActionFor(offer, planSwitchState, catalog.offers, locale);
   }
   const pendingSwitch = showPlanSwitch ? planSwitchState?.pendingSwitch ?? null : null;
   const pendingOffer = pendingSwitch
@@ -731,32 +755,6 @@ type DashboardCatalogState =
       retryable: boolean;
     };
 
-function dashboardPlanActionFor(
-  offer: PortalCoinOffer,
-  planSwitchState: PortalPlanSwitchState | null,
-  offers: PortalCoinOffer[],
-  locale: PortalCommerceLocale
-) {
-  // Same server projection as LegacyMarketplacePanel.planActionFor: the
-  // plan-switch state decides the label; the dashboard never derives it.
-  if (!planSwitchState) return undefined;
-  const entry = planSwitchState.offers.find((item) => item.offerRef === offer.offerRef);
-  if (!entry) return undefined;
-  const currentOffer = planSwitchState.current
-    ? offers.find((item) => item.offerRef === planSwitchState.current?.offerRef)
-    : null;
-  return {
-    action: entry.action,
-    chargeUnits: entry.chargeUnits,
-    effectiveAt: entry.effectiveAt,
-    reasonCode: entry.reasonCode,
-    currentTitle: currentOffer
-      ? currentOffer.title[locale]
-      : planSwitchState.current?.offerRef ?? null,
-    currentValidUntil: planSwitchState.current?.validUntil ?? null
-  };
-}
-
 /**
  * Dashboard "套餐商城" card. Offers, prices and switch labels all come
  * from the server catalog + plan-switch state, exactly like the
@@ -887,7 +885,7 @@ export function DashboardMarketplaceCard({
               mode={model === "wallet_first_unique_v1" ? "reserve" : "purchase"}
               offer={offer}
               planAction={model === "legacy"
-                ? dashboardPlanActionFor(offer, planSwitchState, catalog.offers, locale)
+                ? resolvePlanActionFor(offer, planSwitchState, catalog.offers, locale)
                 : undefined}
               onPrimary={onOpenMarketplace}
             />

@@ -3429,12 +3429,13 @@ function DashboardPanel({
   // P2-1 (2026-11-17, NOT closed): these rows are PortalServiceOrder
   // records (requestRef, no amount field). Neither candidate source
   // joins to them — PortalCoinOrder has orderRef but no service
-  // request ref, and wallet ledger entries link via relatedOrderRef to
-  // commerce/recharge order refs, never to a service requestRef (and one
-  // service order can map to several ledger entries). No amount column
-  // is rendered rather than inventing one. Closing P2-1 needs a backend
-  // field: amountUnits on the service-order read, or a coinOrderRef on
-  // the service order / serviceRequestRef on the coin order.
+  // request ref, and wallet ledger entries link via relatedOrderRef, an
+  // opaque order ref with no mapping to a service requestRef in this
+  // codebase (and one service order can map to several ledger entries).
+  // No amount column is rendered rather than inventing one. Closing
+  // P2-1 needs a backend field: amountUnits on the service-order read,
+  // or a coinOrderRef on the service order / serviceRequestRef on the
+  // coin order.
   const heavyUsageOrders = [...orderRows]
     .sort((left, right) => orderUsageSortValue(right) - orderUsageSortValue(left))
     .slice(0, 3);
