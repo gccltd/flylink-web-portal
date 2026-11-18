@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { UserPortalPage } from "../features/user-portal/user-portal-page";
@@ -200,4 +200,31 @@ test("successful login survives its own real-model broadcast after a rejected hu
   expect(authenticate).toHaveBeenCalledTimes(2);
   expect(c.restoreSession).toHaveBeenCalledTimes(1);
   expect(c.issueHumanChallenge).toHaveBeenCalledTimes(2);
+});
+
+test("concept topbar: brand in header, bell opens orders without a badge, help opens support, user menu signs out", async () => {
+  const c = client();
+  render(<UserPortalPage portalClient={c} />);
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  const topbar = document.querySelector(".portal-v2-topbar");
+  expect(topbar).not.toBeNull();
+  expect(within(topbar as HTMLElement).getByText("飞连VPN")).toBeInTheDocument();
+  expect(within(topbar as HTMLElement).getByText("用户中心")).toBeInTheDocument();
+  // No backend notification source: no unread dot, no notification center.
+  const bell = within(topbar as HTMLElement).getByRole("button", { name: "订单管理" });
+  expect(bell.querySelector("[data-unread-badge]")).toBeNull();
+  expect(within(bell).queryByText(/未读/)).toBeNull();
+  fireEvent.click(bell);
+  await waitFor(() => expect(
+    within(topbar as HTMLElement).getByRole("heading", { name: "订单" })
+  ).toBeInTheDocument());
+  fireEvent.click(within(topbar as HTMLElement).getByRole("button", { name: "帮助" }));
+  await waitFor(() => expect(
+    within(topbar as HTMLElement).getByRole("heading", { name: "支持" })
+  ).toBeInTheDocument());
+  fireEvent.click(within(topbar as HTMLElement).getByRole("button", { name: "账户菜单" }));
+  const menu = await screen.findByRole("menu", { name: "账户菜单" });
+  expect(within(menu).getByText("Test Account")).toBeInTheDocument();
+  fireEvent.click(within(menu).getByRole("menuitem", { name: "退出登录" }));
+  await waitFor(() => expect(c.logout).toHaveBeenCalledTimes(1));
 });

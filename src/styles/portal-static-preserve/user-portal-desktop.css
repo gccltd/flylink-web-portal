@@ -229,6 +229,147 @@
   min-width: min(620px, 54vw);
 }
 
+/* Topbar brand (concept art): the brand lives here, not in the sidebar. */
+.portal-v2-topbar-brand {
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+.portal-v2-topbar-brand strong {
+  font-size: 16px;
+}
+
+.portal-v2-topbar-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 0;
+}
+
+.portal-v2-topbar-icon-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.portal-v2-topbar-icon-button:hover,
+.portal-v2-topbar-icon-button:focus-visible,
+.portal-v2-topbar-icon-button.active {
+  border-color: #30363d;
+  background: rgba(148, 163, 184, 0.12);
+  color: #20d5e8;
+  outline: 0;
+}
+
+.portal-v2-topbar-user {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.portal-v2-topbar-user-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 180px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #f0f6fc;
+  cursor: pointer;
+  padding: 2px 10px 2px 2px;
+}
+
+.portal-v2-topbar-user-button:hover,
+.portal-v2-topbar-user-button:focus-visible {
+  border-color: #30363d;
+  background: rgba(148, 163, 184, 0.12);
+  outline: 0;
+}
+
+.portal-v2-topbar-user-button .portal-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+
+.portal-v2-topbar-user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.portal-v2-topbar-user-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  border: 0;
+  background: transparent;
+  cursor: default;
+  padding: 0;
+}
+
+.portal-v2-topbar-user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 200px;
+  max-width: calc(100vw - 32px);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  background: #161b22;
+  box-shadow: 0 16px 40px rgba(1, 4, 9, 0.5);
+  padding: 8px;
+}
+
+.portal-v2-topbar-user-menu-name {
+  margin: 0;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+
+.portal-v2-topbar-user-menu-name strong {
+  color: #f0f6fc;
+  font-size: 14px;
+}
+
+.portal-v2-topbar-user-menu-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #f0f6fc;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.portal-v2-topbar-user-menu-logout:hover,
+.portal-v2-topbar-user-menu-logout:focus-visible {
+  background: rgba(148, 163, 184, 0.12);
+  outline: 0;
+}
+
+.portal-v2-topbar-user-menu-logout svg {
+  width: 16px;
+  height: 16px;
+}
+
 .portal-v2-primary-actions,
 .portal-v2-utility-actions {
   display: flex;
@@ -4610,6 +4751,44 @@
   box-shadow: none;
 }
 
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button {
+  color: #64748b;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button:hover,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button:focus-visible,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button.active {
+  border-color: #d8e2ef;
+  background: #f1f5f9;
+  color: #0969da;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-button {
+  color: #0f172a;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-button:hover,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-button:focus-visible {
+  border-color: #d8e2ef;
+  background: #f1f5f9;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu {
+  border-color: #d8e2ef;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-name strong,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout {
+  color: #0f172a;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:hover,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:focus-visible {
+  background: #f1f5f9;
+}
+
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-global-search input,
 .portal-v2-shell[data-portal-theme="light"] .portal-search-field,
 .portal-v2-shell[data-portal-theme="light"] .portal-search-field input,
@@ -5399,6 +5578,18 @@
   .portal-v2-primary-actions,
   .portal-v2-shell .portal-status-indicator {
     display: none;
+  }
+
+  /* Narrow topbar (320px budget): brand + bell + help + avatar only.
+     The theme/language switch stays in Settings on narrow screens. */
+  .portal-v2-topbar-brand small,
+  .portal-v2-topbar .portal-v2-preference-switch,
+  .portal-v2-topbar-user-name {
+    display: none;
+  }
+
+  .portal-v2-topbar-brand strong {
+    font-size: 20px;
   }
 
   .portal-v2-topbar-actions {
@@ -6353,7 +6544,8 @@
   }
 
   .portal-v2-shell .portal-v2-utility-actions {
-    display: none;
+    display: flex;
+    width: auto;
   }
 
   .portal-v2-shell .portal-v2-settings-panel {

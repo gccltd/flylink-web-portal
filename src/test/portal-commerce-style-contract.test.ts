@@ -138,12 +138,23 @@ describe("Portal commerce desktop style contract", () => {
     }
   });
 
-  test("keeps the signed-in desktop Header focused on title and global search", () => {
+  // Frozen-value change (2026-11-17 concept topbar, Yi-approved round):
+  // the desktop utility actions were `display: none` ("header focused on
+  // title and global search"). The approved topbar puts bell / help /
+  // user / theme-language controls there instead, so desktop now shows
+  // them (`display: flex`, `width: auto`). The 44px global search and the
+  // settings grid below are unchanged frozen values.
+  test("keeps the signed-in desktop Header with title, global search, and topbar utility actions", () => {
     expect(desktopDeclaration(
       desktopStyles,
       ".portal-v2-shell .portal-v2-utility-actions",
       "display"
-    )).toBe("none");
+    )).toBe("flex");
+    expect(desktopDeclaration(
+      desktopStyles,
+      ".portal-v2-shell .portal-v2-utility-actions",
+      "width"
+    )).toBe("auto");
     expect(desktopDeclaration(
       desktopStyles,
       ".portal-v2-shell .portal-v2-global-search input",

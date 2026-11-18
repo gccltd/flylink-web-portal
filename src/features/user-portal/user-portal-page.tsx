@@ -5,8 +5,10 @@ import {
   ArrowLeft,
   AppWindow,
   BarChart3,
+  Bell,
   CheckCircle2,
   ChevronRight,
+  CircleHelp,
   Copy,
   Download,
   Eye,
@@ -1574,6 +1576,7 @@ export function UserPortalPage({
   const [humanChallengeReady, setHumanChallengeReady] = useState(false);
   const [humanChallengeLoading, setHumanChallengeLoading] = useState(true);
   const [activeView, setActiveView] = useState<PortalView>(() => readPortalLocation().view);
+  const [topbarUserMenuOpen, setTopbarUserMenuOpen] = useState(false);
   const [orderCenterFilter, setOrderCenterFilter] = useState<PortalOrdersFilter>(() => readPortalLocation().orderFilter);
   const [personalCenterSubview, setPersonalCenterSubview] = useState<"profile" | "security">(() => readPortalLocation().profileSubview);
   const [selectedPlanId, setSelectedPlanId] = useState<PortalPlanId>("monthly_basic");
@@ -2862,16 +2865,9 @@ export function UserPortalPage({
       sessionRef={portalSession.sessionRef ?? null} sessionGeneration={sessionGeneration}>
       <div className="portal-use-shell portal-v2-shell" data-portal-theme={theme}>
         <aside className="portal-use-sidebar portal-v2-sidebar">
-          <div className="portal-v2-brand">
-            <span className="portal-v2-logo">
-              <ShieldCheck aria-hidden="true" />
-            </span>
-            <div>
-              <strong>飞连VPN</strong>
-              <small>{uiText(locale, "用户中心", "User center")}</small>
-            </div>
-          </div>
-
+          {/* Brand lives in the topbar (concept art); the sidebar keeps
+              navigation + the account card only, so the brand is not
+              repeated. */}
           <nav className="portal-use-nav" aria-label={uiText(locale, "用户中心导航", "User center navigation")}>
             {shellNavGroups.map((group) => (
               <div
@@ -2982,11 +2978,14 @@ export function UserPortalPage({
           {!paymentFlowActive ? (
             <>
               <header className="portal-use-topbar portal-v2-topbar">
-                <div className="portal-v2-mobile-brand" aria-label="飞连VPN">
+                <div className="portal-v2-brand portal-v2-topbar-brand" aria-label="飞连VPN">
                   <span className="portal-v2-logo">
                     <ShieldCheck aria-hidden="true" />
                   </span>
-                  <strong>飞连VPN</strong>
+                  <div>
+                    <strong>飞连VPN</strong>
+                    <small>{uiText(locale, "用户中心", "User center")}</small>
+                  </div>
                 </div>
                 <div className="portal-v2-page-title">
                   <h1>{activeView === "dashboard" ? uiText(locale, "账户概览", "Account overview") : activeViewCopy.label}</h1>
@@ -3013,22 +3012,85 @@ export function UserPortalPage({
                     </label>
                   </form>
                   <div className="portal-v2-utility-actions" aria-label={uiText(locale, "快速操作", "Quick actions")}>
+                    {/* Bell: there is no backend notification source, so no
+                        notification center and no unread dot are rendered.
+                        The bell opens Order Management instead. */}
                     <button
                       type="button"
-                      className={cn("portal-v2-mobile-icon-button", activeView === "support" && "active")}
-                      aria-label={uiText(locale, "打开支持", "Open support")}
+                      className={cn("portal-v2-topbar-icon-button", activeView === "orders" && "active")}
+                      aria-label={uiText(locale, "订单管理", "Order management")}
+                      title={uiText(locale, "订单管理", "Order management")}
+                      onClick={() => navigatePortalView("orders")}
+                    >
+                      <Bell aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className={cn("portal-v2-topbar-icon-button", activeView === "support" && "active")}
+                      aria-label={uiText(locale, "帮助", "Help")}
+                      title={uiText(locale, "帮助", "Help")}
                       onClick={() => navigatePortalView("support")}
                     >
-                      <Headphones aria-hidden="true" />
+                      <CircleHelp aria-hidden="true" />
                     </button>
-                    <button
-                      type="button"
-                      className="portal-v2-mobile-icon-button"
-                      aria-label={uiText(locale, "退出", "Sign out from mobile header")}
-                      onClick={logout}
-                    >
-                      <LogOut aria-hidden="true" />
-                    </button>
+                    <div className="portal-v2-topbar-user">
+                      <button
+                        type="button"
+                        className="portal-v2-topbar-user-button"
+                        aria-haspopup="menu"
+                        aria-expanded={topbarUserMenuOpen}
+                        aria-label={uiText(locale, "账户菜单", "Account menu")}
+                        onClick={() => setTopbarUserMenuOpen((open) => !open)}
+                      >
+                        <span className="portal-avatar" aria-hidden="true">{userDisplayName.charAt(0).toUpperCase()}</span>
+                        <span className="portal-v2-topbar-user-name">{userDisplayName}</span>
+                      </button>
+                      {topbarUserMenuOpen ? (
+                        <>
+                          <button
+                            type="button"
+                            className="portal-v2-topbar-user-backdrop"
+                            aria-hidden="true"
+                            tabIndex={-1}
+                            onClick={() => setTopbarUserMenuOpen(false)}
+                          />
+                          <div
+                            className="portal-v2-topbar-user-menu"
+                            role="menu"
+                            aria-label={uiText(locale, "账户菜单", "Account menu")}
+                            onKeyDown={(event) => {
+                              if (event.key === "Escape") setTopbarUserMenuOpen(false);
+                            }}
+                          >
+                            <p className="portal-v2-topbar-user-menu-name">
+                              <strong>{userDisplayName}</strong>
+                            </p>
+                            <button
+                              type="button"
+                              className="portal-v2-topbar-user-menu-logout"
+                              role="menuitem"
+                              onClick={() => {
+                                setTopbarUserMenuOpen(false);
+                                logout();
+                              }}
+                            >
+                              <LogOut aria-hidden="true" />
+                              {uiText(locale, "退出登录", "Sign out")}
+                            </button>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                    <PublicPreferenceSwitch
+                      ariaLabel={authCopy.preferences}
+                      localeAriaLabel={authCopy.language}
+                      themeAriaLabel={authCopy.theme}
+                      locale={locale}
+                      theme={theme}
+                      onLocaleChange={setLocale}
+                      onThemeChange={setTheme}
+                      className="portal-v2-preference-switch"
+                    />
                   </div>
                 </div>
               </header>
