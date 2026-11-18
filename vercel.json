@@ -1,7 +1,1 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    { "source": "/web/:path*", "destination": "/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
+{"$schema":"https://openapi.vercel.sh/vercel.json","rewrites":[{"destination":"/index.html","source":"/portal/register"},{"destination":"/index.html","source":"/portal/register/"},{"destination":"/index.html","source":"/portal"},{"destination":"/index.html","source":"/portal/"},{"destination":"/index.html","source":"/web/register"},{"destination":"/index.html","source":"/web/register/"},{"destination":"/:path*","source":"/web/:path*"}]}
