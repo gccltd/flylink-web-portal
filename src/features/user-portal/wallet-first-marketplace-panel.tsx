@@ -8,6 +8,8 @@ import { Circle, LoaderCircle } from "lucide-react";
 import {
   CoinsDialogFrame,
   PortalCoinCommerceClientError,
+  formatQuoteCountdown,
+  useQuoteCountdown,
   type PortalCoinCommerceClientErrorCode,
   type PortalCoinOffer,
   type PortalDeferredCheckoutQuote,
@@ -24,6 +26,7 @@ import {
 type CommerceLocale = "zh" | "en";
 
 export type WalletFirstMarketplacePanelProps = {
+  autoRenewRevision?: number;
   commerceClient: PortalWalletFirstCommerceClient | null;
   locale: CommerceLocale;
   onOpenWallet?: () => void;
@@ -182,6 +185,36 @@ function isActiveTransition(transition: PortalDeferredTransition) {
   return transition.state !== "settled" && transition.state !== "cancelled";
 }
 
+// Server-projected wallet total from the quote's balances snapshot — the
+// same Coins read model the Wallet page renders, not a client recompute.
+function balanceTotal(balance: PortalDeferredCheckoutQuote["balances"]["before"]) {
+  return balance.bonusCoins + balance.paidCoins + balance.rewardCoins;
+}
+
+// Display-only countdown anchored at the server-issued `expiresAt`.
+// It never gates the reserve action: quote validity is decided by the
+// server (`quote_expired` / `quote_stale`), never by this tick.
+function WalletFirstQuoteCountdown({
+  expiresAt,
+  locale
+}: {
+  expiresAt: string;
+  locale: CommerceLocale;
+}) {
+  const countdown = useQuoteCountdown(expiresAt);
+  const zh = isChinese(locale);
+  return (
+    <div>
+      <dt>{zh ? "剩余时间" : "Time left"}</dt>
+      <dd>
+        {countdown.expired
+          ? (zh ? "报价已过期" : "Quote expired")
+          : formatQuoteCountdown(countdown.remainingMs)}
+      </dd>
+    </div>
+  );
+}
+
 function DeferredTransitionList({
   cancellingTransitionRef,
   emptyText,
@@ -323,6 +356,7 @@ function DeferredQueue({
  * wallet-first account cannot accidentally submit an ordinary Commerce Order.
  */
 export function WalletFirstMarketplacePanel({
+  autoRenewRevision = 0,
   commerceClient,
   locale,
   onOpenWallet,
@@ -400,6 +434,26 @@ export function WalletFirstMarketplacePanel({
   const retryLoad = useCallback(() => {
     setRevision((current) => current + 1);
   }, []);
+
+  // One-click renewal from the dashboard hero, mirrored from
+  // LegacyMarketplacePanel: a request is consumed once it fires, once the
+  // panel knows it cannot open a dialog for it, or once the user opens a
+  // product flow by hand — a stale request must never pop a dialog later.
+  // Wallet-first has no server-identified current offer (no plan-switch
+  // state endpoint; the current resource carries no offerRef), so once
+  // the catalog is ready the revision is consumed without opening
+  // anything. While the catalog loads, the request waits, exactly as
+  // the legacy panel waits for its catalog.
+  const autoRenewConsumedRef = useRef(0);
+  useEffect(() => {
+    if (autoRenewRevision <= 0 || autoRenewRevision <= autoRenewConsumedRef.current) return;
+    if (flow.status !== "idle") {
+      autoRenewConsumedRef.current = autoRenewRevision;
+      return;
+    }
+    if (load.status !== "ready") return;
+    autoRenewConsumedRef.current = autoRenewRevision;
+  }, [autoRenewRevision, flow.status, load.status]);
 
   const refreshTransitions = useCallback(async () => {
     if (!commerceClient || !sessionRef) return;
@@ -675,10 +729,41 @@ export function WalletFirstMarketplacePanel({
                 <dt>{zh ? "商品" : "Offer"}</dt>
                 <dd>{offerTitle(flow.quote.offer, locale)}</dd>
               </div>
+              {flow.quote.planSwitch ? (
+                <div>
+                  <dt>{zh ? "套餐标价" : "List price"}</dt>
+                  <dd>{flow.quote.offer.baseCoinUnits} Coins</dd>
+                </div>
+              ) : null}
+              {flow.quote.planSwitch && flow.quote.planSwitch.creditUnits > 0 ? (
+                <div>
+                  <dt>{zh ? "已付切换费用抵扣" : "Paid switch credit"}</dt>
+                  <dd>− {flow.quote.planSwitch.creditUnits} Coins</dd>
+                </div>
+              ) : null}
               <div>
-                <dt>{zh ? "价格" : "Price"}</dt>
+                <dt>{zh ? "本次实际支付" : "Amount due now"}</dt>
                 <dd>{flow.quote.amountUnits} Coins</dd>
               </div>
+              <div>
+                <dt>{zh ? "当前余额" : "Current balance"}</dt>
+                <dd>{balanceTotal(flow.quote.balances.before)} Coins</dd>
+              </div>
+              {flow.quote.shortfallUnits > 0 ? (
+                <div>
+                  <dt>{zh ? "还需充值" : "Top-up needed"}</dt>
+                  <dd>{flow.quote.shortfallUnits} Coins</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>{zh ? "报价到期" : "Quote expiry"}</dt>
+                <dd>
+                  <time dateTime={flow.quote.expiresAt}>
+                    {formatPortalDateTime(flow.quote.expiresAt, locale)}
+                  </time>
+                </dd>
+              </div>
+              <WalletFirstQuoteCountdown expiresAt={flow.quote.expiresAt} locale={locale} />
               <div>
                 <dt>{zh ? "服务内容" : "Service includes"}</dt>
                 <dd>{deliveryText(flow.quote.offer, locale)}</dd>

@@ -68,7 +68,7 @@ function deliveryText(quote: PortalCoinQuote, locale: CommerceLocale) {
   );
 }
 
-function formatQuoteCountdown(remainingMs: number) {
+export function formatQuoteCountdown(remainingMs: number) {
   const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -85,7 +85,7 @@ function formatQuoteCountdown(remainingMs: number) {
  * It never gates the confirm action: quote validity is decided by the
  * server (`quote_expired` / `quote_stale`), never by this tick.
  */
-function useQuoteCountdown(expiresAt: string) {
+export function useQuoteCountdown(expiresAt: string) {
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => {

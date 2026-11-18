@@ -161,6 +161,7 @@ function walletFirstClient(): PortalWalletFirstCommerceClient {
 }
 
 function renderMarketplace(input: {
+  autoRenewRevision?: number;
   legacy: PortalCoinCommerceClient;
   model: "legacy" | "wallet_first_unique_v1";
   onOpenWallet?: () => void;
@@ -168,6 +169,7 @@ function renderMarketplace(input: {
   walletFirst: PortalWalletFirstCommerceClient;
 }) {
   return render(createElement(MarketplacePanel, {
+    autoRenewRevision: input.autoRenewRevision ?? 0,
     commerceClient: input.legacy,
     commerceModelClient: {
       getCommerceModel: vi.fn().mockResolvedValue(input.model)
@@ -596,4 +598,97 @@ describe("Portal wallet-first Marketplace model gate", () => {
     expect(legacy.createOrder).not.toHaveBeenCalled();
   });
 
+});
+
+describe("wallet-first quote facts and auto-renew revision", () => {
+  test("shows the six server-projected amount rows and a display-only countdown", async () => {
+    const legacy = legacyClient();
+    const walletFirst = walletFirstClient();
+    vi.mocked(walletFirst.previewDeferredCheckout).mockResolvedValue({
+      ...QUOTE,
+      amountUnits: 180,
+      planSwitch: {
+        kind: "upgrade_inplace",
+        creditUnits: 20,
+        chargeUnits: 180,
+        effectiveAt: null,
+        cancelsPendingDowngrade: false
+      }
+    });
+    renderMarketplace({ legacy, model: "wallet_first_unique_v1", walletFirst });
+
+    fireEvent.click(await screen.findByRole("button", { name: "使用 Coins 预约：年度套餐" }));
+    const dialog = await screen.findByRole("dialog", { name: "确认 Coins 服务切换" });
+    expect(within(dialog).getByText("套餐标价").parentElement)
+      .toHaveTextContent("套餐标价200 Coins");
+    expect(within(dialog).getByText("已付切换费用抵扣").parentElement)
+      .toHaveTextContent("已付切换费用抵扣− 20 Coins");
+    expect(within(dialog).getByText("本次实际支付").parentElement)
+      .toHaveTextContent("本次实际支付180 Coins");
+    expect(within(dialog).getByText("当前余额").parentElement)
+      .toHaveTextContent("当前余额1000 Coins");
+    expect(within(dialog).queryByText("还需充值")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("报价到期").parentElement)
+      .toHaveTextContent("报价到期");
+    // The fixture quote expired in 2026-08; the countdown only displays
+    // that state and never gates the reserve action.
+    expect(within(dialog).getByText("剩余时间").parentElement)
+      .toHaveTextContent("剩余时间报价已过期");
+    expect(within(dialog).getByRole("button", { name: "确认预留 Coins" })).toBeEnabled();
+  });
+
+  test("shows the shortfall row for an insufficient quote and closes to the Wallet like the legacy dialog", async () => {
+    const legacy = legacyClient();
+    const walletFirst = walletFirstClient();
+    const onOpenWallet = vi.fn();
+    vi.mocked(walletFirst.previewDeferredCheckout).mockResolvedValue(INSUFFICIENT_QUOTE);
+    renderMarketplace({ legacy, model: "wallet_first_unique_v1", onOpenWallet, walletFirst });
+
+    fireEvent.click(await screen.findByRole("button", { name: "使用 Coins 预约：年度套餐" }));
+    const dialog = await screen.findByRole("dialog", { name: "确认 Coins 服务切换" });
+    expect(within(dialog).getByText("当前余额").parentElement)
+      .toHaveTextContent("当前余额195 Coins");
+    expect(within(dialog).getByText("还需充值").parentElement)
+      .toHaveTextContent("还需充值5 Coins");
+    fireEvent.click(within(dialog).getByRole("button", { name: "前往钱包" }));
+    expect(onOpenWallet).toHaveBeenCalledTimes(1);
+    // Closing the dialog means returning re-previews a fresh server quote.
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(walletFirst.reserveDeferredTransition).not.toHaveBeenCalled();
+  });
+
+  test("consumes an auto-renew revision without opening a dialog for wallet-first", async () => {
+    const legacy = legacyClient();
+    const walletFirst = walletFirstClient();
+    const view = renderMarketplace({
+      autoRenewRevision: 1,
+      legacy,
+      model: "wallet_first_unique_v1",
+      walletFirst
+    });
+    await screen.findByRole("button", { name: "使用 Coins 预约：年度套餐" });
+    expect(walletFirst.previewDeferredCheckout).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // A later revision is consumed the same way, and opening a dialog by
+    // hand still previews exactly once.
+    view.rerender(createElement(MarketplacePanel, {
+      autoRenewRevision: 2,
+      commerceClient: legacy,
+      commerceModelClient: {
+        getCommerceModel: vi.fn().mockResolvedValue("wallet_first_unique_v1")
+      },
+      locale: "zh",
+      sessionRef: "portal_session_wallet_first",
+      sessionGeneration: 1,
+      theme: "dark",
+      walletFirstCommerceClient: walletFirst
+    }));
+    await waitFor(() => expect(walletFirst.previewDeferredCheckout).not.toHaveBeenCalled());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // The rerender gives the model gate a new client identity, so it
+    // re-resolves the model and the panel reloads before it is usable.
+    fireEvent.click(await screen.findByRole("button", { name: "使用 Coins 预约：年度套餐" }));
+    await screen.findByRole("dialog", { name: "确认 Coins 服务切换" });
+    expect(walletFirst.previewDeferredCheckout).toHaveBeenCalledTimes(1);
+  });
 });

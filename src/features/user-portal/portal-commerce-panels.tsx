@@ -959,6 +959,7 @@ function WalletFirstMarketplaceModelGate({
   if (model.status === "ready" && model.model === "wallet_first_unique_v1") {
     return (
       <WalletFirstMarketplacePanel
+        autoRenewRevision={legacyProps.autoRenewRevision}
         commerceClient={walletFirstCommerceClient}
         locale={locale}
         onOpenWallet={legacyProps.onOpenWallet}
