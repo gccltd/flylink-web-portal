@@ -5,10 +5,8 @@ import {
   ArrowLeft,
   AppWindow,
   BarChart3,
-  Bell,
   CheckCircle2,
   ChevronRight,
-  CircleHelp,
   Copy,
   Download,
   Eye,
@@ -19,7 +17,6 @@ import {
   LayoutGrid,
   LineChart,
   LifeBuoy,
-  LogOut,
   Mail,
   Plus,
   QrCode,
@@ -74,6 +71,9 @@ import {
   usePortalRecharge
 } from "./recharge";
 import { useDesktopScrollRegion } from "./use-desktop-scroll-region";
+import { PortalAppShell } from "./layout/portal-app-shell";
+import { PortalSidebar } from "./layout/portal-sidebar";
+import { PortalTopbar } from "./layout/portal-topbar";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
 import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange, writePortalLocation } from "./portal-browser-session";
 import { portalAssetPath, portalRoutePath } from "./portal-entry";
@@ -2876,110 +2876,29 @@ export function UserPortalPage({
   return (
     <DataPackRotationProvider commerceClient={portalClient.commerce ?? null}
       sessionRef={portalSession.sessionRef ?? null} sessionGeneration={sessionGeneration}>
-      <div className="portal-use-shell portal-v2-shell" data-portal-theme={theme}>
-        <aside className="portal-use-sidebar portal-v2-sidebar">
-          {/* Brand lives in the topbar (concept art); the sidebar keeps
-              navigation + the account card only, so the brand is not
-              repeated. */}
-          <nav className="portal-use-nav" aria-label={uiText(locale, "用户中心导航", "User center navigation")}>
-            {shellNavGroups.map((group) => (
-              <div
-                key={group.id}
-                className="portal-nav-group"
-                data-portal-nav-group={group.id}
-                role="group"
-                aria-labelledby={`portal-nav-group-${group.id}`}
-              >
-                <span className="portal-nav-group-label" id={`portal-nav-group-${group.id}`}>
-                  {group.label}
-                </span>
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const hasOrderCategories = item.id === "orders"
-                    && commerceModel !== "wallet_first_unique_v1";
-                  const hasOrderDisclosure = hasOrderCategories && desktopOrderNavigation;
-                  const orderCategoriesExpanded = hasOrderDisclosure && activeView === "orders";
-                  const current = activeView === item.id
-                    && (!hasOrderDisclosure || orderCenterFilter === "all");
-                  return (
-                    <Fragment key={item.id}>
-                      <button
-                        type="button"
-                        aria-label={item.label}
-                        aria-describedby={item.id === "wallet" ? "portal-wallet-nav-balance" : undefined}
-                        aria-current={current ? "page" : undefined}
-                        aria-expanded={hasOrderDisclosure ? orderCategoriesExpanded : undefined}
-                        aria-controls={hasOrderDisclosure ? "portal-order-categories" : undefined}
-                        data-portal-view={item.id}
-                        className={cn("portal-use-nav-item", current && "active", hasOrderCategories && "portal-order-nav-parent")}
-                        onClick={() => navigatePortalView(item.id)}
-                      >
-                        <Icon aria-hidden="true" />
-                        <span>
-                          <strong>{item.label}</strong>
-                          <small>{item.description}</small>
-                        </span>
-                        {item.id === "wallet" ? (
-                          <span className="sr-only" id="portal-wallet-nav-balance">
-                            Coins · {authoritativeWalletBalance ?? "--"}
-                          </span>
-                        ) : null}
-                        {hasOrderCategories ? <ChevronRight className="portal-order-nav-chevron" aria-hidden="true" /> : null}
-                      </button>
-                      {hasOrderCategories ? (
-                        <div
-                          id="portal-order-categories"
-                          className="portal-order-subnav"
-                          role="group"
-                          aria-label={uiText(locale, "订单分类", "Order categories")}
-                          hidden={!orderCategoriesExpanded}
-                        >
-                          {portalOrderNavigationItems.map((category) => {
-                            const categoryCurrent = orderCategoriesExpanded && orderCenterFilter === category.id;
-                            const label = uiText(locale, category.zh, category.en);
-                            return (
-                              <button
-                                key={category.id}
-                                type="button"
-                                className={cn("portal-use-nav-item portal-order-nav-child", categoryCurrent && "active")}
-                                aria-label={label}
-                                aria-current={categoryCurrent ? "page" : undefined}
-                                onClick={() => navigatePortalOrderFilter(category.id)}
-                              >
-                                <span><strong>{label}</strong></span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </Fragment>
-                  );
-                })}
-              </div>
-            ))}
-          </nav>
-
-          <div className="portal-user-card portal-v2-user-card portal-v2-account-card">
-            <span className="portal-avatar">{userDisplayName.charAt(0).toUpperCase()}</span>
-            <div>
-              <strong>{userDisplayName}</strong>
-              <small>{uiText(locale, "邮箱：", "Email: ")}{userDisplayName}</small>
-            </div>
-            <button
-              type="button"
-              className="portal-logout-button portal-v2-account-logout"
-              aria-label={uiText(locale, "退出登录", "Sign out")}
-              onClick={logout}
-            >
-              <LogOut aria-hidden="true" />
-            </button>
-          </div>
-        </aside>
-
-        <main className={cn(
-          "portal-use-main portal-v2-main",
-          paymentFlowActive && "portal-v2-main-payment"
-        )}>
+      <PortalAppShell
+        theme={theme}
+        mainClassName={paymentFlowActive ? "portal-v2-main-payment" : undefined}
+        sidebar={
+          <PortalSidebar
+            locale={locale}
+            groups={shellNavGroups}
+            activeView={activeView}
+            orderCenterFilter={orderCenterFilter}
+            orderCategories={portalOrderNavigationItems.map((category) => ({
+              id: category.id,
+              label: uiText(locale, category.zh, category.en)
+            }))}
+            showOrderCategories={commerceModel !== "wallet_first_unique_v1"}
+            desktopOrderNavigation={desktopOrderNavigation}
+            userDisplayName={userDisplayName}
+            walletBalance={authoritativeWalletBalance}
+            onNavigate={navigatePortalView}
+            onNavigateOrderFilter={navigatePortalOrderFilter}
+            onLogout={logout}
+          />
+        }
+      >
           {portalClient.adsConsent && AdsConsentPanel ? (
             <AdsConsentPanel
               locale={locale}
@@ -2990,126 +2909,28 @@ export function UserPortalPage({
           ) : null}
           {!paymentFlowActive ? (
             <>
-              <header className="portal-use-topbar portal-v2-topbar">
-                <div className="portal-v2-brand portal-v2-topbar-brand" aria-label="飞连VPN">
-                  <span className="portal-v2-logo">
-                    <ShieldCheck aria-hidden="true" />
-                  </span>
-                  <div>
-                    <strong>飞连VPN</strong>
-                    <small>{uiText(locale, "用户中心", "User center")}</small>
-                  </div>
-                </div>
-                <div className="portal-v2-page-title">
-                  <h1>{activeView === "dashboard" ? uiText(locale, "账户概览", "Account overview") : activeViewCopy.label}</h1>
-                </div>
-                <div className="portal-v2-topbar-actions">
-                  <form
-                    className="portal-v2-primary-actions portal-v2-global-search-form"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      navigatePortalView("orders");
-                    }}
-                  >
-                    <label className="portal-v2-global-search" htmlFor="portal-global-search">
-                      <Search aria-hidden="true" />
-                      <span className="sr-only">{uiText(locale, "订单搜索", "Orders search")}</span>
-                      <input
-                        id="portal-global-search"
-                        type="search"
-                        aria-label={uiText(locale, "订单搜索", "Orders search")}
-                        value={orderSearch}
-                        onChange={(event) => setOrderSearch(event.target.value)}
-                        placeholder={uiText(locale, "搜索订单、套餐或状态", "Search orders, plans, or status")}
-                      />
-                    </label>
-                  </form>
-                  <div className="portal-v2-utility-actions" aria-label={uiText(locale, "快速操作", "Quick actions")}>
-                    {/* Bell: there is no backend notification source, so no
-                        notification center and no unread dot are rendered.
-                        The bell opens Order Management instead. */}
-                    <button
-                      type="button"
-                      className={cn("portal-v2-topbar-icon-button", activeView === "orders" && "active")}
-                      aria-label={uiText(locale, "订单管理", "Order management")}
-                      title={uiText(locale, "订单管理", "Order management")}
-                      onClick={() => navigatePortalView("orders")}
-                    >
-                      <Bell aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      className={cn("portal-v2-topbar-icon-button", activeView === "support" && "active")}
-                      aria-label={uiText(locale, "帮助", "Help")}
-                      title={uiText(locale, "帮助", "Help")}
-                      onClick={() => navigatePortalView("support")}
-                    >
-                      <CircleHelp aria-hidden="true" />
-                    </button>
-                    <div className="portal-v2-topbar-user">
-                      <button
-                        type="button"
-                        className="portal-v2-topbar-user-button"
-                        aria-haspopup="menu"
-                        aria-expanded={topbarUserMenuOpen}
-                        aria-label={uiText(locale, "账户菜单", "Account menu")}
-                        onClick={() => setTopbarUserMenuOpen((open) => !open)}
-                      >
-                        <span className="portal-avatar" aria-hidden="true">{userDisplayName.charAt(0).toUpperCase()}</span>
-                        <span className="portal-v2-topbar-user-name">{userDisplayName}</span>
-                      </button>
-                      {topbarUserMenuOpen ? (
-                        <>
-                          <button
-                            type="button"
-                            className="portal-v2-topbar-user-backdrop"
-                            aria-hidden="true"
-                            tabIndex={-1}
-                            onClick={() => setTopbarUserMenuOpen(false)}
-                          />
-                          <div
-                            className="portal-v2-topbar-user-menu"
-                            role="menu"
-                            aria-label={uiText(locale, "账户菜单", "Account menu")}
-                            onKeyDown={(event) => {
-                              if (event.key === "Escape") setTopbarUserMenuOpen(false);
-                            }}
-                          >
-                            <p className="portal-v2-topbar-user-menu-name">
-                              <strong>{userDisplayName}</strong>
-                            </p>
-                            <button
-                              type="button"
-                              className="portal-v2-topbar-user-menu-logout"
-                              role="menuitem"
-                              onClick={() => {
-                                setTopbarUserMenuOpen(false);
-                                logout();
-                              }}
-                            >
-                              <LogOut aria-hidden="true" />
-                              {uiText(locale, "退出登录", "Sign out")}
-                            </button>
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                    <PublicPreferenceSwitch
-                      ariaLabel={authCopy.preferences}
-                      localeAriaLabel={authCopy.language}
-                      themeAriaLabel={authCopy.theme}
-                      locale={locale}
-                      theme={theme}
-                      onLocaleChange={setLocale}
-                      onThemeChange={setTheme}
-                      className="portal-v2-preference-switch"
-                    />
-                  </div>
-                </div>
-              </header>
-              <div className="portal-v2-mobile-title">
-                <h1>{activeView === "dashboard" ? uiText(locale, "概览", "Dashboard") : activeViewCopy.label}</h1>
-              </div>
+              <PortalTopbar
+                locale={locale}
+                pageTitle={activeView === "dashboard" ? uiText(locale, "账户概览", "Account overview") : activeViewCopy.label}
+                mobileTitle={activeView === "dashboard" ? uiText(locale, "概览", "Dashboard") : activeViewCopy.label}
+                ordersActive={activeView === "orders"}
+                supportActive={activeView === "support"}
+                orderSearch={orderSearch}
+                onOrderSearchChange={setOrderSearch}
+                onSearchSubmit={() => navigatePortalView("orders")}
+                onOpenOrders={() => navigatePortalView("orders")}
+                onOpenSupport={() => navigatePortalView("support")}
+                userDisplayName={userDisplayName}
+                userMenuOpen={topbarUserMenuOpen}
+                onUserMenuOpenChange={setTopbarUserMenuOpen}
+                onLogout={logout}
+                theme={theme}
+                onLocaleChange={setLocale}
+                onThemeChange={setTheme}
+                preferencesLabel={authCopy.preferences}
+                languageLabel={authCopy.language}
+                themeLabel={authCopy.theme}
+              />
             </>
           ) : null}
 
@@ -3330,8 +3151,7 @@ export function UserPortalPage({
               }}
             />
           ) : null}
-        </main>
-      </div>
+      </PortalAppShell>
       {shouldShowSecuritySetup ? (
         <SecuritySetupDialog
           authenticatorBound={authenticatorBound}
