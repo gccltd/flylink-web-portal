@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
+    { "source": "/api/portal/:path*", "destination": "/api/portal-proxy?__portal_path=:path*" },
     { "source": "/portal/register", "destination": "/index.html" },
     { "source": "/portal/register/", "destination": "/index.html" },
     { "source": "/portal", "destination": "/index.html" },
