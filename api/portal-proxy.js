@@ -42,7 +42,7 @@ const ALLOWED_POST_PATHS = new Set([
 // anything not listed here is dropped. That matters because the backend
 // rejects any `?` in the raw URL of browser-session bootstrap and logout
 // with 403, so a forwarded routing artifact would break the whole login
-// flow on Preview. Endpoints not listed here forward no query parameters.
+// flow in either Vercel environment. Endpoints not listed here forward no query parameters.
 const ALLOWED_QUERY_PARAMS = new Map([
   ["/api/portal/coins/wallet/ledger", new Set(["page", "limit", "afterOccurredAt", "afterEntryRef"])],
   ["/api/portal/access-requests/current", new Set(["portalUserRef"])],
@@ -229,7 +229,7 @@ export function createPortalApiProxyHandler({
       }
     } else if (method === "POST") {
       if (!ALLOWED_POST_PATHS.has(resolved.pathname)) {
-        sendJson(res, 403, { error: "preview_read_only" });
+        sendJson(res, 403, { error: "portal_write_not_enabled" });
         return;
       }
     } else {
