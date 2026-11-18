@@ -3432,7 +3432,11 @@ function DashboardPanel({
       )
       : uiText(locale, "套餐已开通", "Plan active")
     : null;
-  const currentPlanLabel = currentPlan?.label ?? resourcePlanLabel;
+  const currentPlanLabel = resourceReconciliation
+    ? uiText(locale, "资源状态核对中", "Resource state is being reconciled")
+    : resourceAvailable
+      ? resourcePlanLabel
+      : currentPlan?.label ?? resourcePlanLabel;
   const orderPlanTrafficBytes = (currentPlan?.monthlyTrafficGb ?? 0) > 0
     ? (currentPlan?.monthlyTrafficGb ?? 0) * 1024 ** 3
     : 0;
@@ -3440,8 +3444,14 @@ function DashboardPanel({
   const resourceQuotaBytes = resourceAvailable && resourceAvailable.plan.monthlyTrafficGb > 0
     ? resourceAvailable.plan.monthlyTrafficGb * 1024 ** 3
     : 0;
-  const planTrafficBytes = resourceQuotaBytes || entitlementQuotaBytes || orderPlanTrafficBytes || trafficSummary.totalBytes;
-  const hasTrafficAccess = Boolean(resourceAvailable) || entitlementActive || selectedOrder?.status === "active";
+  const planTrafficBytes = resourceAvailable
+    ? resourceQuotaBytes
+    : resourceReconciliation
+      ? 0
+      : entitlementQuotaBytes || orderPlanTrafficBytes || trafficSummary.totalBytes;
+  const hasTrafficAccess = !resourceReconciliation && (
+    Boolean(resourceAvailable) || entitlementActive || selectedOrder?.status === "active"
+  );
   // Wallet-first current-resource read does not expose a usage counter.
   // Never derive a remaining balance from a quota without a measured usage sample.
   const remainingTrafficBytes = resourceAvailable
@@ -3481,11 +3491,13 @@ function DashboardPanel({
       : pendingOrders > 0
         ? "pending"
         : "empty";
-  const resourceExpiry = resourceAvailable
-    ? formatDateTime(resourceAvailable.validUntil, locale)
-    : selectedOrder
-      ? expiryDisplay(created, lifecycle, locale)
-      : entitlementExpiryDisplay(currentEntitlement, locale);
+  const resourceExpiry = resourceReconciliation
+    ? uiText(locale, "状态核对中", "Being reconciled")
+    : resourceAvailable
+      ? formatDateTime(resourceAvailable.validUntil, locale)
+      : selectedOrder
+        ? expiryDisplay(created, lifecycle, locale)
+        : entitlementExpiryDisplay(currentEntitlement, locale);
 
 
   return (
@@ -3508,7 +3520,9 @@ function DashboardPanel({
                     {uiText(locale, "有效期至 ", "Valid until ")}
                     {resourceExpiry}
                   </>
-                ) : uiText(locale, "前往商城开通服务", "Buy a service in the Marketplace")}
+                ) : resourceReconciliation
+                  ? uiText(locale, "资源状态核对中", "Resource state is being reconciled")
+                  : uiText(locale, "前往商城开通服务", "Buy a service in the Marketplace")}
               </small>
             </div>
             <div className="portal-v2-hero-card__cell">
@@ -3519,9 +3533,11 @@ function DashboardPanel({
                   <span style={{ width: `${Math.min(100, Math.max(0, remainingTrafficPercent))}%` }} />
                 </div>
               ) : (
-                <small>{hasTrafficAccess
-                  ? uiText(locale, "当前资源接口未提供实时用量", "Live usage is not available from the current resource API")
-                  : uiText(locale, "资源开通后显示", "Shown after the resource is active")}</small>
+                <small>{resourceReconciliation
+                  ? uiText(locale, "核对完成前暂不展示流量数据", "Traffic details are hidden until reconciliation completes")
+                  : hasTrafficAccess
+                    ? uiText(locale, "当前资源接口未提供实时用量", "Live usage is not available from the current resource API")
+                    : uiText(locale, "资源开通后显示", "Shown after the resource is active")}</small>
               )}
             </div>
             <div className="portal-v2-hero-card__cell">
