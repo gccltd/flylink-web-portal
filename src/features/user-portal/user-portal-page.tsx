@@ -49,12 +49,16 @@ import {
   usePublicThemePreference
 } from "./public-locale-switch";
 import {
+  DashboardMarketplaceCard,
   MarketplacePanel,
   ReferralRewardsPanel
 } from "./portal-commerce-panels";
 import {
   PORTAL_COIN_ORDER_STORAGE_KEY,
-  type PortalCommerceModel
+  type PortalCoinCommerceClient,
+  type PortalCommerceModel,
+  type PortalCommerceModelClient,
+  type PortalWalletFirstCommerceClient
 } from "./commerce";
 import { PortalOrdersPanel, type PortalOrdersFilter } from "./orders/portal-orders-panel";
 import { DataPackRotationProvider } from "./commerce/data-pack-rotation-context";
@@ -3120,6 +3124,12 @@ export function UserPortalPage({
                 locale={locale}
                 walletBalance={authoritativeWalletBalance}
                 onRenewCurrentPlan={requestRenewal}
+                commerceClient={portalClient.commerce ?? null}
+                commerceModelClient={portalClient.commerceModel ?? null}
+                walletFirstCommerceClient={portalClient.walletFirstCommerce ?? null}
+                sessionRef={portalSession.sessionRef ?? null}
+                sessionGeneration={sessionGeneration}
+                onOpenMarketplace={openMarketplace}
               />
             )
           ) : null}
@@ -3372,7 +3382,13 @@ function DashboardPanel({
   trafficSummary,
   locale,
   walletBalance,
-  onRenewCurrentPlan
+  onRenewCurrentPlan,
+  commerceClient,
+  commerceModelClient,
+  walletFirstCommerceClient,
+  sessionRef,
+  sessionGeneration,
+  onOpenMarketplace
 }: {
   created: CreatedSubscription | null;
   lifecycle: SubscriptionLifecycle;
@@ -3385,6 +3401,12 @@ function DashboardPanel({
   locale: PortalAuthLocale;
   walletBalance: number | null;
   onRenewCurrentPlan?: () => void;
+  commerceClient?: PortalCoinCommerceClient | null;
+  commerceModelClient?: PortalCommerceModelClient | null;
+  walletFirstCommerceClient?: PortalWalletFirstCommerceClient | null;
+  sessionRef?: string | null;
+  sessionGeneration?: number;
+  onOpenMarketplace?: () => void;
 }) {
   const desktopViewport = useDesktopScrollRegion();
   const pendingOrders = pendingOrderCount(orderRows);
@@ -3630,6 +3652,16 @@ function DashboardPanel({
           </div>
         </article> : null}
 
+        <DashboardMarketplaceCard
+          commerceClient={commerceClient ?? null}
+          commerceModelClient={commerceModelClient ?? null}
+          walletFirstCommerceClient={walletFirstCommerceClient ?? null}
+          locale={locale}
+          onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
+          sessionGeneration={sessionGeneration ?? 0}
+          sessionRef={sessionRef ?? null}
+        />
+
         <article className="portal-v2-panel">
           <div className="portal-v2-panel-header">
             <div>
@@ -3700,6 +3732,28 @@ function DashboardPanel({
               <span>{uiText(locale, "开始使用后会在这里显示流量。", "Traffic appears here after you start using the service.")}</span>
             </div>
           )}
+        </article>
+
+        <article className="portal-v2-panel">
+          <div className="portal-v2-panel-header">
+            <div>
+              <span className="portal-card-label">{uiText(locale, "开始使用", "Start using")}</span>
+              <h3>{uiText(locale, "开始使用", "Start using")}</h3>
+            </div>
+          </div>
+          <p>{uiText(locale, "已完成购买？立即连接飞连VPN。", "Already purchased? Connect to FlinkVPN now.")}</p>
+          <button
+            className="portal-primary-button"
+            type="button"
+            onClick={() => setActiveView("start")}
+          >
+            {uiText(locale, "启动飞连VPN", "Launch FlinkVPN")}
+          </button>
+          <ul className="portal-v2-start-points">
+            <li>{uiText(locale, "全球加速", "Global acceleration")}</li>
+            <li>{uiText(locale, "稳定安全", "Stable and secure")}</li>
+            <li>{uiText(locale, "多端支持", "Multi-device support")}</li>
+          </ul>
         </article>
       </section>
     </div>

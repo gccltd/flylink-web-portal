@@ -710,6 +710,194 @@ function LegacyMarketplacePanel({
   );
 }
 
+export type DashboardMarketplaceCardProps = {
+  commerceClient: PortalCoinCommerceClient | null;
+  commerceModelClient?: PortalCommerceModelClient | null;
+  walletFirstCommerceClient?: PortalWalletFirstCommerceClient | null;
+  locale: PortalCommerceLocale;
+  onOpenMarketplace: () => void;
+  sessionGeneration?: number;
+  sessionRef: string | null;
+};
+
+type DashboardCatalogState =
+  | { status: "loading"; offers: PortalCoinOffer[] }
+  | { status: "ready"; offers: PortalCoinOffer[] }
+  | { status: "unavailable"; offers: PortalCoinOffer[] }
+  | {
+      status: "error";
+      offers: PortalCoinOffer[];
+      errorCode: PortalCoinCommerceClientErrorCode;
+      retryable: boolean;
+    };
+
+function dashboardPlanActionFor(
+  offer: PortalCoinOffer,
+  planSwitchState: PortalPlanSwitchState | null,
+  offers: PortalCoinOffer[],
+  locale: PortalCommerceLocale
+) {
+  // Same server projection as LegacyMarketplacePanel.planActionFor: the
+  // plan-switch state decides the label; the dashboard never derives it.
+  if (!planSwitchState) return undefined;
+  const entry = planSwitchState.offers.find((item) => item.offerRef === offer.offerRef);
+  if (!entry) return undefined;
+  const currentOffer = planSwitchState.current
+    ? offers.find((item) => item.offerRef === planSwitchState.current?.offerRef)
+    : null;
+  return {
+    action: entry.action,
+    chargeUnits: entry.chargeUnits,
+    effectiveAt: entry.effectiveAt,
+    reasonCode: entry.reasonCode,
+    currentTitle: currentOffer
+      ? currentOffer.title[locale]
+      : planSwitchState.current?.offerRef ?? null,
+    currentValidUntil: planSwitchState.current?.validUntil ?? null
+  };
+}
+
+/**
+ * Dashboard "套餐商城" card. Offers, prices and switch labels all come
+ * from the server catalog + plan-switch state, exactly like the
+ * Marketplace view; the card only opens the Marketplace view, it never
+ * starts a purchase itself. Wallet-first accounts have no plan-switch
+ * state endpoint, so their cards render without switch labels and the
+ * server preview in the Marketplace view remains the gate.
+ */
+export function DashboardMarketplaceCard({
+  commerceClient,
+  commerceModelClient = null,
+  walletFirstCommerceClient = null,
+  locale,
+  onOpenMarketplace,
+  sessionGeneration = 0,
+  sessionRef
+}: DashboardMarketplaceCardProps) {
+  const zh = isChinese(locale);
+  const [refreshRevision, setRefreshRevision] = useState(0);
+  const [model, setModel] = useState<PortalCommerceModel | "pending" | "error">(() => (
+    commerceModelClient && sessionRef ? "pending" : "legacy"
+  ));
+  const [catalog, setCatalog] = useState<DashboardCatalogState>(() => (
+    commerceClient && sessionRef
+      ? { status: "loading", offers: [] }
+      : { status: "unavailable", offers: [] }
+  ));
+  const [planSwitchState, setPlanSwitchState] = useState<PortalPlanSwitchState | null>(null);
+
+  useEffect(() => {
+    if (!commerceModelClient) {
+      setModel("legacy");
+      return undefined;
+    }
+    if (!sessionRef) {
+      setModel("error");
+      return undefined;
+    }
+    let cancelled = false;
+    setModel("pending");
+    void commerceModelClient.getCommerceModel({ sessionRef }).then((nextModel) => {
+      if (!cancelled) setModel(nextModel);
+    }).catch(() => {
+      if (!cancelled) setModel("error");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [commerceModelClient, sessionGeneration, sessionRef]);
+
+  useEffect(() => {
+    if (model === "pending") {
+      setCatalog({ status: "loading", offers: [] });
+      return undefined;
+    }
+    if (model === "error" || !sessionRef) {
+      setCatalog(model === "error"
+        ? { status: "error", offers: [], errorCode: "commerce_unavailable", retryable: true }
+        : { status: "unavailable", offers: [] });
+      return undefined;
+    }
+    const client = model === "wallet_first_unique_v1" ? walletFirstCommerceClient : commerceClient;
+    if (!client) {
+      setCatalog({ status: "unavailable", offers: [] });
+      return undefined;
+    }
+    let cancelled = false;
+    setCatalog({ status: "loading", offers: [] });
+    setPlanSwitchState(null);
+    void client.listOffers({ sessionRef }).then((offers) => {
+      if (!cancelled) setCatalog({ status: "ready", offers });
+    }).catch((error: unknown) => {
+      if (!cancelled) setCatalog({ status: "error", offers: [], ...safeCommerceFailure(error) });
+    });
+    // Legacy only, single read: the Marketplace view owns the polling
+    // loop and the pending-switch banner; the card shows the state once.
+    if (model === "legacy" && commerceClient && typeof commerceClient.readPlanSwitchState === "function") {
+      void commerceClient.readPlanSwitchState({ sessionRef }).then((state) => {
+        if (!cancelled) setPlanSwitchState(state);
+      }).catch(() => {
+        if (!cancelled) setPlanSwitchState(null);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [commerceClient, model, refreshRevision, sessionGeneration, sessionRef, walletFirstCommerceClient]);
+
+  const planOffers = catalog.offers.filter((offer) => offer.category === "plan");
+
+  return (
+    <article className="portal-v2-panel portal-v2-dashboard-marketplace">
+      <div className="portal-v2-panel-header">
+        <div>
+          <span className="portal-card-label">{zh ? "套餐商城" : "Plan marketplace"}</span>
+          <h3>{zh ? "套餐商城" : "Plan marketplace"}</h3>
+        </div>
+        <button className="portal-link-button" type="button" onClick={onOpenMarketplace}>
+          {zh ? "去商城" : "Go to Marketplace"}
+        </button>
+      </div>
+      {catalog.status === "loading" ? (
+        <p role="status">{zh ? "正在加载套餐…" : "Loading plans…"}</p>
+      ) : null}
+      {catalog.status === "unavailable" ? (
+        <p role="status">{zh ? "套餐暂时不可用，请稍后再试。" : "Plans are temporarily unavailable. Please try again later."}</p>
+      ) : null}
+      {catalog.status === "error" ? (
+        <div role="alert">
+          <p>{safeCommerceErrorText(catalog.errorCode, locale)}</p>
+          {catalog.retryable ? (
+            <button type="button" onClick={() => setRefreshRevision((revision) => revision + 1)}>
+              {zh ? "重试" : "Retry"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {catalog.status === "ready" && planOffers.length === 0 ? (
+        <p role="status">{zh ? "当前没有可用套餐。" : "No plans are currently available."}</p>
+      ) : null}
+      {catalog.status === "ready" && planOffers.length > 0 ? (
+        <ul className="portal-marketplace-grid">
+          {planOffers.map((offer) => (
+            <MarketplaceOfferCard
+              busy={false}
+              key={offer.offerRef}
+              locale={locale}
+              mode={model === "wallet_first_unique_v1" ? "reserve" : "purchase"}
+              offer={offer}
+              planAction={model === "legacy"
+                ? dashboardPlanActionFor(offer, planSwitchState, catalog.offers, locale)
+                : undefined}
+              onPrimary={onOpenMarketplace}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </article>
+  );
+}
+
 type MarketplaceModelState =
   | { status: "loading" }
   | { status: "ready"; model: PortalCommerceModel }

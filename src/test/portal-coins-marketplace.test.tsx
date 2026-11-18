@@ -25,7 +25,7 @@ import {
 import { createLocalUserPortalClient } from "../features/user-portal/user-portal-preview-client";
 import type { PortalSession, UserPortalClient } from "../features/user-portal/user-portal-client";
 import { UserPortalPage } from "../features/user-portal/user-portal-page";
-import { MarketplacePanel } from "../features/user-portal/portal-commerce-panels";
+import { DashboardMarketplaceCard, MarketplacePanel } from "../features/user-portal/portal-commerce-panels";
 import { formatPortalDateTime } from "../features/user-portal/portal-commerce-presentation";
 import type { PortalPlanSwitchState } from "../features/user-portal/commerce/api-contract";
 import type {
@@ -1647,7 +1647,10 @@ describe("Portal server-backed Marketplace", () => {
       name: "用户中心导航"
     });
     fireEvent.click(within(navigation).getByRole("button", { name: "设置" }));
-    fireEvent.click(screen.getByRole("button", { name: "EN" }));
+    // The topbar also carries a locale switch (concept topbar), so scope
+    // the click to the Settings panel's own switch.
+    const settingsPanel = document.querySelector(".portal-v2-settings-panel") as HTMLElement;
+    fireEvent.click(within(settingsPanel).getByRole("button", { name: "EN" }));
     fireEvent.click(within(screen.getByRole("navigation", {
       name: "User center navigation"
     })).getByRole("button", { name: "Marketplace" }));
@@ -2236,5 +2239,48 @@ describe("Portal server-backed Marketplace", () => {
     expect(css).toContain("overflow-y: auto");
     expect(css).toContain("@media (prefers-reduced-motion: reduce)");
     expect(css).toContain(".portal-coins-dialog button:focus-visible");
+  });
+});
+
+describe("dashboard marketplace and start-using cards", () => {
+  test("renders server catalog offers with the same switch labels as the Marketplace view", async () => {
+    const onOpenMarketplace = vi.fn();
+    render(createElement(DashboardMarketplaceCard, {
+      commerceClient: switchClient(),
+      locale: "zh",
+      onOpenMarketplace,
+      sessionRef: session.sessionRef
+    }));
+    expect(await screen.findByRole("heading", { name: "套餐商城" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "续费：基础月卡" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "升级，补差价 5 Coins：进阶月卡" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "去商城" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "续费：基础月卡" }));
+    expect(onOpenMarketplace).toHaveBeenCalledTimes(1);
+  });
+
+  test("dashboard wires the marketplace card and the start-using card opens the start view", async () => {
+    // Earlier tests in this file leave a #portal=… hash behind; the
+    // dashboard is the initial view only from a clean location.
+    window.history.replaceState(null, "", "/");
+    render(createElement(UserPortalPage, {
+      initialSession: session,
+      portalClient: portalClientWithCommerce(switchClient())
+    }));
+    const navigation = await screen.findByRole("navigation", { name: "用户中心导航" });
+    // The default landing view is Start, not the dashboard.
+    fireEvent.click(within(navigation).getByRole("button", { name: "概览" }));
+    expect(await screen.findByRole("heading", { name: "套餐商城" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "续费：基础月卡" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "启动飞连VPN" })).toBeInTheDocument();
+    expect(screen.getByText("已完成购买？立即连接飞连VPN。")).toBeInTheDocument();
+    expect(screen.getByText("全球加速")).toBeInTheDocument();
+    expect(screen.getByText("稳定安全")).toBeInTheDocument();
+    expect(screen.getByText("多端支持")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "启动飞连VPN" }));
+    const topbar = document.querySelector(".portal-v2-topbar") as HTMLElement;
+    await waitFor(() => expect(
+      within(topbar).getByRole("heading", { name: "开始使用" })
+    ).toBeInTheDocument());
   });
 });

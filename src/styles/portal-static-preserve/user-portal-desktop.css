@@ -628,6 +628,39 @@
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.72fr);
 }
 
+/* Dashboard marketplace card: the catalog grid collapses to one column
+   inside the half-width panel (the frozen 2/3-column marketplace grid
+   itself is untouched). */
+.portal-v2-shell .portal-v2-dashboard-marketplace .portal-marketplace-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.portal-v2-start-points {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portal-v2-start-points li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8b949e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.portal-v2-start-points li::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #20d5e8;
+}
+
 .portal-v2-subscription-panel {
   grid-row: span 2;
 }
@@ -4787,6 +4820,10 @@
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:focus-visible {
   background: #f1f5f9;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-start-points li {
+  color: #57606a;
 }
 
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-global-search input,
