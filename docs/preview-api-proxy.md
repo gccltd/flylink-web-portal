@@ -26,7 +26,7 @@ Allowed:
 - Approved account, security, resource, offer, wallet, ledger, order, recharge-order, deferred-transition, and referral reads.
 - Server-generated checkout quote previews. These create a short-lived quote record, but do not create an order, hold coins, or debit a balance.
 
-Blocked with 403 `preview_read_only` in both environments:
+Blocked with 403 `portal_write_not_enabled` in both environments:
 
 - Registration and verification-email sends.
 - Account/resource mutations and subscription-link reveal/refresh/disable actions.
