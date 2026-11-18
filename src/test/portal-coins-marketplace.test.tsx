@@ -2249,7 +2249,7 @@ describe("dashboard marketplace and start-using cards", () => {
       commerceClient: switchClient(),
       locale: "zh",
       onOpenMarketplace,
-      sessionRef: session.sessionRef
+      sessionRef: session.sessionRef ?? null
     }));
     expect(await screen.findByRole("heading", { name: "套餐商城" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "续费：基础月卡" })).toBeInTheDocument();
