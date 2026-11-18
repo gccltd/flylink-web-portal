@@ -90,3 +90,5 @@ no `LICENSE` file, and being publicly visible does not grant any right to
 copy, modify, distribute or use the code commercially. Do not assume a
 license until the owner publishes one. Attribution for adapted admin-shell
 layout patterns lives in `NOTICE.md`.
+
+<!-- desktop redesign probe 1 2026-11-18 -->
