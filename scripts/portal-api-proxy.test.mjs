@@ -158,7 +158,7 @@ test("read-only quote preview is allowed but purchase and recharge writes are bl
     headers: { "content-type": "application/json" },
   }), purchaseRes);
   assert.equal(purchaseRes.statusCode, 403);
-  assert.deepEqual(JSON.parse(purchaseRes.body), { error: "preview_read_only" });
+  assert.deepEqual(JSON.parse(purchaseRes.body), { error: "portal_write_not_enabled" });
 
   const rechargeRes = makeResponse();
   await handler(makeRequest({
@@ -187,7 +187,7 @@ test("read-only quote preview is allowed but purchase and recharge writes are bl
     },
   }), productionPurchaseRes);
   assert.equal(productionPurchaseRes.statusCode, 403);
-  assert.deepEqual(JSON.parse(productionPurchaseRes.body), { error: "preview_read_only" });
+  assert.deepEqual(JSON.parse(productionPurchaseRes.body), { error: "portal_write_not_enabled" });
   assert.equal(calls, 1);
 });
 
@@ -216,6 +216,20 @@ test("production proxy accepts only the stable project domain and Preview reject
   assert.equal(productionRes.statusCode, 200);
   assert.equal(capturedUrl, "https://portal.gccwebos.com/api/portal/browser-session");
   assert.equal(calls, 1);
+
+  const loginRes = makeResponse();
+  await productionHandler(makeRequest({
+    path: "password/session",
+    method: "POST",
+    body: { accountId: "test@example.com", password: "not-a-real-secret" },
+    headers: {
+      host: productionHost,
+      origin: "https://" + productionHost,
+      "content-type": "application/json",
+    },
+  }), loginRes);
+  assert.equal(loginRes.statusCode, 200);
+  assert.equal(calls, 2);
 
   for (const host of ["attacker.example", ENV.VERCEL_URL, ENV.VERCEL_BRANCH_URL]) {
     const rejected = makeResponse();
@@ -247,7 +261,7 @@ test("production proxy accepts only the stable project domain and Preview reject
     headers: { host: productionHost, origin: "https://" + productionHost },
   }), productionHostOnPreview);
   assert.equal(productionHostOnPreview.statusCode, 404);
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 
 test("cross-origin, non-browser, malformed session, and unapproved read requests fail closed", async () => {
