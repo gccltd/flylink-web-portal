@@ -25,3 +25,5 @@ jobs:
         run: npm test
       - name: Build desktop portal
         run: npm run build:portal:web
+      - name: Verify desktop portal build
+        run: npm run verify:portal:web
