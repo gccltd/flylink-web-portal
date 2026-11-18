@@ -7114,3 +7114,15 @@
     gap: 10px;
   }
 }
+
+
+@media (min-width: 960px) {
+  .portal-v2-shell[data-portal-theme="light"] .portal-v2-dashboard-wallet-balance strong {
+    color: #0f172a;
+  }
+
+  .portal-v2-shell[data-portal-theme="light"] .portal-v2-dashboard-wallet-balance span,
+  .portal-v2-shell[data-portal-theme="light"] .portal-v2-dashboard-wallet p {
+    color: #64748b;
+  }
+}
