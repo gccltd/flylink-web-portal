@@ -1,1 +1,14 @@
-{"$schema":"https://openapi.vercel.sh/vercel.json","rewrites":[{"destination":"/index.html","source":"/portal/register"},{"destination":"/index.html","source":"/portal/register/"},{"destination":"/index.html","source":"/portal"},{"destination":"/index.html","source":"/portal/"},{"destination":"/index.html","source":"/web/register"},{"destination":"/index.html","source":"/web/register/"},{"destination":"/:path*","source":"/web/:path*"}]}
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/portal/register", "destination": "/index.html" },
+    { "source": "/portal/register/", "destination": "/index.html" },
+    { "source": "/portal", "destination": "/index.html" },
+    { "source": "/portal/", "destination": "/index.html" },
+    { "source": "/web/register", "destination": "/index.html" },
+    { "source": "/web/register/", "destination": "/index.html" },
+    { "source": "/web", "destination": "/index.html" },
+    { "source": "/web/", "destination": "/index.html" },
+    { "source": "/web/:path*", "destination": "/:path*" }
+  ]
+}
