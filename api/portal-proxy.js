@@ -177,14 +177,18 @@ export function createPortalApiProxyHandler({
   return async function portalApiProxy(req, res) {
     const method = String(req?.method || "GET").toUpperCase();
     const requestHost = normalizedHost(readHeader(req, "host"));
-    const allowedHosts = new Set(
-      [env.VERCEL_URL, env.VERCEL_BRANCH_URL]
-        .map(normalizedHost)
-        .filter(Boolean),
-    );
+    // Preview deployments accept only their deployment or branch host.
+    // Production accepts only the project's stable production domain; do not
+    // trust a branch alias or arbitrary deployment URL in the production env.
+    const configuredHosts = env.VERCEL_ENV === "preview"
+      ? [env.VERCEL_URL, env.VERCEL_BRANCH_URL]
+      : env.VERCEL_ENV === "production"
+        ? [env.VERCEL_PROJECT_PRODUCTION_URL]
+        : [];
+    const allowedHosts = new Set(configuredHosts.map(normalizedHost).filter(Boolean));
 
-    if (env.VERCEL_ENV !== "preview" || !requestHost || !allowedHosts.has(requestHost)) {
-      sendJson(res, 404, { error: "preview_proxy_unavailable" });
+    if (!requestHost || !allowedHosts.has(requestHost)) {
+      sendJson(res, 404, { error: "portal_proxy_unavailable" });
       return;
     }
 
