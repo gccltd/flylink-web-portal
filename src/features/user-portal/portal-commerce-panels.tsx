@@ -1,0 +1,840 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { Circle, LoaderCircle } from "lucide-react";
+import {
+  CoinsPurchaseDialog,
+  isPortalCoinOrderTerminal,
+  PortalCoinCommerceClientError,
+  useCoinsPurchaseFlow,
+  type PortalCoinCommerceClientErrorCode,
+  type PortalCoinCommerceClient,
+  type PortalCommerceModel,
+  type PortalCommerceModelClient,
+  type PortalCoinOffer,
+  type PortalPlanSwitchState
+} from "./commerce";
+import { formatPortalDateTime } from "./portal-commerce-presentation";
+import type { PortalWalletFirstCommerceClient } from "./commerce";
+import { MarketplaceOfferCard } from "./marketplace-offer-card";
+import { WalletFirstMarketplacePanel } from "./wallet-first-marketplace-panel";
+import { portalCoinCommerceErrorText as safeCommerceErrorText } from "./commerce/commerce-error-presentation";
+import { PortalOwnedDataPacks } from "./commerce/components/portal-owned-data-packs";
+
+export type PortalCommerceLocale = "zh" | "en";
+
+type PanelProps = {
+  locale: PortalCommerceLocale;
+};
+
+function isChinese(locale: PortalCommerceLocale) {
+  return locale === "zh";
+}
+
+type MarketplacePanelProps = PanelProps & {
+  commerceClient: PortalCoinCommerceClient | null;
+  commerceModelClient?: PortalCommerceModelClient | null;
+  autoRenewRevision?: number;
+  onOpenWallet?: () => void;
+  onSessionInvalid?: () => void;
+  onWalletMutation?: () => void;
+  sessionGeneration?: number;
+  sessionRef: string | null;
+  theme: "light" | "dark";
+  walletFirstCommerceClient?: PortalWalletFirstCommerceClient | null;
+};
+
+type LegacyMarketplacePanelProps = Omit<
+  MarketplacePanelProps,
+  "commerceModelClient" | "walletFirstCommerceClient"
+>;
+
+type MarketplaceCatalogState =
+  | { status: "loading"; offers: PortalCoinOffer[] }
+  | { status: "ready"; offers: PortalCoinOffer[] }
+  | { status: "unavailable"; offers: PortalCoinOffer[] }
+  | {
+      status: "error";
+      offers: PortalCoinOffer[];
+      errorCode: PortalCoinCommerceClientErrorCode;
+      retryable: boolean;
+    };
+
+type MarketplaceProductIntent = {
+  offerRef: string;
+};
+
+function MarketplaceNoticeIndicator({
+  state
+}: {
+  state: "loading" | "empty" | "unavailable" | "error";
+}) {
+  if (state === "loading") {
+    return (
+      <LoaderCircle
+        aria-hidden="true"
+        className="portal-notice__indicator portal-notice__indicator--loading"
+      />
+    );
+  }
+  return (
+    <Circle
+      aria-hidden="true"
+      className="portal-notice__indicator portal-notice__marker"
+    />
+  );
+}
+
+function safeCommerceFailure(error: unknown): {
+  errorCode: PortalCoinCommerceClientErrorCode;
+  retryable: boolean;
+} {
+  if (error instanceof PortalCoinCommerceClientError) {
+    return {
+      errorCode: error.code,
+      retryable: error.retryable
+    };
+  }
+  return {
+    errorCode: "commerce_request_failed",
+    retryable: true
+  };
+}
+
+function LegacyMarketplacePanel({
+  autoRenewRevision = 0,
+  commerceClient,
+  locale,
+  onOpenWallet,
+  onSessionInvalid,
+  onWalletMutation,
+  sessionGeneration = 0,
+  sessionRef,
+  theme
+}: LegacyMarketplacePanelProps) {
+  const zh = isChinese(locale);
+  const generationRef = useRef(0);
+  const [refreshRevision, setRefreshRevision] = useState(0);
+  const [planSwitchRevision, setPlanSwitchRevision] = useState(0);
+  const [ownedPacksRevision, setOwnedPacksRevision] = useState(0);
+  const deliveredPackRef = useRef({ sessionGeneration, sessionRef, orderRef: "" });
+  const planSwitchScope = useMemo(() => ({
+    commerceClient, refreshRevision, planSwitchRevision, sessionGeneration, sessionRef
+  }), [commerceClient, refreshRevision, planSwitchRevision, sessionGeneration, sessionRef]);
+  const [catalog, setCatalog] = useState<MarketplaceCatalogState>(() => (
+    commerceClient && sessionRef
+      ? { status: "loading", offers: [] }
+      : { status: "unavailable", offers: [] }
+  ));
+  const [planSwitchResult, setPlanSwitchResult] = useState<{
+    scope: typeof planSwitchScope;
+    value: PortalPlanSwitchState;
+  } | null>(null);
+  const planSwitchState = planSwitchResult?.scope === planSwitchScope
+    ? planSwitchResult.value
+    : null;
+  const deliveredPlanRef = useRef<{
+    sessionGeneration: number;
+    sessionRef: string | null;
+    orderRef: string | null;
+  }>({ sessionGeneration, sessionRef, orderRef: null });
+  const [productIntent, setProductIntent] =
+    useState<MarketplaceProductIntent | null>(null);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [resumingExistingOrder, setResumingExistingOrder] = useState(false);
+  const startedProductRef = useRef(false);
+  const flowErrorRef = useRef<HTMLDivElement | null>(null);
+  const originFocusRef = useRef<HTMLButtonElement | null>(null);
+  const productClientRef = useRef(commerceClient);
+  const productSessionRef = useRef(sessionRef);
+  const latestProductSessionRef = useRef(sessionRef);
+  const productIntentSequenceRef = useRef(0);
+  const autoOpenedOrderRef = useRef<string | null>(null);
+  latestProductSessionRef.current = sessionRef;
+  const purchaseFlow = useCoinsPurchaseFlow({
+    client: commerceClient,
+    onWalletMutation,
+    sessionGeneration,
+    sessionRef
+  });
+
+  useEffect(() => {
+    const previous = deliveredPackRef.current;
+    if (previous.sessionRef !== sessionRef || previous.sessionGeneration !== sessionGeneration) {
+      deliveredPackRef.current = { sessionGeneration, sessionRef, orderRef: "" };
+      return;
+    }
+    const order = purchaseFlow.order;
+    if (!order || order.offer.category !== "data_pack" || order.paymentStatus !== "captured"
+      || order.fulfillment.status !== "delivered" || order.orderRef === previous.orderRef) return;
+    deliveredPackRef.current = { sessionGeneration, sessionRef, orderRef: order.orderRef };
+    setOwnedPacksRevision((revision) => revision + 1);
+  }, [purchaseFlow.order, sessionGeneration, sessionRef]);
+
+  useEffect(() => {
+    const previous = deliveredPlanRef.current;
+    if (previous.sessionRef !== sessionRef || previous.sessionGeneration !== sessionGeneration) {
+      deliveredPlanRef.current = { sessionGeneration, sessionRef, orderRef: null };
+      // The purchase hook clears the previous session's order in its effect.
+      // Do not interpret that render's old order as this session's delivery.
+      return;
+    }
+    const order = purchaseFlow.order;
+    if (
+      !sessionRef
+      || !order
+      || order.offer.category !== "plan"
+      || order.paymentStatus !== "captured"
+      || order.fulfillment.status !== "delivered"
+      || previous.orderRef === order.orderRef
+    ) return;
+    deliveredPlanRef.current = { sessionGeneration, sessionRef, orderRef: order.orderRef };
+    // Capture can precede delivery: wallet settlement alone is not an
+    // entitlement change. Refresh once the server confirms actual delivery.
+    setPlanSwitchRevision((revision) => revision + 1);
+  }, [purchaseFlow.order, sessionGeneration, sessionRef]);
+
+  useEffect(() => {
+    if (productSessionRef.current === sessionRef) return;
+    productSessionRef.current = sessionRef;
+    productIntentSequenceRef.current += 1;
+    setProductIntent(null);
+    setDialogVisible(false);
+    setResumingExistingOrder(false);
+    startedProductRef.current = false;
+    originFocusRef.current = null;
+  }, [sessionRef]);
+
+  useEffect(() => {
+    if (productClientRef.current === commerceClient) return;
+    const ownsPendingMutation = purchaseFlow.phase === "submitting"
+      || purchaseFlow.cancelling;
+    if (ownsPendingMutation) return;
+    productClientRef.current = commerceClient;
+    if (purchaseFlow.order !== null) return;
+    const hasProductReadState = productIntent !== null
+      || dialogVisible
+      || purchaseFlow.offer !== null
+      || purchaseFlow.quote !== null;
+    if (!hasProductReadState) return;
+    productIntentSequenceRef.current += 1;
+    setProductIntent(null);
+    setDialogVisible(false);
+    setResumingExistingOrder(false);
+    purchaseFlow.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `purchaseFlow` is destructured into individual property deps above; adding the whole object would re-run on every render (its identity changes per render) without semantic change
+  }, [
+    commerceClient,
+    dialogVisible,
+    productIntent,
+    purchaseFlow.cancelling,
+    purchaseFlow.offer,
+    purchaseFlow.order,
+    purchaseFlow.phase,
+    purchaseFlow.quote,
+    purchaseFlow.reset
+  ]);
+
+  useEffect(() => () => {
+    productIntentSequenceRef.current += 1;
+  }, []);
+
+  const retryCatalog = useCallback(() => {
+    setRefreshRevision((revision) => revision + 1);
+  }, []);
+
+  useEffect(() => {
+    const generation = generationRef.current + 1;
+    generationRef.current = generation;
+    if (!commerceClient || !sessionRef) {
+      setCatalog({ status: "unavailable", offers: [] });
+      return () => {
+        generationRef.current += 1;
+      };
+    }
+    setCatalog({ status: "loading", offers: [] });
+    void commerceClient.listOffers({ sessionRef }).then((offers) => {
+      if (generation !== generationRef.current) return;
+      setCatalog({ status: "ready", offers });
+    }).catch((error: unknown) => {
+      if (generation !== generationRef.current) return;
+      const failure = safeCommerceFailure(error);
+      setCatalog({
+        status: "error",
+        offers: [],
+        ...failure
+      });
+    });
+    return () => {
+      generationRef.current += 1;
+    };
+  }, [commerceClient, refreshRevision, sessionRef]);
+
+  useEffect(() => {
+    const { commerceClient, sessionRef } = planSwitchScope;
+    if (
+      !commerceClient
+      || !sessionRef
+      || typeof commerceClient.readPlanSwitchState !== "function"
+    ) {
+      setPlanSwitchResult(null);
+      return undefined;
+    }
+    let cancelled = false;
+    let reading = false;
+    let timer: number | undefined;
+    let pendingAt: number | null = null;
+    let retryAt = 0;
+    let automaticReads = 0;
+    const readState = commerceClient.readPlanSwitchState.bind(commerceClient);
+    const clearTimer = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      timer = undefined;
+    };
+    function schedule() {
+      clearTimer();
+      if (cancelled || reading || pendingAt === null || automaticReads >= 6) return;
+      const wakeAt = Math.max(pendingAt, retryAt);
+      // Browser timers overflow above a signed 32-bit delay. Long schedules
+      // checkpoint without an early request or an assumed entitlement change.
+      timer = window.setTimeout(() => {
+        timer = undefined;
+        if (Date.now() < wakeAt) schedule();
+        else void read(true);
+      }, Math.min(2_147_483_647, Math.max(1, wakeAt - Date.now())));
+    }
+    async function read(automatic = false) {
+      if (cancelled || reading) return;
+      reading = true;
+      if (automatic) automaticReads += 1;
+      clearTimer();
+      setPlanSwitchResult(null);
+      try {
+        const next = await readState({ sessionRef: sessionRef! });
+        if (cancelled) return;
+        const parsed = next?.pendingSwitch
+          ? Date.parse(next.pendingSwitch.effectiveAt)
+          : Number.NaN;
+        const nextPendingAt = Number.isFinite(parsed) ? parsed : null;
+        // Only a different server deadline earns a new automatic-read budget.
+        // Focus events, errors and unchanged overdue replies cannot restart it.
+        if (nextPendingAt !== pendingAt) automaticReads = 0;
+        pendingAt = nextPendingAt;
+        const overdue = pendingAt !== null && pendingAt <= Date.now();
+        retryAt = overdue ? Date.now() + 10_000 : 0;
+        setPlanSwitchResult(next && !overdue ? { scope: planSwitchScope, value: next } : null);
+      } catch {
+        if (!cancelled) {
+          setPlanSwitchResult(null);
+          retryAt = Date.now() + 10_000;
+        }
+      } finally {
+        reading = false;
+        schedule();
+      }
+    }
+    function onVisible() {
+      if (document.visibilityState !== "visible" || pendingAt === null) return;
+      if (Date.now() < Math.max(pendingAt, retryAt)) return;
+      // After six automatic attempts, a later visible/focus event can still
+      // recover, with the same cooldown and in-flight guard, but no new loop.
+      void read();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    void read();
+    return () => {
+      cancelled = true;
+      clearTimer();
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [planSwitchScope]);
+
+  const planOffers = catalog.offers.filter((offer) => offer.category === "plan");
+  const dataPackOffers = catalog.offers.filter((offer) => offer.category === "data_pack");
+  const planSwitchBlocking = Boolean(planSwitchState?.offers.some((item) => (
+    typeof item.reasonCode === "string" && item.reasonCode.startsWith("plan_switch_")
+  )));
+  const showPlanSwitch = Boolean(planSwitchState?.current) || planSwitchBlocking;
+  function planActionFor(offer: PortalCoinOffer) {
+    if (!showPlanSwitch || !planSwitchState) return undefined;
+    const entry = planSwitchState.offers.find((item) => item.offerRef === offer.offerRef);
+    if (!entry) return undefined;
+    const currentOffer = planSwitchState.current
+      ? catalog.offers.find((item) => item.offerRef === planSwitchState.current?.offerRef)
+      : null;
+    return {
+      action: entry.action,
+      chargeUnits: entry.chargeUnits,
+      effectiveAt: entry.effectiveAt,
+      reasonCode: entry.reasonCode,
+      currentTitle: currentOffer
+        ? currentOffer.title[locale]
+        : planSwitchState.current?.offerRef ?? null,
+      currentValidUntil: planSwitchState.current?.validUntil ?? null
+    };
+  }
+  const pendingSwitch = showPlanSwitch ? planSwitchState?.pendingSwitch ?? null : null;
+  const pendingOffer = pendingSwitch
+    ? catalog.offers.find((item) => item.offerRef === pendingSwitch.toOfferRef)
+    : null;
+  const productBusy = purchaseFlow.phase === "loading_detail"
+    || purchaseFlow.phase === "loading_preview"
+    || purchaseFlow.phase === "submitting";
+
+  const restoreProductFocus = useCallback(() => {
+    originFocusRef.current?.focus();
+  }, []);
+
+  const startProduct = useCallback(async (
+    offerRef: string,
+    origin?: HTMLButtonElement
+  ) => {
+    if (!commerceClient || !sessionRef) return;
+    const intentSequence = productIntentSequenceRef.current + 1;
+    productIntentSequenceRef.current = intentSequence;
+    const intentSessionRef = sessionRef;
+    if (origin) {
+      originFocusRef.current = origin;
+    }
+    if (
+      purchaseFlow.order
+      && !isPortalCoinOrderTerminal(purchaseFlow.order)
+    ) {
+      setProductIntent(null);
+      setResumingExistingOrder(true);
+      setDialogVisible(true);
+      return;
+    }
+    purchaseFlow.reset();
+    startedProductRef.current = true;
+    setResumingExistingOrder(false);
+    setProductIntent({ offerRef });
+    setDialogVisible(true);
+    await purchaseFlow.openProduct(offerRef);
+    if (
+      intentSequence !== productIntentSequenceRef.current
+      || latestProductSessionRef.current !== intentSessionRef
+    ) {
+      return;
+    }
+    await purchaseFlow.previewCheckout();
+  }, [commerceClient, purchaseFlow, sessionRef]);
+
+  const closeCoinsDialog = useCallback(() => {
+    productIntentSequenceRef.current += 1;
+    if (purchaseFlow.order) {
+      autoOpenedOrderRef.current = purchaseFlow.order.orderRef;
+    }
+    setDialogVisible(false);
+    setResumingExistingOrder(false);
+    setProductIntent(null);
+    if (
+      !purchaseFlow.order
+      || isPortalCoinOrderTerminal(purchaseFlow.order)
+    ) {
+      purchaseFlow.reset();
+    }
+  }, [purchaseFlow]);
+
+  const retryProduct = useCallback(() => {
+    if (!productIntent) return;
+    void startProduct(productIntent.offerRef);
+  }, [productIntent, startProduct]);
+
+  // One-click renewal from the dashboard: when the dashboard requests a
+  // renewal, this panel opens the current plan's purchase dialog as soon as
+  // the catalog and the server plan-switch state identify the current
+  // offer. The request is consumed once it fires, or once the panel knows
+  // there is no current plan to renew, or once the user opens any product
+  // dialog by hand — a stale request must never pop a dialog later while
+  // the user is browsing the Marketplace.
+  const autoRenewConsumedRef = useRef(0);
+  useEffect(() => {
+    if (autoRenewRevision <= 0 || autoRenewRevision <= autoRenewConsumedRef.current) return;
+    if (dialogVisible) {
+      autoRenewConsumedRef.current = autoRenewRevision;
+      return;
+    }
+    if (catalog.status !== "ready") return;
+    const currentOfferRef = planSwitchState?.current?.offerRef ?? null;
+    if (currentOfferRef) {
+      autoRenewConsumedRef.current = autoRenewRevision;
+      void startProduct(currentOfferRef);
+      return;
+    }
+    const planSwitchReadSettled = planSwitchResult !== null;
+    const planSwitchUnavailable = typeof commerceClient?.readPlanSwitchState !== "function";
+    if (planSwitchReadSettled || planSwitchUnavailable) {
+      autoRenewConsumedRef.current = autoRenewRevision;
+    }
+  }, [
+    autoRenewRevision,
+    catalog.status,
+    commerceClient,
+    dialogVisible,
+    planSwitchResult,
+    planSwitchState,
+    startProduct
+  ]);
+
+  const activeOrderRef = purchaseFlow.order?.orderRef ?? null;
+  useEffect(() => {
+    if (productIntent && purchaseFlow.errorCode && !purchaseFlow.quote && !purchaseFlow.order) {
+      flowErrorRef.current?.focus();
+    }
+  }, [productIntent, purchaseFlow.errorCode, purchaseFlow.order, purchaseFlow.quote]);
+  const confirmationBlocked = Boolean(
+    purchaseFlow.quote
+    && !purchaseFlow.order
+    && purchaseFlow.errorCode
+    && !purchaseFlow.errorRetryable
+  );
+  useEffect(() => {
+    if (
+      !activeOrderRef
+      || autoOpenedOrderRef.current === activeOrderRef
+    ) {
+      return;
+    }
+    autoOpenedOrderRef.current = activeOrderRef;
+    if (!startedProductRef.current && purchaseFlow.order && !isPortalCoinOrderTerminal(purchaseFlow.order)) {
+      setResumingExistingOrder(true);
+    }
+    setDialogVisible(true);
+  }, [activeOrderRef, purchaseFlow.order, purchaseFlow.quote]);
+
+  return (
+    <section
+      className="portal-commerce-layout portal-commerce-layout--marketplace"
+      aria-label={zh ? "商城目录" : "Marketplace catalog"}
+      aria-busy={catalog.status === "loading" || productBusy || undefined}
+    >
+      {catalog.status === "unavailable" ? (
+        <div
+          aria-live="polite"
+          className="portal-marketplace-state"
+          data-state="unavailable"
+          role="status"
+        >
+          <MarketplaceNoticeIndicator state="unavailable" />
+          <p>
+            {zh
+              ? "商城暂时不可用，请稍后再试。"
+              : "The Marketplace is temporarily unavailable. Please try again later."}
+          </p>
+        </div>
+      ) : null}
+      {catalog.status === "loading" ? (
+        <div
+          aria-live="polite"
+          className="portal-marketplace-state"
+          data-state="loading"
+          role="status"
+        >
+          <MarketplaceNoticeIndicator state="loading" />
+          <span>
+            {zh ? "正在加载商城目录…" : "Loading Marketplace catalog…"}
+          </span>
+        </div>
+      ) : null}
+      {catalog.status === "error" ? (
+        <div
+          aria-live="assertive"
+          className="portal-marketplace-state"
+          data-state="error"
+          role="alert"
+        >
+          <MarketplaceNoticeIndicator state="error" />
+          <p>{safeCommerceErrorText(catalog.errorCode, locale)}</p>
+          {catalog.retryable ? (
+            <button type="button" onClick={retryCatalog}>
+              {zh ? "重试" : "Retry"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {catalog.status === "ready" && catalog.offers.length === 0 ? (
+        <div
+          aria-live="polite"
+          className="portal-marketplace-state"
+          data-state="empty"
+          role="status"
+        >
+          <MarketplaceNoticeIndicator state="empty" />
+          <span>
+            {zh ? "当前没有可用商品。" : "No products are currently available."}
+          </span>
+        </div>
+      ) : null}
+      {catalog.status === "ready" && planOffers.length > 0 ? (
+        <section
+          className="portal-marketplace-group"
+          aria-label={zh ? "套餐" : "Plans"}
+        >
+          {pendingSwitch ? (
+            <p className="portal-marketplace-plan-switch" role="status">
+              {zh
+                ? `待生效降级：${pendingOffer?.title.zh ?? pendingSwitch.toOfferRef}，${formatPortalDateTime(pendingSwitch.effectiveAt, locale)} 生效。续费或升级会取消该降级。`
+                : `Pending downgrade: ${pendingOffer?.title.en ?? pendingSwitch.toOfferRef}, effective ${formatPortalDateTime(pendingSwitch.effectiveAt, locale)}. Renewing or upgrading cancels it.`}
+            </p>
+          ) : null}
+          <ul className="portal-marketplace-grid">
+            {planOffers.map((offer) => (
+              <MarketplaceOfferCard
+                busy={productBusy}
+                key={offer.offerRef}
+                locale={locale}
+                mode="purchase"
+                offer={offer}
+                planAction={planActionFor(offer)}
+                onPrimary={(event) => {
+                  void startProduct(
+                    offer.offerRef,
+                    event.currentTarget
+                  );
+                }}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {catalog.status === "ready" && dataPackOffers.length > 0 ? (
+        <section
+          className="portal-marketplace-group"
+          aria-label={zh ? "流量包" : "Data packs"}
+        >
+          <ul className="portal-marketplace-grid">
+            {dataPackOffers.map((offer) => (
+              <MarketplaceOfferCard
+                busy={productBusy}
+                key={offer.offerRef}
+                locale={locale}
+                mode="purchase"
+                offer={offer}
+                onPrimary={(event) => {
+                  void startProduct(
+                    offer.offerRef,
+                    event.currentTarget
+                  );
+                }}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {commerceClient && sessionRef ? <PortalOwnedDataPacks commerceClient={commerceClient}
+        sessionRef={sessionRef} sessionGeneration={sessionGeneration} refreshRevision={ownedPacksRevision}
+        locale={locale} theme={theme} onSessionInvalid={onSessionInvalid} /> : null}
+      {productBusy && !purchaseFlow.quote && !purchaseFlow.order ? (
+        <div
+          aria-live="polite"
+          className="portal-marketplace-flow-state"
+          data-state="loading"
+          role="status"
+        >
+          <MarketplaceNoticeIndicator state="loading" />
+          <span>
+            {purchaseFlow.phase === "loading_preview"
+              ? zh
+                ? "正在计算购买金额…"
+                : "Calculating your purchase amount…"
+              : zh
+                ? "正在确认商品信息…"
+                : "Checking product information…"}
+          </span>
+        </div>
+      ) : null}
+      {purchaseFlow.errorCode
+        && !purchaseFlow.quote
+        && !purchaseFlow.order ? (
+          <div
+            aria-live="assertive"
+            className="portal-marketplace-flow-state"
+            data-state="error"
+            ref={flowErrorRef}
+            role="alert"
+            tabIndex={-1}
+          >
+            <MarketplaceNoticeIndicator state="error" />
+            <p>{safeCommerceErrorText(purchaseFlow.errorCode, locale)}</p>
+            {productIntent && (
+              purchaseFlow.errorRetryable
+              || purchaseFlow.errorCode === "quote_expired"
+              || purchaseFlow.errorCode === "quote_stale"
+            ) ? (
+              <button type="button" onClick={retryProduct}>
+                {zh ? "重试" : "Retry"}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      {dialogVisible ? (
+        <div
+          className="portal-coins-dialog-theme"
+          data-portal-theme={theme}
+        >
+          {purchaseFlow.quote || purchaseFlow.order ? (
+            <CoinsPurchaseDialog
+              dataPackDelivery={commerceClient && sessionRef ? {
+                commerceClient, sessionRef, sessionGeneration, theme,
+                onSessionInvalid: onSessionInvalid ?? closeCoinsDialog
+              } : undefined}
+              cancelling={purchaseFlow.cancelling}
+              confirmDisabled={confirmationBlocked}
+              errorCode={purchaseFlow.errorCode}
+              locale={locale}
+              onCancel={purchaseFlow.cancelPurchase}
+              onConfirm={purchaseFlow.confirmPurchase}
+              onOpenRecharge={onOpenWallet ? () => {
+                closeCoinsDialog();
+                onOpenWallet();
+              } : undefined}
+              onRefresh={purchaseFlow.refreshOrder}
+              onRequestClose={closeCoinsDialog}
+              onRestoreFocus={restoreProductFocus}
+              order={purchaseFlow.order}
+              quote={purchaseFlow.quote}
+              resumingExistingOrder={resumingExistingOrder}
+              submitting={purchaseFlow.phase === "submitting"}
+            />
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+type MarketplaceModelState =
+  | { status: "loading" }
+  | { status: "ready"; model: PortalCommerceModel }
+  | {
+      status: "error";
+      errorCode: PortalCoinCommerceClientErrorCode;
+      retryable: boolean;
+    };
+
+function WalletFirstMarketplaceModelGate({
+  commerceModelClient,
+  walletFirstCommerceClient,
+  ...legacyProps
+}: LegacyMarketplacePanelProps & {
+  commerceModelClient: PortalCommerceModelClient;
+  walletFirstCommerceClient: PortalWalletFirstCommerceClient | null;
+}) {
+  const { locale, sessionGeneration = 0, sessionRef } = legacyProps;
+  const zh = isChinese(locale);
+  const generationRef = useRef(0);
+  const [revision, setRevision] = useState(0);
+  const [model, setModel] = useState<MarketplaceModelState>(() => (
+    sessionRef ? { status: "loading" } : {
+      status: "error",
+      errorCode: "commerce_unavailable",
+      retryable: true
+    }
+  ));
+
+  useEffect(() => {
+    const generation = generationRef.current + 1;
+    generationRef.current = generation;
+    if (!sessionRef) {
+      setModel({
+        status: "error",
+        errorCode: "commerce_unavailable",
+        retryable: true
+      });
+      return () => {
+        generationRef.current += 1;
+      };
+    }
+    setModel({ status: "loading" });
+    void commerceModelClient.getCommerceModel({ sessionRef }).then((nextModel) => {
+      if (generation !== generationRef.current) return;
+      setModel({ status: "ready", model: nextModel });
+    }).catch((error: unknown) => {
+      if (generation !== generationRef.current) return;
+      setModel({ status: "error", ...safeCommerceFailure(error) });
+    });
+    return () => {
+      generationRef.current += 1;
+    };
+  }, [commerceModelClient, revision, sessionGeneration, sessionRef]);
+
+  if (model.status === "ready" && model.model === "legacy") {
+    return <LegacyMarketplacePanel {...legacyProps} />;
+  }
+  if (model.status === "ready" && model.model === "wallet_first_unique_v1") {
+    return (
+      <WalletFirstMarketplacePanel
+        commerceClient={walletFirstCommerceClient}
+        locale={locale}
+        onOpenWallet={legacyProps.onOpenWallet}
+        onWalletMutation={legacyProps.onWalletMutation}
+        sessionGeneration={sessionGeneration}
+        sessionRef={sessionRef}
+        theme={legacyProps.theme}
+      />
+    );
+  }
+  return (
+    <section
+      aria-busy={model.status === "loading" || undefined}
+      aria-label={zh ? "商城目录" : "Marketplace catalog"}
+      className="portal-commerce-layout portal-commerce-layout--marketplace"
+      data-commerce-model="pending"
+    >
+      <div
+        aria-live={model.status === "loading" ? "polite" : "assertive"}
+        className="portal-marketplace-state"
+        data-state={model.status}
+        role={model.status === "loading" ? "status" : "alert"}
+      >
+        <MarketplaceNoticeIndicator
+          state={model.status === "loading" ? "loading" : "error"}
+        />
+        <p>
+          {model.status === "loading"
+            ? (zh ? "正在加载商城…" : "Loading the Marketplace…")
+            : model.status === "error"
+              ? safeCommerceErrorText(model.errorCode, locale)
+              : (zh ? "商城暂时不可用，请稍后再试。" : "The Marketplace is temporarily unavailable. Please try again later.")}
+        </p>
+        {model.status === "error" && model.retryable ? (
+          <button type="button" onClick={() => setRevision((current) => current + 1)}>
+            {zh ? "重试" : "Retry"}
+          </button>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The model is never a browser input.  The HTTP Portal client projects it
+ * from the authenticated server session, then this gate mounts one isolated
+ * route family.  Existing callers without a model capability retain the old
+ * local/test-only legacy surface unchanged.
+ */
+export function MarketplacePanel({
+  commerceModelClient = null,
+  walletFirstCommerceClient = null,
+  ...legacyProps
+}: MarketplacePanelProps) {
+  if (!commerceModelClient) {
+    return <LegacyMarketplacePanel {...legacyProps} />;
+  }
+  return (
+    <WalletFirstMarketplaceModelGate
+      {...legacyProps}
+      commerceModelClient={commerceModelClient}
+      walletFirstCommerceClient={walletFirstCommerceClient}
+    />
+  );
+}
+
+export { ReferralRewardsPanel } from "./referrals/portal-referral-panel";

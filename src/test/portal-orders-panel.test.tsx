@@ -1,0 +1,2337 @@
+import { createElement, Fragment, useLayoutEffect, useState } from "react";
+import { readFileSync } from "node:fs";
+import { createRoot } from "react-dom/client";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+
+import {
+  PortalOrdersPanel as PortalOrdersPanelComponent,
+  portalOrdersIdentityMatches,
+  type PortalOrdersFilter,
+  type PortalOrdersPanelProps
+} from "../features/user-portal/orders/portal-orders-panel";
+import {
+  buildPortalOrderCenterItems,
+  orderCenterStatusForCoin,
+  orderCenterStatusForPayment,
+  orderCenterStatusForRecharge,
+  orderCenterStatusForService,
+  type PortalServiceOrder
+} from "../features/user-portal/orders/portal-order-center-model";
+import type {
+  PortalCoinCommerceClient,
+  PortalCoinOrder
+} from "../features/user-portal/commerce";
+import { PortalCoinCommerceClientError } from "../features/user-portal/commerce";
+import type {
+  PortalRechargeClient,
+  PortalRechargeOrder,
+  PortalRechargePaymentRedirectResult,
+} from "../features/user-portal/recharge";
+import { handoffPortalRechargeOrderToPayment } from "../features/user-portal/recharge/portal-recharge-payment-handoff";
+import type {
+  PortalPaymentOrder,
+  PortalSubscriptionRequest
+} from "../features/user-portal/user-portal-client";
+
+afterEach(cleanup);
+
+test("opening a delivered data-pack order automatically reads delivery and drops it when closed", async () => {
+  const packOrder: PortalCoinOrder = {
+    ...ORDER,
+    orderRef: "order_data_100gb_1",
+    offer: {
+      ...ORDER.offer,
+      offerRef: "offer_data_100gb",
+      offerVersionRef: "offerversion_data_100gb_1",
+      category: "data_pack",
+      delivery: {
+        kind: "data_pack", durationDays: null, monthlyTrafficGb: null,
+        trafficGb: 100, neverExpires: true, discountBasisPoints: null
+      }
+    }
+  };
+  const getDataPackDelivery = vi.fn().mockResolvedValue({
+    orderRef: packOrder.orderRef,
+    subscriptionUrl: "https://subscriptions.example.test/s/test-secret-not-for-log",
+    usage: { totalBytes: 1_000, usedBytes: 0, remainingBytes: 1_000,
+      collectionStatus: "measured_zero", updatedAt: "2026-09-28T00:00:00.000Z",
+      exhausted: false }
+  });
+  const commerceClient = {
+    listOrders: vi.fn().mockResolvedValue({ orders: [packOrder], nextCursor: null }),
+    getOrder: vi.fn().mockResolvedValue(packOrder), getDataPackDelivery
+  } as unknown as PortalCoinCommerceClient;
+  render(<PortalOrdersPanel locale="zh" commerceClient={commerceClient}
+    sessionRef="session_alpha" sessionGeneration={1} onSessionInvalid={vi.fn()} />);
+  const detail = await screen.findByRole("button", { name: /order_data_100gb_1/ });
+  fireEvent.click(detail);
+  await screen.findByRole("button", { name: "复制订阅" });
+  expect(screen.getByRole("textbox", { name: "订阅链接" })).toHaveAttribute("readonly");
+  expect(screen.queryByRole("button", { name: "获取订阅" })).toBeNull();
+  expect(getDataPackDelivery).toHaveBeenCalledTimes(1);
+  fireEvent.click(detail);
+  expect(screen.queryByRole("button", { name: "复制订阅" })).toBeNull();
+});
+
+const ORDER: PortalCoinOrder = {
+  orderRef: "order_consumption_001",
+  offer: {
+    offerRef: "offer_monthly_50gb",
+    offerVersionRef: "offerversion_monthly_50gb_1",
+    category: "plan",
+    title: { zh: "月付 50 GB", en: "Monthly 50 GB" },
+    summary: { zh: "每月 50 GB", en: "50 GB each month" },
+    importantNotices: {
+      zh: ["购买后自动交付"],
+      en: ["Delivered automatically after purchase"]
+    },
+    baseCoinUnits: 20,
+    referencePrice: { currency: "CNY", amountMinor: 2_000 },
+    acceptedCoinTypes: ["paid_coins"],
+    delivery: {
+      kind: "subscription_plan",
+      durationDays: 30,
+      monthlyTrafficGb: 50,
+      trafficGb: null,
+      neverExpires: false,
+      discountBasisPoints: 500
+    }
+  },
+  amountUnits: 20,
+  allocation: [{ coinType: "paid_coins", amountUnits: 20 }],
+  paymentStatus: "captured",
+  cancelUntil: "2026-07-27T12:30:00.000Z",
+  fulfillment: { status: "delivered", safeCode: null },
+  createdAt: "2026-07-27T12:00:00.000Z",
+  updatedAt: "2026-07-27T12:01:00.000Z"
+};
+
+const PAYMENT_ORDER: PortalPaymentOrder = {
+  accessRequestRef: "access_request_001",
+  accessRequestStatus: "subscription_ready",
+  amountMinor: 2_000,
+  channel: "alipay",
+  checkoutUrl: "https://example.test/checkout/pay_001",
+  createdAt: "2026-07-27T13:00:00.000Z",
+  currency: "CNY",
+  orderRef: "pay_001",
+  paidAt: "2026-07-27T13:01:00.000Z",
+  paymentExpiresAt: "2026-07-27T13:30:00.000Z",
+  planId: "monthly_basic",
+  planLabel: "基础月付",
+  providerOrderRef: "provider_pay_001",
+  qrCode: "https://example.test/qr/pay_001",
+  status: "payment_failed",
+  urlScheme: "alipay://pay_001",
+  safety: {
+    noRawMerchantKey: true,
+    noRawProviderPayload: true
+  }
+};
+
+const RECHARGE_ORDER: PortalRechargeOrder = {
+  orderRef: "payment_recharge_001",
+  offerRef: "coins_30",
+  quoteVersion: 1,
+  expectedPaidCoinUnits: 30,
+  amountMinor: 100,
+  currency: "USD",
+  currencyExponent: 2,
+  adapterKey: "paypal_v1",
+  paymentMethod: "paypal",
+  status: "credited",
+  providerOrderRef: "paypal_order_001",
+  nextAction: null,
+  walletOperationRef: "wallet_operation_001",
+  walletLotRef: "wallet_lot_001",
+  expiresAt: "2026-07-27T15:30:00.000Z",
+  createdAt: "2026-07-27T15:00:00.000Z",
+  updatedAt: "2026-07-27T15:01:00.000Z"
+};
+
+const SERVICE_REQUEST: PortalSubscriptionRequest = {
+  status: "subscription_ready",
+  lifecycle: "active",
+  requestRef: "service_request_001",
+  userRef: "user_001",
+  planId: "monthly_basic",
+  clientTarget: "clash",
+  expiresAt: "2026-08-27T14:00:00.000Z",
+  durationDays: 30,
+  quantity: 1,
+  subscriptionUrl: "https://example.test/subscription/service_001",
+  usage: {
+    uploadBytes: 0,
+    downloadBytes: 0,
+    usedBytes: 0,
+    totalBytes: 50 * 1024 ** 3,
+    usageRatio: 0,
+    status: "within_limit",
+    collectionStatus: "measured_zero",
+    channelCount: 1,
+    measuredChannelCount: 1,
+    updatedAt: "2026-07-27T14:00:00.000Z"
+  },
+  nextAction: "copy_subscription_url",
+  updatedAt: "2026-07-27T14:00:00.000Z",
+  safety: {
+    noAdminApi: true,
+    noDbMutation: true,
+    noPaymentActivation: true,
+    noPublicAdmin: true,
+    noRawCustomerDataReturned: true
+  }
+};
+
+const SERVICE_ORDER: PortalServiceOrder = {
+  requestRef: "service_request_001",
+  request: SERVICE_REQUEST,
+  createdAt: "2026-07-27T14:00:00.000Z",
+  planId: "monthly_basic" as const,
+  durationDays: 30,
+  quantity: 1,
+  clientTarget: "clash" as const,
+  status: "active" as const,
+  expiresAt: "2026-08-27T14:00:00.000Z",
+  subscriptionUrl: "https://example.test/subscription/service_001"
+};
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, reject, resolve };
+}
+
+function installMobileViewport() {
+  const originalMatchMedia = window.matchMedia;
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+  });
+  return () => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia
+    });
+  };
+}
+
+type DirectPanelProps = Pick<
+  PortalOrdersPanelProps,
+  "locale" | "commerceClient" | "sessionRef" | "sessionGeneration" | "onSessionInvalid"
+> & Partial<Omit<
+  PortalOrdersPanelProps,
+  "locale" | "commerceClient" | "sessionRef" | "sessionGeneration" | "onSessionInvalid"
+>> & {
+  onContinueRechargeOrder?: (order: PortalRechargeOrder) => PortalRechargePaymentRedirectResult;
+};
+
+function PortalOrdersPanel(props: DirectPanelProps) {
+  return createElement(ControlledPanelHarness, props);
+}
+
+function ControlledPanelHarness(props: DirectPanelProps) {
+  const [selectedFilter, setSelectedFilter] = useState<PortalOrdersFilter>("all");
+  const filter = props.filter ?? selectedFilter;
+  const onFilterChange = (next: PortalOrdersFilter) => {
+    setSelectedFilter(next);
+    props.onFilterChange?.(next);
+  };
+  return createElement(Fragment, null,
+    createElement("select", {
+      "aria-label": "Test parent order filter",
+      value: filter,
+      onChange: (event: React.ChangeEvent<HTMLSelectElement>) => (
+        onFilterChange(event.target.value as PortalOrdersFilter)
+      )
+    }, ["all", "coins_consumption", "coin_recharge", "plans_services"].map((value) => (
+      createElement("option", { key: value, value }, value)
+    ))),
+    createElement(PortalOrdersPanelComponent, {
+      legacyPaymentOrders: [],
+      serviceOrders: [],
+      selectedServiceOrderRef: null,
+      orderSearch: "",
+      onOrderSearchChange: () => undefined,
+      onOpenServiceOrder: () => undefined,
+      onOpenMarketplace: () => undefined,
+      ...props,
+      filter,
+      onFilterChange
+    })
+  );
+}
+
+function selectOrderFilter(filter: PortalOrdersFilter) {
+  fireEvent.change(screen.getByRole("combobox", { name: "Test parent order filter" }), {
+    target: { value: filter }
+  });
+}
+
+function compactOrderFixture(locale: "zh" | "en") {
+  const suffix = "aacdfe0123456789".repeat(4);
+  const coin = { ...ORDER, orderRef: `order_consumption_${suffix}` };
+  const recharge = { ...RECHARGE_ORDER, orderRef: `payment_recharge_${suffix}` };
+  const payment = { ...PAYMENT_ORDER, orderRef: `pay_${suffix}` };
+  const service = {
+    ...SERVICE_ORDER,
+    requestRef: `service_request_${suffix}`,
+    request: { ...SERVICE_REQUEST, requestRef: `service_request_${suffix}` }
+  };
+  const createCoinOrder = vi.fn();
+  const createRechargeOrder = vi.fn();
+  const onContinueRechargeOrder = vi.fn(() => "redirected" as const);
+  const commerceClient = {
+    listOrders: vi.fn().mockResolvedValue({ orders: [coin], nextCursor: null }),
+    getOrder: vi.fn().mockResolvedValue(coin),
+    createOrder: createCoinOrder
+  } as unknown as PortalCoinCommerceClient;
+  const rechargeClient = {
+    listOrders: vi.fn().mockResolvedValue([recharge]),
+    createOrder: createRechargeOrder
+  } as unknown as PortalRechargeClient;
+  const props: DirectPanelProps = {
+    locale, commerceClient, rechargeClient,
+    sessionRef: "session_compact_orders", sessionGeneration: 1,
+    onSessionInvalid: vi.fn(), legacyPaymentOrders: [payment], serviceOrders: [service],
+    onContinueRechargeOrder
+  };
+  return {
+    props, createCoinOrder, createRechargeOrder, onContinueRechargeOrder,
+    refs: { coin: coin.orderRef, recharge: recharge.orderRef, payment: payment.orderRef, service: service.requestRef }
+  };
+}
+
+function CommitPhaseAction({
+  action,
+  armed
+}: {
+  action: () => void;
+  armed: boolean;
+}) {
+  useLayoutEffect(() => {
+    if (armed) action();
+  }, [action, armed]);
+  return null;
+}
+
+function ordersThemeTokens(css: string, theme: "dark" | "light") {
+  const selector = `.portal-v2-shell[data-portal-theme="${theme}"] .portal-orders-panel`;
+  const block = css.match(new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{([^}]*)\\}`));
+  expect(block, `missing explicit ${theme} Orders token block`).not.toBeNull();
+  return new Map(
+    [...(block?.[1] ?? "").matchAll(/(--portal-orders-[a-z-]+)\s*:\s*([^;]+);/g)]
+      .map((match) => [match[1], match[2].trim()])
+  );
+}
+
+function relativeLuminance(hex: string) {
+  const channels = hex.slice(1).match(/../g);
+  if (!channels || channels.length !== 3) throw new Error(`Expected six-digit hex color, received ${hex}`);
+  const [red, green, blue] = channels.map((channel) => {
+    const value = Number.parseInt(channel, 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+}
+
+function contrastRatio(first: string, second: string) {
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
+  return (Math.max(firstLuminance, secondLuminance) + 0.05)
+    / (Math.min(firstLuminance, secondLuminance) + 0.05);
+}
+
+describe("PortalOrdersPanel", () => {
+  test.each(["zh", "en"] as const)("%s presents six consumer columns without visible order IDs in collapsed rows", async (locale) => {
+    const fixture = compactOrderFixture(locale);
+    render(createElement(PortalOrdersPanel, fixture.props));
+    for (const ref of Object.values(fixture.refs)) {
+      await screen.findByRole("button", { name: new RegExp(ref) });
+    }
+    const table = screen.getByRole("table", { name: locale === "zh" ? "订单列表" : "Orders" });
+    expect(within(table).getAllByRole("columnheader").map((header) => header.textContent)).toEqual(
+      locale === "zh"
+        ? ["商品或服务", "类型", "金额", "状态", "创建时间", "操作"]
+        : ["Product or service", "Type", "Amount", "Status", "Created", "Actions"]
+    );
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(rows).toHaveLength(4);
+    const products = {
+      coin: ORDER.offer.title[locale], recharge: "30 Coins",
+      payment: locale === "zh" ? "基础月付" : "Basic monthly",
+      service: locale === "zh" ? "基础月付" : "Monthly basic"
+    };
+    for (const kind of ["coin", "recharge", "payment", "service"] as const) {
+      const ref = fixture.refs[kind];
+      const row = within(table).getByRole("button", { name: new RegExp(ref) }).closest("tr")!;
+      const cells = within(row).getAllByRole("cell");
+      expect(cells).toHaveLength(6);
+      expect(cells[0]).toHaveTextContent(products[kind]);
+      expect(cells[4].querySelector("time")).toHaveAttribute("datetime");
+      expect(within(cells[5]).getByRole("button", { name: new RegExp(ref) })).toBeInTheDocument();
+      expect(row).not.toHaveTextContent(ref);
+    }
+    expect(table).not.toHaveTextContent(/order_consumption_|payment_recharge_|service_request_|P-aacdfe/);
+    expect(within(table).getByText(ORDER.offer.title[locale])).toBeInTheDocument();
+    expect(within(table).getByText("30 Coins")).toBeInTheDocument();
+    expect(table).not.toHaveTextContent(/paid Coins|paid_coins|paypal_order_001|wallet_operation_001|wallet_lot_001/);
+    expect(table.innerHTML).not.toMatch(/example\.test\/(?:checkout|qr|subscription)|alipay:\/\//);
+    expect(fixture.createCoinOrder).not.toHaveBeenCalled();
+    expect(fixture.createRechargeOrder).not.toHaveBeenCalled();
+    expect(fixture.onContinueRechargeOrder).not.toHaveBeenCalled();
+  });
+
+  test.each(["coin", "recharge", "payment", "service"] as const)("retains the complete long %s order ID only in its read-only expanded detail", async (kind) => {
+    const fixture = compactOrderFixture("en");
+    render(createElement(PortalOrdersPanel, fixture.props));
+    const action = await screen.findByRole("button", { name: new RegExp(fixture.refs[kind]) });
+    expect(action).toHaveTextContent("View");
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(action);
+    await waitFor(() => {
+      const detailId = action.getAttribute("aria-controls");
+      expect(detailId).toBeTruthy();
+      const detail = document.getElementById(detailId!);
+      expect(detail).toHaveTextContent(fixture.refs[kind]);
+      expect(detail?.closest("td")).toHaveAttribute("colspan", "6");
+    });
+    const detail = document.getElementById(action.getAttribute("aria-controls")!)!;
+    expect(detail.innerHTML).not.toMatch(/example\.test\/(?:checkout|qr|subscription)|alipay:\/\//);
+    expect(detail).not.toHaveTextContent(/provider_pay_001|paypal_order_001|wallet_operation_001|wallet_lot_001/);
+    fireEvent.click(action);
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    expect(action).not.toHaveAttribute("aria-controls");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(fixture.createCoinOrder).not.toHaveBeenCalled();
+    expect(fixture.createRechargeOrder).not.toHaveBeenCalled();
+    expect(fixture.onContinueRechargeOrder).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    [
+      "captured delivered Coins order",
+      "successful",
+      () => orderCenterStatusForCoin(ORDER)
+    ],
+    [
+      "held Coins order",
+      "in_progress",
+      () => orderCenterStatusForCoin({
+        ...ORDER,
+        orderRef: "order_consumption_held",
+        paymentStatus: "held",
+        fulfillment: { status: "not_requested", safeCode: null }
+      })
+    ],
+    [
+      "credited Coins recharge",
+      "successful",
+      () => orderCenterStatusForRecharge(RECHARGE_ORDER)
+    ],
+    [
+      "failed legacy payment",
+      "attention",
+      () => orderCenterStatusForPayment(PAYMENT_ORDER)
+    ],
+    [
+      "active service order",
+      "successful",
+      () => orderCenterStatusForService(SERVICE_ORDER)
+    ],
+    [
+      "expired service order",
+      "closed",
+      () => orderCenterStatusForService({
+        ...SERVICE_ORDER,
+        request: {
+          ...SERVICE_REQUEST,
+          lifecycle: "expired",
+          status: "subscription_disabled"
+        },
+        status: "expired"
+      })
+    ],
+    [
+      "runtime-unknown Coins payment status",
+      "attention",
+      () => orderCenterStatusForCoin({
+        ...ORDER,
+        orderRef: "order_consumption_unknown",
+        paymentStatus: "historical_unknown_status"
+      } as unknown as PortalCoinOrder)
+    ],
+    [
+      "unknown legacy payment status",
+      "attention",
+      () => orderCenterStatusForPayment({
+        ...PAYMENT_ORDER,
+        orderRef: "pay_unknown",
+        status: "historical_unknown_status"
+      })
+    ]
+  ])("maps complete source DTO %s to %s", (_description, expected, actual) => {
+    expect(actual()).toBe(expected);
+  });
+
+  test("builds domain-prefixed, newest-first items without collapsing source records", () => {
+    const items = buildPortalOrderCenterItems({
+      coinOrders: [ORDER],
+      legacyPaymentOrders: [PAYMENT_ORDER],
+      serviceOrders: [SERVICE_ORDER]
+    });
+
+    expect(items.map((item) => ({
+      kind: item.kind,
+      key: item.key,
+      createdAt: item.createdAt,
+      status: item.status
+    }))).toEqual([
+      {
+        kind: "service_access",
+        key: "service_access:service_request_001",
+        createdAt: "2026-07-27T14:00:00.000Z",
+        status: "successful"
+      },
+      {
+        kind: "legacy_payment",
+        key: "legacy_payment:pay_001",
+        createdAt: "2026-07-27T13:00:00.000Z",
+        status: "attention"
+      },
+      {
+        kind: "coins_consumption",
+        key: "coins_consumption:order_consumption_001",
+        createdAt: "2026-07-27T12:00:00.000Z",
+        status: "successful"
+      }
+    ]);
+    expect(items[0].source).toBe(SERVICE_ORDER);
+    expect(items[1].source).toBe(PAYMENT_ORDER);
+    expect(items[2].source).toBe(ORDER);
+  });
+
+  test("does not duplicate parent navigation with Orders type tabs or buttons", () => {
+    render(createElement(PortalOrdersPanel, {
+      locale: "zh",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    expect(screen.queryByRole("group", { name: "订单类型" })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "订单类型" })).toBeNull();
+    expect(document.querySelector(".portal-orders-filters")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^(全部|商城消费|充值订单|套餐与服务)$/ })).toBeNull();
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Coins 消费订单" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Coins 充值订单" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "历史订单" })).toBeNull();
+  });
+
+  test.each(["zh", "en"] as const)("%s retains a native controlled order-type selector only on narrow screens", async (locale) => {
+    const restoreViewport = installMobileViewport();
+    try {
+      const fixture = compactOrderFixture(locale);
+      const onFilterChange = vi.fn();
+      render(createElement(PortalOrdersPanel, { ...fixture.props, onFilterChange }));
+      await screen.findByRole("button", { name: new RegExp(fixture.refs.coin) });
+      const select = screen.getByRole("combobox", {
+        name: locale === "zh" ? "订单类型" : "Order type"
+      });
+      expect(select.tagName).toBe("SELECT");
+      expect(select).toHaveValue("all");
+      expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual(
+        locale === "zh"
+          ? ["全部", "商城消费", "充值订单", "套餐与服务"]
+          : ["All", "Marketplace purchases", "Coins recharges", "Plans and services"]
+      );
+      for (const [filter, visibleRef, hiddenRef] of [
+        ["plans_services", fixture.refs.service, fixture.refs.coin],
+        ["coin_recharge", fixture.refs.recharge, fixture.refs.service],
+        ["coins_consumption", fixture.refs.coin, fixture.refs.recharge]
+      ] as const) {
+        fireEvent.change(select, { target: { value: filter } });
+        expect(select).toHaveValue(filter);
+        expect(onFilterChange).toHaveBeenLastCalledWith(filter);
+        expect(await screen.findByRole("button", { name: new RegExp(visibleRef) })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: new RegExp(hiddenRef) })).toBeNull();
+      }
+      fireEvent.change(select, { target: { value: "all" } });
+      expect(select).toHaveValue("all");
+      expect(onFilterChange).toHaveBeenCalledTimes(4);
+      expect(onFilterChange).toHaveBeenLastCalledWith("all");
+      expect(document.querySelector(".portal-orders-filters")).toBeNull();
+      expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+      expect(fixture.createCoinOrder).not.toHaveBeenCalled();
+      expect(fixture.createRechargeOrder).not.toHaveBeenCalled();
+      expect(fixture.onContinueRechargeOrder).not.toHaveBeenCalled();
+    } finally {
+      cleanup();
+      restoreViewport();
+    }
+  });
+
+  test("honors the controlled order type without changing the existing list request boundaries", async () => {
+    const fixture = compactOrderFixture("en");
+    const view = render(createElement(PortalOrdersPanel, {
+      ...fixture.props, filter: "plans_services"
+    }));
+    expect(fixture.props.commerceClient?.listOrders).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: new RegExp(fixture.refs.service) })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: new RegExp(fixture.refs.payment) })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: new RegExp(fixture.refs.coin) })).toBeNull();
+    expect(screen.queryByRole("button", { name: new RegExp(fixture.refs.recharge) })).toBeNull();
+
+    view.rerender(createElement(PortalOrdersPanel, {
+      ...fixture.props, filter: "coin_recharge"
+    }));
+    expect(await screen.findByRole("button", { name: new RegExp(fixture.refs.recharge) })).toBeInTheDocument();
+    expect(fixture.props.commerceClient?.listOrders).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: new RegExp(fixture.refs.service) })).toBeNull();
+    view.rerender(createElement(PortalOrdersPanel, {
+      ...fixture.props, filter: "coins_consumption"
+    }));
+    expect(await screen.findByRole("button", { name: new RegExp(fixture.refs.coin) })).toBeInTheDocument();
+    expect(fixture.props.commerceClient?.listOrders).toHaveBeenCalledTimes(1);
+    expect(fixture.props.rechargeClient?.listOrders).toHaveBeenCalledTimes(1);
+  });
+
+  test.each(["coin", "recharge", "payment", "service"] as const)("clears the selected %s detail on a controlled filter change and keeps it collapsed on return", async (kind) => {
+    const fixture = compactOrderFixture("en");
+    render(createElement(PortalOrdersPanel, fixture.props));
+    const action = await screen.findByRole("button", { name: new RegExp(fixture.refs[kind]) });
+    fireEvent.click(action);
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(1);
+    selectOrderFilter(kind === "service" || kind === "payment" ? "coin_recharge" : "plans_services");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    selectOrderFilter("all");
+    const returnedAction = await screen.findByRole("button", { name: new RegExp(fixture.refs[kind]) });
+    expect(returnedAction).toHaveAttribute("aria-expanded", "false");
+    expect(returnedAction).not.toHaveAttribute("aria-controls");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(fixture.createCoinOrder).not.toHaveBeenCalled();
+    expect(fixture.createRechargeOrder).not.toHaveBeenCalled();
+    expect(fixture.onContinueRechargeOrder).not.toHaveBeenCalled();
+  });
+
+  test.each(["success", "session-invalid"] as const)("ignores a late %s detail response after controlled filter navigation", async (outcome) => {
+    const pendingDetail = deferred<PortalCoinOrder>();
+    const onSessionInvalid = vi.fn();
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn(() => pendingDetail.promise)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en", commerceClient: client, sessionRef: "session_filter_detail",
+      sessionGeneration: 1, onSessionInvalid, serviceOrders: [SERVICE_ORDER]
+    }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(ORDER.orderRef) }));
+    expect(client.getOrder).toHaveBeenCalledTimes(1);
+    selectOrderFilter("plans_services");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    selectOrderFilter("all");
+    const action = await screen.findByRole("button", { name: new RegExp(ORDER.orderRef) });
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    await act(async () => {
+      if (outcome === "success") pendingDetail.resolve(ORDER);
+      else pendingDetail.reject(new PortalCoinCommerceClientError("commerce_session_invalid", false));
+    });
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(onSessionInvalid).not.toHaveBeenCalled();
+    expect(client.getOrder).toHaveBeenCalledTimes(1);
+  });
+
+  test("clears controlled type, status and search filters and focuses the search field", async () => {
+    const fixture = compactOrderFixture("en");
+    const onFilterChange = vi.fn();
+    const onOrderSearchChange = vi.fn();
+    function Harness() {
+      const [filter, setFilter] = useState<PortalOrdersFilter>("plans_services");
+      const [orderSearch, setOrderSearch] = useState("unmatched search");
+      return createElement(PortalOrdersPanel, {
+        ...fixture.props, filter, orderSearch,
+        onFilterChange: (next) => { onFilterChange(next); setFilter(next); },
+        onOrderSearchChange: (next) => { onOrderSearchChange(next); setOrderSearch(next); }
+      });
+    }
+    render(createElement(Harness));
+    fireEvent.change(screen.getByRole("combobox", { name: "Status" }), { target: { value: "attention" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Clear filters" }));
+    expect(onFilterChange).toHaveBeenCalledExactlyOnceWith("all");
+    expect(onOrderSearchChange).toHaveBeenCalledExactlyOnceWith("");
+    expect(screen.getByRole("combobox", { name: "Status" })).toHaveValue("all");
+    const search = screen.getByRole("textbox", { name: "Search orders" });
+    expect(search).toHaveValue("");
+    expect(search).toHaveFocus();
+    expect(await screen.findByRole("button", { name: new RegExp(fixture.refs.coin) })).toBeInTheDocument();
+  });
+
+  test.each(["zh", "en"] as const)("%s explains Orders and Wallet in consumer-facing language", (locale) => {
+    render(createElement(PortalOrdersPanel, {
+      locale,
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+
+    const note = screen.getByRole("note", {
+      name: locale === "zh" ? "订单与钱包职责说明" : "Order and Wallet responsibilities"
+    });
+    expect(note).toHaveTextContent(locale === "zh"
+      ? "查看购买、充值与服务记录；余额变化请前往 Coins 钱包。"
+      : "View purchases, recharges and services; find balance changes in your Coins Wallet.");
+    expect(note).not.toHaveTextContent(/生命周期|账变|lifecycle|ledger/i);
+  });
+
+  test("loads durable Coins recharge orders into the unified center", async () => {
+    const providerNeutralOrder: PortalRechargeOrder = {
+      ...RECHARGE_ORDER,
+      amountMinor: 950,
+      currency: "CNY",
+      adapterKey: "chaojipay_v1",
+      paymentMethod: "alipay",
+      status: "entry_ready",
+      providerOrderRef: "chaojipay_order_001",
+    };
+    const rechargeClient = {
+      listOrders: vi.fn(async () => [providerNeutralOrder])
+    } as unknown as PortalRechargeClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      rechargeClient,
+      sessionRef: "session_recharge_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+
+    selectOrderFilter("coin_recharge");
+    const rowAction = await screen.findByRole("button", {
+      name: /payment_recharge_001.*30 Coins.*Awaiting payment/i
+    });
+    expect(screen.getByText("CNY 9.50")).toBeInTheDocument();
+    expect(rowAction).not.toHaveTextContent(/PayPal|Sandbox|chaojipay_v1/i);
+    fireEvent.click(rowAction);
+    const detail = screen.getByRole("region", {
+      name: "Coins recharge order detail"
+    });
+    const paymentMethodField = within(detail).getByText("Payment method").closest("div");
+    expect(paymentMethodField).not.toBeNull();
+    expect(within(paymentMethodField as HTMLElement).getByText("Alipay", {
+      selector: "strong"
+    })).toBeInTheDocument();
+    expect(within(detail).getAllByText("Alipay")).toHaveLength(1);
+    expect(within(detail).getByText("Credit").closest("div")).toHaveTextContent("30 Coins");
+    expect(detail).not.toHaveTextContent(/PayPal|Sandbox|chaojipay_v1|paid Coins/i);
+    expect(rechargeClient.listOrders).toHaveBeenCalledWith({
+      sessionRef: "session_recharge_orders"
+    });
+  });
+
+  test("continues only the exact server-ready recharge order without creating a new one", async () => {
+    const entryReadyOrder: PortalRechargeOrder = {
+      ...RECHARGE_ORDER,
+      status: "entry_ready",
+      walletOperationRef: null,
+      walletLotRef: null,
+      expiresAt: "2099-08-01T00:10:00.000Z",
+      nextAction: {
+        type: "redirect",
+        url: "https://cashier.example.test/continue/payment_recharge_001",
+        expiresAt: "2099-08-01T00:10:00.000Z"
+      }
+    };
+    const onContinueRechargeOrder = vi.fn(() => "redirected" as const);
+    const createOrder = vi.fn();
+    const rechargeClient = {
+      listOrders: vi.fn(async () => [entryReadyOrder]),
+      createOrder
+    } as unknown as PortalRechargeClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      rechargeClient,
+      sessionRef: "session_recharge_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      onContinueRechargeOrder,
+    }));
+
+    selectOrderFilter("coin_recharge");
+    const viewOrder = await screen.findByRole("button", {
+      name: /View.*payment_recharge_001.*30 Coins/i
+    });
+    fireEvent.click(viewOrder);
+    expect(screen.getByRole("region", { name: "Coins recharge order detail" }))
+      .toHaveTextContent(entryReadyOrder.orderRef);
+    expect(onContinueRechargeOrder).not.toHaveBeenCalled();
+    expect(createOrder).not.toHaveBeenCalled();
+    fireEvent.click(viewOrder);
+    const continuePayment = await screen.findByRole("button", {
+      name: /continue payment.*payment_recharge_001/i
+    });
+    fireEvent.click(continuePayment);
+
+    expect(onContinueRechargeOrder).toHaveBeenCalledTimes(1);
+    expect(onContinueRechargeOrder).toHaveBeenCalledWith(entryReadyOrder);
+    expect(createOrder).not.toHaveBeenCalled();
+    expect(screen.queryByRole("region", {
+      name: "Coins recharge order detail"
+    })).toBeNull();
+  });
+
+  test("shows an accessible error when an exact recharge handoff is blocked", async () => {
+    const entryReadyOrder: PortalRechargeOrder = {
+      ...RECHARGE_ORDER,
+      status: "entry_ready",
+      walletOperationRef: null,
+      walletLotRef: null,
+      expiresAt: "2099-08-01T00:10:00.000Z",
+      nextAction: {
+        type: "redirect",
+        url: "https://cashier.example.test/continue/payment_recharge_001",
+        expiresAt: "2099-08-01T00:10:00.000Z"
+      }
+    };
+    const rechargeClient = {
+      listOrders: vi.fn(async () => [entryReadyOrder])
+    } as unknown as PortalRechargeClient;
+    const onContinueRechargeOrder = vi.fn(() => "blocked" as const);
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      rechargeClient,
+      sessionRef: "session_recharge_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      onContinueRechargeOrder,
+    }));
+
+    selectOrderFilter("coin_recharge");
+    fireEvent.click(await screen.findByRole("button", {
+      name: /continue payment.*payment_recharge_001/i
+    }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Could not safely continue this payment. No new recharge order was created."
+    );
+    expect(onContinueRechargeOrder).toHaveBeenCalledWith(entryReadyOrder);
+  });
+
+  test.each(["order", "action"] as const)("keeps expired %s history visible without offering payment", async (field) => {
+    const entryReadyOrder: PortalRechargeOrder = {
+      ...RECHARGE_ORDER,
+      status: "entry_ready",
+      expiresAt: field === "order" ? "2000-01-01T00:00:00.000Z" : "2099-01-01T00:00:00.000Z",
+      nextAction: {
+        type: "redirect",
+        url: "https://cashier.example.test/synthetic-no-network",
+        expiresAt: field === "action" ? "2000-01-01T00:00:00.000Z" : "2099-01-01T00:00:00.000Z",
+      },
+    };
+    const onContinueRechargeOrder = vi.fn(() => "redirected" as const);
+    render(createElement(PortalOrdersPanel, {
+      locale: "en", commerceClient: null,
+      rechargeClient: { listOrders: vi.fn(async () => [entryReadyOrder]) } as unknown as PortalRechargeClient,
+      sessionRef: "session_recharge_orders", sessionGeneration: 1,
+      onSessionInvalid: vi.fn(), onContinueRechargeOrder,
+    }));
+
+    selectOrderFilter("coin_recharge");
+    expect(await screen.findByRole("button", { name: /view:.*payment_recharge_001/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /continue payment/i })).toBeNull();
+    expect(onContinueRechargeOrder).not.toHaveBeenCalled();
+  });
+
+  test("shows an explicit expiry message if a visible payment button expires before clicking", async () => {
+    const clock = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-09-05T12:00:00.000Z"));
+    try {
+      const entryReadyOrder: PortalRechargeOrder = {
+        ...RECHARGE_ORDER,
+        status: "entry_ready",
+        expiresAt: "2026-09-05T12:01:00.000Z",
+        nextAction: {
+          type: "redirect", url: "https://cashier.example.test/synthetic-no-network",
+          expiresAt: "2026-09-05T12:00:01.000Z",
+        },
+      };
+      const redirect = vi.fn();
+      const continuation = vi.fn((order: PortalRechargeOrder) => handoffPortalRechargeOrderToPayment(order, redirect));
+      render(createElement(PortalOrdersPanel, {
+        locale: "en", commerceClient: null,
+        rechargeClient: { listOrders: vi.fn(async () => [entryReadyOrder]) } as unknown as PortalRechargeClient,
+        sessionRef: "session_recharge_orders", sessionGeneration: 1,
+        onSessionInvalid: vi.fn(), onContinueRechargeOrder: continuation,
+      }));
+      selectOrderFilter("coin_recharge");
+      const button = await screen.findByRole("button", { name: /continue payment.*payment_recharge_001/i });
+
+      clock.mockReturnValue(Date.parse("2026-09-05T12:00:01.000Z"));
+      fireEvent.click(button);
+
+      expect(redirect).not.toHaveBeenCalled();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "This payment entry has expired. Refresh Orders to check its status. No new recharge order was created."
+      );
+      expect(screen.queryByRole("button", { name: /continue payment/i })).toBeNull();
+    } finally {
+      clock.mockRestore();
+      window.sessionStorage.clear();
+    }
+  });
+
+  test.each([
+    "created",
+    "pending",
+    "payment_verified",
+    "credited",
+    "failed_no_charge",
+    "reconciliation_required",
+    "expired",
+  ] as const)("does not offer continuation for a %s recharge order", async (status) => {
+    const rechargeClient = {
+      listOrders: vi.fn(async () => [{
+        ...RECHARGE_ORDER,
+        status,
+        nextAction: {
+          type: "redirect" as const,
+          url: "https://cashier.example.test/continue/payment_recharge_001",
+          expiresAt: "2026-08-01T00:10:00.000Z",
+        },
+      }])
+    } as unknown as PortalRechargeClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      rechargeClient,
+      sessionRef: "session_recharge_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      onContinueRechargeOrder: vi.fn(() => "redirected" as const),
+    }));
+
+    selectOrderFilter("coin_recharge");
+    await waitFor(() => expect(rechargeClient.listOrders).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole("button", { name: /continue payment/i })).toBeNull();
+  });
+
+  test("does not offer continuation when a ready recharge has no server action", async () => {
+    const rechargeClient = {
+      listOrders: vi.fn(async () => [{
+        ...RECHARGE_ORDER,
+        status: "entry_ready" as const,
+        nextAction: null,
+      }])
+    } as unknown as PortalRechargeClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      rechargeClient,
+      sessionRef: "session_recharge_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      onContinueRechargeOrder: vi.fn(() => "redirected" as const),
+    }));
+
+    selectOrderFilter("coin_recharge");
+    await waitFor(() => expect(rechargeClient.listOrders).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole("button", { name: /continue payment/i })).toBeNull();
+  });
+
+  test("keeps the labelled Orders search contract while composing the frozen Empty and Filled field", () => {
+    const onOrderSearchChange = vi.fn();
+    const props: DirectPanelProps = {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      orderSearch: "",
+      onOrderSearchChange
+    };
+    const view = render(PortalOrdersPanel(props));
+
+    const input = screen.getByRole("textbox", { name: "Search orders" });
+    expect(input).not.toHaveAttribute("role", "searchbox");
+    const field = input.parentElement;
+    expect(field).toHaveClass("portal-order-search-field");
+    expect(field?.tagName).toBe("SPAN");
+    expect(field).toHaveAttribute("data-state", "empty");
+    const icon = field?.firstElementChild;
+    expect(icon?.tagName).toBe("svg");
+    expect(icon).toHaveAttribute("aria-hidden", "true");
+    fireEvent.change(input, { target: { value: "order_001" } });
+    expect(onOrderSearchChange).toHaveBeenCalledWith("order_001");
+
+    view.rerender(PortalOrdersPanel({
+      ...props,
+      orderSearch: "order_001"
+    }));
+    expect(screen.getByRole("textbox", {
+      name: "Search orders"
+    }).parentElement).toHaveAttribute("data-state", "filled");
+  });
+
+  test("defines every scoped Orders color token used by the component styles", () => {
+    const css = readFileSync("src/styles/portal-static-preserve/user-portal-commerce.css", "utf8");
+    const used = [...css.matchAll(/var\((--portal-orders-[a-z-]+)\)/g)].map((match) => match[1]);
+    const usedTokens = new Set(used);
+    for (const theme of ["dark", "light"] as const) {
+      const themeTokens = ordersThemeTokens(css, theme);
+      expect(new Set(themeTokens.keys())).toEqual(usedTokens);
+      expect(contrastRatio(
+        themeTokens.get("--portal-orders-accent") ?? "",
+        themeTokens.get("--portal-orders-on-accent") ?? ""
+      )).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(
+        themeTokens.get("--portal-orders-focus") ?? "",
+        themeTokens.get("--portal-orders-surface") ?? ""
+      )).toBeGreaterThanOrEqual(3);
+    }
+    expect(css).not.toMatch(/\.portal-v2-shell \.portal-orders-[^{]+\{[^}]*var\(--portal-v2-/s);
+  });
+
+  test("keeps the empty row spanning the table without restoring mobile cards", () => {
+    const css = readFileSync("src/styles/portal-static-preserve/user-portal-commerce.css", "utf8");
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.append(style);
+    try {
+      const rules = Array.from(style.sheet?.cssRules ?? []);
+      const declaration = (candidates: CSSRule[], selector: string, property: string) => {
+        let value = "";
+        for (const rule of candidates) {
+          if (rule instanceof CSSStyleRule && rule.selectorText.split(",")
+            .some((part) => part.replace(/\s+/g, " ").trim() === selector)) {
+            value = rule.style.getPropertyValue(property).trim() || value;
+          }
+        }
+        return value;
+      };
+      const emptyCell = ".portal-v2-shell .portal-orders-panel td.portal-order-empty-state";
+      const emptyWrap = '.portal-v2-shell .portal-orders-panel .portal-order-table-wrap[data-empty="true"]';
+      // Only direct CSSStyleRules count here: declarations inside desktop media
+      // cannot accidentally satisfy an all-width empty-state contract.
+      expect(declaration(rules, emptyCell, "display")).toBe("table-cell");
+      expect(declaration(rules, emptyWrap, "overflow-x")).toBe("hidden");
+      expect(declaration(rules, `${emptyWrap} .portal-order-table`, "min-width")).toBe("100%");
+      for (const rule of rules) {
+        if (rule instanceof CSSMediaRule && rule.conditionText === "(max-width: 720px)") {
+          expect(["", "table-cell"]).toContain(declaration(Array.from(rule.cssRules), emptyCell, "display"));
+        }
+      }
+    } finally {
+      style.remove();
+    }
+  });
+
+  test("themes the Orders search input and every unified status badge", () => {
+    const css = readFileSync("src/styles/portal-static-preserve/user-portal-commerce.css", "utf8");
+    expect(css).toMatch(
+      /\.portal-v2-shell \.portal-orders-panel \.portal-order-search-input\s*\{[^}]*background:\s*var\(--portal-orders-surface\);[^}]*color:\s*var\(--portal-orders-text\);/s
+    );
+    expect(css).toMatch(
+      /\.portal-v2-shell \.portal-orders-panel \.portal-order-search-input::placeholder\s*\{[^}]*color:\s*var\(--portal-orders-muted\);/s
+    );
+    expect(css).toMatch(
+      /\.portal-v2-shell \.portal-orders-panel \.portal-order-search-input:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--portal-orders-focus\);/s
+    );
+    for (const status of ["in_progress", "successful", "attention", "closed"]) {
+      expect(css).toMatch(
+        new RegExp(`\\.portal-v2-shell \\.portal-orders-panel \\.portal-order-status\\.${status}\\s*\\{[^}]*var\\(--portal-orders-${status.replace("_", "-")}-`, "s")
+      );
+    }
+  });
+
+  test("exposes product and user-facing payment and fulfillment context in each consumption order button name", async () => {
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_accessible_order",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+
+    expect(await screen.findByRole("button", {
+      name: /order_consumption_001.*Monthly 50 GB.*Payment complete.*Delivered/i
+    })).toBeInTheDocument();
+  });
+
+  test("labels processing fulfillment as delivery in progress", async () => {
+    const processingOrder: PortalCoinOrder = {
+      ...ORDER,
+      orderRef: "order_consumption_processing",
+      fulfillment: { status: "processing", safeCode: null }
+    };
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({
+        orders: [processingOrder],
+        nextCursor: null
+      })
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_processing_order",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn()
+    }));
+
+    expect(await screen.findByRole("button", {
+      name: /order_consumption_processing.*Payment complete.*Delivering/i
+    })).toBeInTheDocument();
+    expect(within(screen.getByRole("table", { name: "Orders" }))
+      .queryByText("Needs attention")).toBeNull();
+  });
+
+  test("gives every order action unique context and links expanded details", async () => {
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn().mockResolvedValue(ORDER)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_accessible_details",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [PAYMENT_ORDER],
+      serviceOrders: [SERVICE_ORDER]
+    }));
+
+    const table = screen.getByRole("table", { name: "Orders" });
+    within(table).getAllByRole("columnheader").forEach((header) => {
+      expect(header).toHaveAttribute("scope", "col");
+    });
+    expect(within(table).getByRole("button", {
+      name: /View.*pay_001.*Basic monthly.*Payment failed/i
+    })).toBeInTheDocument();
+    const serviceAction = within(table).getByRole("button", {
+      name: /View.*service_request_001.*Monthly basic.*Active/i
+    });
+    expect(serviceAction).toHaveAttribute("aria-expanded", "false");
+    expect(serviceAction).not.toHaveAttribute("aria-controls");
+    const legacyAction = within(table).getByRole("button", {
+      name: /View.*pay_001.*Basic monthly.*Payment failed/i
+    });
+    expect(legacyAction).toHaveAttribute("aria-expanded", "false");
+    expect(legacyAction).not.toHaveAttribute("aria-controls");
+
+    const coinsAction = await within(table).findByRole("button", {
+      name: /order_consumption_001.*Monthly 50 GB/i
+    });
+    expect(coinsAction).toHaveAttribute("aria-expanded", "false");
+    expect(coinsAction).not.toHaveAttribute("aria-controls");
+    fireEvent.click(coinsAction);
+
+    const detail = await screen.findByRole("region", {
+      name: "Coins consumption order detail"
+    });
+    const detailId = coinsAction.getAttribute("aria-controls");
+    expect(detailId).toBeTruthy();
+    expect(coinsAction).toHaveAttribute("aria-expanded", "true");
+    expect(detail).toHaveAttribute("id", detailId);
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(1);
+
+    fireEvent.click(coinsAction);
+
+    expect(coinsAction).toHaveAttribute("aria-expanded", "false");
+    expect(coinsAction).not.toHaveAttribute("aria-controls");
+    expect(screen.queryByRole("region", {
+      name: "Coins consumption order detail"
+    })).toBeNull();
+    expect(client.getOrder).toHaveBeenCalledTimes(1);
+  });
+
+  test("keeps a pending legacy payment inside Orders as a collapsible read-only detail", () => {
+    const pendingPaymentOrder: PortalPaymentOrder = {
+      ...PAYMENT_ORDER,
+      orderRef: "pay_pending_001",
+      status: "pending_payment",
+      paidAt: undefined
+    };
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [pendingPaymentOrder]
+    }));
+
+    const table = screen.getByRole("table", { name: "Orders" });
+    const action = within(table).getByRole("button", {
+      name: /View.*pay_pending_001.*Basic monthly.*Pending payment/i
+    });
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    expect(action).not.toHaveAttribute("aria-controls");
+    expect(within(table).queryByRole("button", { name: /Pay now/i })).toBeNull();
+
+    fireEvent.click(action);
+
+    const detail = screen.getByRole("region", {
+      name: /Plan payment details: P-pending_001/i
+    });
+    const detailId = action.getAttribute("aria-controls");
+    expect(detailId).toBeTruthy();
+    expect(action).toHaveAttribute("aria-expanded", "true");
+    expect(detail).toHaveAttribute("id", detailId);
+    expect(within(detail).getByText("Pending payment")).toBeInTheDocument();
+
+    fireEvent.click(action);
+
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    expect(action).not.toHaveAttribute("aria-controls");
+    expect(screen.queryByRole("region", {
+      name: /Plan payment details: P-pending_001/i
+    })).toBeNull();
+  });
+
+  test("does not restore a previously selected service after legacy detail closes", () => {
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: "session_single_detail",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [PAYMENT_ORDER],
+      serviceOrders: [SERVICE_ORDER],
+      selectedServiceOrderRef: SERVICE_ORDER.requestRef
+    }));
+
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", {
+      name: /View.*service_request_001.*Monthly basic.*Active/i
+    }));
+    expect(screen.getByRole("region", {
+      name: /Service record details:/i
+    })).toBeInTheDocument();
+    const legacyAction = screen.getByRole("button", {
+      name: /View.*pay_001.*Basic monthly.*Payment failed/i
+    });
+    fireEvent.click(legacyAction);
+    expect(screen.getByRole("region", {
+      name: /Plan payment details: P-001/i
+    })).toBeInTheDocument();
+    expect(screen.queryByRole("region", {
+      name: /Service record details:/i
+    })).toBeNull();
+
+    fireEvent.click(legacyAction);
+
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(legacyAction).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", {
+      name: /View.*service_request_001.*Monthly basic.*Active/i
+    })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test.each(["zh", "en"] as const)("%s keeps every order collapsed on entry despite the parent's selected service", async (locale) => {
+    const fixture = compactOrderFixture(locale);
+    const onOpenServiceOrder = vi.fn();
+    render(createElement(PortalOrdersPanel, {
+      ...fixture.props,
+      selectedServiceOrderRef: fixture.refs.service,
+      onOpenServiceOrder
+    }));
+
+    for (const ref of Object.values(fixture.refs)) {
+      const action = await screen.findByRole("button", { name: new RegExp(ref) });
+      expect(action).toHaveAttribute("aria-expanded", "false");
+      expect(action).not.toHaveAttribute("aria-controls");
+    }
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    selectOrderFilter("plans_services");
+    const action = screen.getByRole("button", { name: new RegExp(fixture.refs.service) });
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    expect(onOpenServiceOrder).not.toHaveBeenCalled();
+
+    fireEvent.click(action);
+    expect(action).toHaveAttribute("aria-expanded", "true");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(1);
+    expect(onOpenServiceOrder).toHaveBeenCalledExactlyOnceWith(fixture.props.serviceOrders![0]);
+    fireEvent.click(action);
+    expect(action).toHaveAttribute("aria-expanded", "false");
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(onOpenServiceOrder).toHaveBeenCalledTimes(1);
+    expect(fixture.createCoinOrder).not.toHaveBeenCalled();
+    expect(fixture.createRechargeOrder).not.toHaveBeenCalled();
+    expect(fixture.onContinueRechargeOrder).not.toHaveBeenCalled();
+  });
+
+  test("does not turn parent service selection updates into a detail-open command", () => {
+    const secondServiceOrder: PortalServiceOrder = {
+      ...SERVICE_ORDER,
+      requestRef: "service_request_002",
+      request: { ...SERVICE_REQUEST, requestRef: "service_request_002" }
+    };
+    const onOpenServiceOrder = vi.fn();
+    const props: DirectPanelProps = {
+      locale: "en", commerceClient: null, sessionRef: "session_parent_selection",
+      sessionGeneration: 1, onSessionInvalid: vi.fn(),
+      serviceOrders: [SERVICE_ORDER, secondServiceOrder], onOpenServiceOrder
+    };
+    const view = render(createElement(PortalOrdersPanel, props));
+    view.rerender(createElement(PortalOrdersPanel, {
+      ...props, selectedServiceOrderRef: SERVICE_ORDER.requestRef
+    }));
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+
+    const action = screen.getByRole("button", { name: /View.*service_request_001/i });
+    fireEvent.click(action);
+    expect(action).toHaveAttribute("aria-expanded", "true");
+    view.rerender(createElement(PortalOrdersPanel, {
+      ...props, selectedServiceOrderRef: secondServiceOrder.requestRef
+    }));
+    expect(action).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /View.*service_request_002/i }))
+      .toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(action);
+    view.rerender(createElement(PortalOrdersPanel, {
+      ...props, selectedServiceOrderRef: SERVICE_ORDER.requestRef
+    }));
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(onOpenServiceOrder).toHaveBeenCalledExactlyOnceWith(SERVICE_ORDER);
+  });
+
+  test("clears a user-opened service detail on identity change without expanding the new parent's selection", () => {
+    const secondServiceOrder: PortalServiceOrder = {
+      ...SERVICE_ORDER,
+      requestRef: "service_request_new_identity",
+      request: { ...SERVICE_REQUEST, requestRef: "service_request_new_identity" }
+    };
+    const props: DirectPanelProps = {
+      locale: "en", commerceClient: null, sessionRef: "session_service_before",
+      sessionGeneration: 1, onSessionInvalid: vi.fn(), serviceOrders: [SERVICE_ORDER]
+    };
+    const view = render(createElement(PortalOrdersPanel, props));
+    fireEvent.click(screen.getByRole("button", { name: /View.*service_request_001/i }));
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(1);
+
+    view.rerender(createElement(PortalOrdersPanel, {
+      ...props, sessionRef: "session_service_after", sessionGeneration: 2,
+      serviceOrders: [secondServiceOrder], selectedServiceOrderRef: secondServiceOrder.requestRef
+    }));
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /View.*service_request_new_identity/i }))
+      .toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: /service_request_001/i })).toBeNull();
+  });
+
+  test("exposes the scrollable Orders table as a named keyboard-focusable region", () => {
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [PAYMENT_ORDER]
+    }));
+
+    const scrollRegion = screen.getByRole("region", {
+      name: "Scrollable orders table"
+    });
+    expect(scrollRegion).toHaveAttribute("tabindex", "0");
+    expect(within(scrollRegion).getByRole("table", { name: "Orders" })).toBeInTheDocument();
+  });
+
+  test("keeps a nonempty mobile table as a named keyboard-focusable region", () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 720
+    });
+    try {
+      render(createElement(PortalOrdersPanel, {
+        locale: "en",
+        commerceClient: null,
+        sessionRef: null,
+        sessionGeneration: 1,
+        onSessionInvalid: vi.fn(),
+        legacyPaymentOrders: [PAYMENT_ORDER]
+      }));
+
+      const wrapper = document.querySelector(".portal-order-table-wrap");
+      expect(wrapper).not.toBeNull();
+      expect(wrapper).toHaveAttribute("role", "region");
+      expect(wrapper).toHaveAttribute("aria-label", "Scrollable orders table");
+      expect(wrapper).toHaveAttribute("tabindex", "0");
+      expect(screen.getByRole("region", {
+        name: "Scrollable orders table"
+      })).toBe(wrapper);
+      expect(within(wrapper as HTMLElement).getByRole("table", { name: "Orders" })).toBeInTheDocument();
+    } finally {
+      cleanup();
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: originalWidth
+      });
+    }
+  });
+
+  test("keeps accessible action names unique when displayed service refs share a prefix", async () => {
+    const secondServiceOrder: PortalServiceOrder = {
+      ...SERVICE_ORDER,
+      requestRef: "service_request_002"
+    };
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_unique_service_refs",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      serviceOrders: [SERVICE_ORDER, secondServiceOrder]
+    }));
+
+    const table = await screen.findByRole("table", { name: "Orders" });
+    const first = within(table).getByRole("button", {
+      name: /View.*service_request_001.*Monthly basic.*Active/i
+    });
+    const second = within(table).getByRole("button", {
+      name: /View.*service_request_002.*Monthly basic.*Active/i
+    });
+    expect(first).not.toHaveAccessibleName(second.getAttribute("aria-label") ?? "");
+  });
+
+  test("does not announce an empty result while the Coins source is loading", () => {
+    const pending = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const client = {
+      listOrders: vi.fn(() => pending.promise)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_loading_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn()
+    }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Loading Marketplace orders…"
+    );
+    expect(screen.queryByText("No matching orders")).toBeNull();
+    expect(screen.queryByText("No Coins consumption orders.")).toBeNull();
+  });
+
+  test("keeps the table layout explicit while Orders data is loading", () => {
+    const pending = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const client = {
+      listOrders: vi.fn(() => pending.promise)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_loading_layout",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn()
+    }));
+
+    const tableWrap = document.querySelector(".portal-order-table-wrap");
+    expect(tableWrap).toHaveAttribute("data-loading", "true");
+    expect(tableWrap).toHaveAttribute("aria-busy", "true");
+    expect(tableWrap?.querySelector(".portal-order-loading-state")).toHaveAttribute("colspan", "6");
+    expect(screen.getByText("Loading Marketplace orders…", {
+      selector: ".portal-order-loading-state span"
+    })).toBeInTheDocument();
+  });
+
+  test("switches from a Coins detail to the selected service in the single detail surface", async () => {
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn().mockResolvedValue(ORDER)
+    } as unknown as PortalCoinCommerceClient;
+
+    function Harness() {
+      const [selectedServiceOrderRef, setSelectedServiceOrderRef] = useState<string | null>(null);
+      return createElement(PortalOrdersPanelComponent, {
+        locale: "en",
+        commerceClient: client,
+        sessionRef: "session_switch_detail",
+        sessionGeneration: 1,
+        onSessionInvalid: vi.fn(),
+        legacyPaymentOrders: [],
+        serviceOrders: [SERVICE_ORDER],
+        selectedServiceOrderRef,
+        orderSearch: "",
+        onOrderSearchChange: () => undefined,
+        onOpenServiceOrder: (order) => setSelectedServiceOrderRef(order.requestRef),
+        onOpenMarketplace: () => undefined
+      });
+    }
+
+    render(createElement(Harness));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(ORDER.orderRef) }));
+    expect(await screen.findByRole("region", { name: "Coins consumption order detail" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", {
+      name: /View.*service_request_001.*Monthly basic.*Active/i
+    }));
+    expect(screen.queryByRole("region", { name: "Coins consumption order detail" })).toBeNull();
+    expect(screen.getByText("Client")).toBeInTheDocument();
+    expect(document.querySelectorAll(".portal-order-detail-row")).toHaveLength(1);
+  });
+
+  test("invalidates an in-flight Coins detail before switching to a service detail", async () => {
+    const staleDetail = deferred<PortalCoinOrder>();
+    const onSessionInvalid = vi.fn();
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn(() => staleDetail.promise)
+    } as unknown as PortalCoinCommerceClient;
+
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_switch_stale_detail",
+      sessionGeneration: 1,
+      onSessionInvalid,
+      serviceOrders: [SERVICE_ORDER]
+    }));
+
+    fireEvent.click(await screen.findByRole("button", {
+      name: new RegExp(ORDER.orderRef)
+    }));
+    await waitFor(() => expect(client.getOrder).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole("button", {
+      name: /View.*service_request_001.*Monthly basic.*Active/i
+    }));
+    expect(screen.getByText("Client")).toBeInTheDocument();
+
+    await act(async () => {
+      staleDetail.reject(new PortalCoinCommerceClientError(
+        "commerce_session_invalid",
+        false
+      ));
+      await Promise.resolve();
+    });
+
+    expect(onSessionInvalid).not.toHaveBeenCalled();
+    expect(screen.queryByRole("region", {
+      name: "Coins consumption order detail"
+    })).toBeNull();
+    expect(screen.getByText("Client")).toBeInTheDocument();
+  });
+
+  test("turns the empty Orders table into a recoverable next step", async () => {
+    const onOpenMarketplace = vi.fn();
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_empty_plans",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      onOpenMarketplace
+    }));
+
+    expect(await screen.findByText("No orders yet")).toBeInTheDocument();
+    const tableWrap = document.querySelector(".portal-order-table-wrap");
+    expect(tableWrap).not.toBeNull();
+    expect(tableWrap).toHaveAttribute("data-empty", "true");
+    expect(tableWrap?.querySelector(".portal-order-empty-state")).toHaveAttribute("colspan", "6");
+    expect(tableWrap).not.toHaveAttribute("role");
+    expect(tableWrap).not.toHaveAttribute("tabindex");
+    expect(screen.getAllByRole("button", {
+      name: "Go to Marketplace"
+    })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Go to Marketplace" }));
+    expect(onOpenMarketplace).toHaveBeenCalledTimes(1);
+
+    selectOrderFilter("plans_services");
+
+    expect(screen.getByText("No matching orders")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+
+    expect(screen.getByRole("combobox", { name: "Test parent order filter" })).toHaveValue("all");
+    expect(screen.getByRole("textbox", { name: "Search orders" })).toHaveFocus();
+    expect(await screen.findByText("No orders yet")).toBeInTheDocument();
+  });
+
+  test("keeps focus inside Orders when loading resolves to the desktop empty state", async () => {
+    const list = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const client = {
+      listOrders: vi.fn(() => list.promise)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_empty_focus",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn()
+    }));
+
+    const loadingMarketplaceButton = screen.getByRole("button", {
+      name: "Go to Marketplace"
+    });
+    loadingMarketplaceButton.focus();
+    expect(document.activeElement).toBe(loadingMarketplaceButton);
+
+    await act(async () => {
+      list.resolve({ orders: [], nextCursor: null });
+      await list.promise;
+    });
+
+    expect(await screen.findByText("No orders yet")).toBeInTheDocument();
+    expect(document.activeElement).toBe(screen.getByRole("button", {
+      name: "Go to Marketplace"
+    }));
+  });
+
+  test("returns focus to the stable toolbar action when the desktop empty state gains an order", async () => {
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    const baseProps = {
+      locale: "en" as const,
+      commerceClient: client,
+      sessionRef: "session_empty_focus_return",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn()
+    };
+    const { rerender } = render(createElement(PortalOrdersPanel, baseProps));
+
+    expect(await screen.findByText("No orders yet")).toBeInTheDocument();
+    const emptyMarketplaceButton = screen.getByRole("button", {
+      name: "Go to Marketplace"
+    });
+    emptyMarketplaceButton.focus();
+    expect(document.activeElement).toBe(emptyMarketplaceButton);
+
+    rerender(createElement(PortalOrdersPanel, {
+      ...baseProps,
+      serviceOrders: [SERVICE_ORDER]
+    }));
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole("button", {
+        name: "Go to Marketplace"
+      }));
+    });
+    expect(screen.getByText("Monthly basic")).toBeInTheDocument();
+  });
+
+  test("preserves the legacy Orders empty state on mobile", async () => {
+    const restoreViewport = installMobileViewport();
+    try {
+      const client = {
+        listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+      } as unknown as PortalCoinCommerceClient;
+      render(createElement(PortalOrdersPanel, {
+        locale: "en",
+        commerceClient: client,
+        sessionRef: "session_empty_mobile",
+        sessionGeneration: 1,
+        onSessionInvalid: vi.fn()
+      }));
+
+      expect(await screen.findByText("No Coins consumption orders.")).toBeInTheDocument();
+      expect(screen.queryByText("No orders yet")).toBeNull();
+      expect(screen.getAllByRole("button", {
+        name: "Go to Marketplace"
+      })).toHaveLength(1);
+      const tableWrap = document.querySelector(".portal-order-table-wrap");
+      expect(tableWrap).not.toBeNull();
+      expect(tableWrap).toHaveAttribute("data-empty", "true");
+      expect(tableWrap).not.toHaveAttribute("role");
+      expect(tableWrap).not.toHaveAttribute("tabindex");
+    } finally {
+      restoreViewport();
+    }
+  });
+
+  test("marks filtered mobile results empty without hiding the toolbar CTA or adding a scroll stop", async () => {
+    const restoreViewport = installMobileViewport();
+    try {
+      const client = {
+        listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+      } as unknown as PortalCoinCommerceClient;
+      render(createElement(PortalOrdersPanel, {
+        locale: "en", commerceClient: client,
+        sessionRef: "session_filtered_empty_mobile", sessionGeneration: 1,
+        onSessionInvalid: vi.fn(), legacyPaymentOrders: [PAYMENT_ORDER]
+      }));
+      const action = await screen.findByRole("button", { name: /View.*pay_001/ });
+      expect(action).toBeInTheDocument();
+      const tableWrap = document.querySelector(".portal-order-table-wrap");
+      expect(tableWrap).not.toHaveAttribute("data-empty");
+      expect(tableWrap).toHaveAttribute("role", "region");
+      expect(tableWrap).toHaveAttribute("tabindex", "0");
+      fireEvent.change(screen.getByLabelText("Status"), { target: { value: "closed" } });
+      await waitFor(() => {
+        expect(tableWrap?.querySelector(".portal-order-empty-state")).toBeInTheDocument();
+        expect(tableWrap).toHaveAttribute("data-empty", "true");
+      });
+      expect(screen.queryByRole("button", { name: /View.*pay_001/ })).toBeNull();
+      expect(tableWrap).not.toHaveAttribute("role");
+      expect(tableWrap).not.toHaveAttribute("tabindex");
+      expect(tableWrap?.querySelector(".portal-order-empty-state")).toHaveAttribute("colspan", "6");
+      expect(screen.getAllByRole("button", { name: "Go to Marketplace" })).toHaveLength(1);
+      expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+    } finally {
+      restoreViewport();
+    }
+  });
+
+  test("keeps legacy and service rows when the Coins source is unavailable", async () => {
+    const client = {
+      listOrders: vi.fn().mockRejectedValue(
+        new PortalCoinCommerceClientError("commerce_unavailable", true)
+      )
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_partial_orders",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [PAYMENT_ORDER],
+      serviceOrders: [SERVICE_ORDER]
+    }));
+
+    expect(await screen.findByText("Some Marketplace orders are temporarily unavailable")).toBeInTheDocument();
+    const table = screen.getByRole("table", { name: "Orders" });
+    expect(within(table).getAllByText("Plan payment")).toHaveLength(1);
+    expect(within(table).getAllByText("Service record")).toHaveLength(1);
+  });
+
+  test("formats a legacy amount with the currency from its DTO", () => {
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [{
+        ...PAYMENT_ORDER,
+        orderRef: "pay_usd_001",
+        currency: "USD",
+        amountMinor: 1_234
+      }]
+    }));
+
+    expect(within(screen.getByRole("table", { name: "Orders" })).getByText("USD 12.34"))
+      .toBeInTheDocument();
+    expect(screen.queryByText("CNY 12.34")).toBeNull();
+  });
+
+  test("derives English legacy plan names from planId when planLabel is missing or Chinese", () => {
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [
+        {
+          ...PAYMENT_ORDER,
+          orderRef: "pay_without_label",
+          planId: "monthly_basic",
+          planLabel: undefined
+        },
+        {
+          ...PAYMENT_ORDER,
+          orderRef: "pay_chinese_default_label",
+          planId: "monthly_plus",
+          planLabel: "标准月付"
+        }
+      ]
+    }));
+
+    const table = within(screen.getByRole("table", { name: "Orders" }));
+    expect(table.getByText("Basic monthly")).toBeInTheDocument();
+    expect(table.getByText("Standard monthly")).toBeInTheDocument();
+    expect(table.queryByText("基础月付")).toBeNull();
+    expect(table.queryByText("标准月付")).toBeNull();
+  });
+
+  test("invalidates old list and detail reads before a new identity passive effect can run", async () => {
+    const oldAppend = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const oldDetail = deferred<PortalCoinOrder>();
+    const cursor = { afterCreatedAt: ORDER.createdAt, afterOrderRef: ORDER.orderRef };
+    const oldClient = {
+      listOrders: vi.fn()
+        .mockResolvedValueOnce({ orders: [ORDER], nextCursor: cursor })
+        .mockImplementationOnce(() => oldAppend.promise),
+      getOrder: vi.fn(() => oldDetail.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const newClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    const onSessionInvalid = vi.fn();
+    const identityCommitted = deferred<void>();
+    const commitAction = () => {
+      const invalid = new PortalCoinCommerceClientError("commerce_session_invalid", false);
+      oldAppend.reject(invalid);
+      oldDetail.reject(invalid);
+      identityCommitted.resolve();
+    };
+    const renderPanel = (current: "old" | "new") => createElement(Fragment, null,
+      createElement(PortalOrdersPanel, {
+        locale: "en",
+        commerceClient: current === "old" ? oldClient : newClient,
+        sessionRef: current === "old" ? "session_commit_old" : "session_commit_new",
+        sessionGeneration: current === "old" ? 1 : 2,
+        onSessionInvalid,
+      }),
+      createElement(CommitPhaseAction, {
+        action: commitAction,
+        armed: current === "new"
+      })
+    );
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const actEnvironment = globalThis as typeof globalThis & {
+      IS_REACT_ACT_ENVIRONMENT?: boolean;
+    };
+    const previousActEnvironment = actEnvironment.IS_REACT_ACT_ENVIRONMENT;
+    try {
+      await act(async () => root.render(renderPanel("old")));
+      const panel = within(container);
+      fireEvent.click(await panel.findByRole("button", { name: new RegExp(ORDER.orderRef) }));
+      fireEvent.click(panel.getByRole("button", { name: "Load more consumption orders" }));
+      await waitFor(() => {
+        expect(oldClient.getOrder).toHaveBeenCalledTimes(1);
+        expect(oldClient.listOrders).toHaveBeenCalledTimes(2);
+      });
+
+      actEnvironment.IS_REACT_ACT_ENVIRONMENT = false;
+      root.render(renderPanel("new"));
+      await identityCommitted.promise;
+      await Promise.resolve();
+
+      expect(onSessionInvalid).not.toHaveBeenCalled();
+      expect(panel.queryByRole("region", { name: "Coins consumption order detail" })).toBeNull();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    } finally {
+      actEnvironment.IS_REACT_ACT_ENVIRONMENT = previousActEnvironment;
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
+
+  test("rejects visible state produced by a different client, session, or generation", () => {
+    const client = {} as PortalCoinCommerceClient;
+    const identity = { commerceClient: client, sessionRef: "session_a", sessionGeneration: 1 };
+    expect(portalOrdersIdentityMatches(identity, identity)).toBe(true);
+    expect(portalOrdersIdentityMatches(identity, { ...identity, sessionRef: "session_b" })).toBe(false);
+    expect(portalOrdersIdentityMatches(identity, { ...identity, sessionGeneration: 2 })).toBe(false);
+    expect(portalOrdersIdentityMatches(identity, { ...identity, commerceClient: {} as PortalCoinCommerceClient })).toBe(false);
+  });
+
+  test("loads bounded consumption pages, preserves server order, and opens a read-only detail", async () => {
+    const olderOrder = { ...ORDER, orderRef: "order_consumption_002", createdAt: "2026-07-27T11:00:00.000Z" };
+    const client = {
+      listOrders: vi.fn()
+        .mockResolvedValueOnce({
+          orders: [ORDER],
+          nextCursor: {
+            afterCreatedAt: ORDER.createdAt,
+            afterOrderRef: ORDER.orderRef
+          }
+        })
+        .mockResolvedValueOnce({ orders: [olderOrder], nextCursor: null }),
+      getOrder: vi.fn().mockResolvedValue(ORDER)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_current",
+      sessionGeneration: 7,
+      onSessionInvalid: vi.fn(),
+    }));
+
+    await waitFor(() => expect(client.listOrders).toHaveBeenCalledWith({
+      sessionRef: "session_current",
+      limit: 25
+    }));
+    expect(await screen.findByRole("button", { name: /order_consumption_001/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Load more consumption orders" }));
+    await waitFor(() => expect(client.listOrders).toHaveBeenLastCalledWith({
+      sessionRef: "session_current",
+      limit: 25,
+      afterCreatedAt: "2026-07-27T12:00:00.000Z",
+      afterOrderRef: "order_consumption_001"
+    }));
+    expect(screen.getAllByRole("button", { name: /order_consumption_00/ })).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: /order_consumption_001/ }));
+    await waitFor(() => expect(client.getOrder).toHaveBeenCalledWith({
+      sessionRef: "session_current",
+      orderRef: "order_consumption_001"
+    }));
+    expect(await screen.findByText("Payment complete")).toBeInTheDocument();
+    expect(screen.getByText("Delivered")).toBeInTheDocument();
+    expect(screen.queryByText("captured")).toBeNull();
+    expect(screen.queryByText("delivered")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^(cancel|pay|deliver)\b/i })).toBeNull();
+  });
+
+  test("maps only the current session-invalid read to logout without exposing recharge placeholders", async () => {
+    const currentInvalid = vi.fn();
+    const currentClient = {
+      listOrders: vi.fn().mockRejectedValue(new PortalCoinCommerceClientError("commerce_session_invalid", false))
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: currentClient,
+      sessionRef: "session_current",
+      sessionGeneration: 4,
+      onSessionInvalid: currentInvalid,
+    }));
+    await waitFor(() => expect(currentInvalid).toHaveBeenCalledTimes(1));
+
+    expect(screen.queryByText("Recharge order data source is not connected yet")).toBeNull();
+    expect(screen.queryByRole("tab")).toBeNull();
+  });
+
+  test("ignores a stale session-invalid rejection after the session changes", async () => {
+    const oldRead = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const oldClient = {
+      listOrders: vi.fn(() => oldRead.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const newClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    const onSessionInvalid = vi.fn();
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: oldClient,
+      sessionRef: "session_old",
+      sessionGeneration: 10,
+      onSessionInvalid,
+    }));
+    await waitFor(() => expect(oldClient.listOrders).toHaveBeenCalledTimes(1));
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: newClient,
+      sessionRef: "session_new",
+      sessionGeneration: 11,
+      onSessionInvalid,
+    }));
+    await waitFor(() => expect(newClient.listOrders).toHaveBeenCalledTimes(1));
+    await act(async () => oldRead.reject(new PortalCoinCommerceClientError("commerce_session_invalid", false)));
+    expect(onSessionInvalid).not.toHaveBeenCalled();
+  });
+
+  test("distinguishes empty, unavailable, and retryable errors without inventing recharge data", async () => {
+    const unavailableClient = {
+      listOrders: vi.fn()
+        .mockRejectedValueOnce(new PortalCoinCommerceClientError("commerce_unavailable", true))
+        .mockResolvedValueOnce({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    const unavailableView = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: unavailableClient,
+      sessionRef: "session_unavailable",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    expect(await screen.findByText("Some Marketplace orders are temporarily unavailable")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Retry consumption orders" }));
+    expect(await screen.findByText("No orders yet")).toBeInTheDocument();
+    unavailableView.unmount();
+
+    const errorClient = {
+      listOrders: vi.fn().mockRejectedValue(new PortalCoinCommerceClientError("wallet_not_active", false))
+    } as unknown as PortalCoinCommerceClient;
+    const errorView = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: errorClient,
+      sessionRef: "session_error",
+      sessionGeneration: 2,
+      onSessionInvalid: vi.fn(),
+    }));
+    expect(await screen.findByText("Some Marketplace orders are temporarily unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry consumption orders" })).toBeNull();
+    errorView.unmount();
+
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: null,
+      sessionGeneration: 3,
+      onSessionInvalid: vi.fn(),
+    }));
+    expect(await screen.findByText("Some Marketplace orders are temporarily unavailable")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry consumption orders" })).toBeNull();
+  });
+
+  test("allows one in-flight cursor request and deduplicates its paired page", async () => {
+    const nextPage = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const secondOrder = { ...ORDER, orderRef: "order_consumption_002", createdAt: "2026-07-27T11:00:00.000Z" };
+    const client = {
+      listOrders: vi.fn()
+        .mockResolvedValueOnce({
+          orders: [ORDER],
+          nextCursor: { afterCreatedAt: ORDER.createdAt, afterOrderRef: ORDER.orderRef }
+        })
+        .mockImplementationOnce(() => nextPage.promise)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_paged",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    await screen.findByRole("button", { name: /order_consumption_001/ });
+    const more = screen.getByRole("button", { name: "Load more consumption orders" });
+    fireEvent.click(more);
+    fireEvent.click(more);
+    expect(client.listOrders).toHaveBeenCalledTimes(2);
+    expect(client.listOrders).toHaveBeenLastCalledWith({
+      sessionRef: "session_paged",
+      limit: 25,
+      afterCreatedAt: ORDER.createdAt,
+      afterOrderRef: ORDER.orderRef
+    });
+    await act(async () => nextPage.resolve({ orders: [secondOrder], nextCursor: null }));
+    expect(screen.getAllByRole("button", { name: /order_consumption_00/ })).toHaveLength(2);
+  });
+
+  test("ignores stale list and detail resolutions while only a current detail-invalid read logs out", async () => {
+    const staleList = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const staleDetail = deferred<PortalCoinOrder>();
+    const oldClient = {
+      listOrders: vi.fn()
+        .mockResolvedValueOnce({ orders: [ORDER], nextCursor: null })
+        .mockImplementationOnce(() => staleList.promise),
+      getOrder: vi.fn(() => staleDetail.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const newClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null }),
+      getOrder: vi.fn().mockRejectedValue(new PortalCoinCommerceClientError("commerce_session_invalid", false))
+    } as unknown as PortalCoinCommerceClient;
+    const onSessionInvalid = vi.fn();
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: oldClient,
+      sessionRef: "session_old",
+      sessionGeneration: 1,
+      onSessionInvalid,
+    }));
+    await screen.findByRole("button", { name: /order_consumption_001/ });
+    fireEvent.click(screen.getByRole("button", { name: /order_consumption_001/ }));
+    await waitFor(() => expect(oldClient.getOrder).toHaveBeenCalledTimes(1));
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: newClient,
+      sessionRef: "session_new",
+      sessionGeneration: 2,
+      onSessionInvalid,
+    }));
+    await act(async () => {
+      staleList.resolve({ orders: [ORDER], nextCursor: null });
+      staleDetail.reject(new PortalCoinCommerceClientError("commerce_session_invalid", false));
+    });
+    expect(onSessionInvalid).not.toHaveBeenCalled();
+    expect(screen.queryByRole("region", { name: "Coins consumption order detail" })).toBeNull();
+
+    selectOrderFilter("coins_consumption");
+    await screen.findByText("No matching orders");
+    expect(screen.queryByRole("button", { name: /order_consumption_001/ })).toBeNull();
+  });
+
+  test("logs out only when the current identity detail GET rejects as session invalid", async () => {
+    const onSessionInvalid = vi.fn();
+    const client = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn().mockRejectedValue(
+        new PortalCoinCommerceClientError("commerce_session_invalid", false)
+      )
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_current_detail",
+      sessionGeneration: 3,
+      onSessionInvalid,
+    }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(ORDER.orderRef) }));
+    await waitFor(() => expect(client.getOrder).toHaveBeenCalledWith({
+      sessionRef: "session_current_detail",
+      orderRef: ORDER.orderRef
+    }));
+    expect(onSessionInvalid).toHaveBeenCalledTimes(1);
+  });
+
+  test("ignores a successful old-detail resolution after the visible identity changes", async () => {
+    const oldDetail = deferred<PortalCoinOrder>();
+    const oldClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn(() => oldDetail.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const newClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [], nextCursor: null })
+    } as unknown as PortalCoinCommerceClient;
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: oldClient,
+      sessionRef: "session_old_detail",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(ORDER.orderRef) }));
+    await waitFor(() => expect(oldClient.getOrder).toHaveBeenCalledTimes(1));
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: newClient,
+      sessionRef: "session_new_detail",
+      sessionGeneration: 2,
+      onSessionInvalid: vi.fn(),
+    }));
+    await act(async () => oldDetail.resolve(ORDER));
+    expect(screen.queryByRole("region", { name: "Coins consumption order detail" })).toBeNull();
+    expect(screen.queryByRole("button", { name: new RegExp(ORDER.orderRef) })).toBeNull();
+  });
+
+  test("retries the selected detail GET only and ignores an old list resolution", async () => {
+    const oldList = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const oldOnlyOrder = { ...ORDER, orderRef: "order_old_only" };
+    const oldClient = {
+      listOrders: vi.fn(() => oldList.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const newerOrder = { ...ORDER, orderRef: "order_consumption_002" };
+    const newClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER, newerOrder], nextCursor: null }),
+      getOrder: vi.fn()
+        .mockRejectedValueOnce(new PortalCoinCommerceClientError("commerce_unavailable", true))
+        .mockResolvedValueOnce(newerOrder)
+    } as unknown as PortalCoinCommerceClient;
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: oldClient,
+      sessionRef: "session_old",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    await waitFor(() => expect(oldClient.listOrders).toHaveBeenCalledTimes(1));
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: newClient,
+      sessionRef: "session_new",
+      sessionGeneration: 2,
+      onSessionInvalid: vi.fn(),
+    }));
+    await screen.findByRole("button", { name: /order_consumption_002/ });
+    await act(async () => oldList.resolve({ orders: [oldOnlyOrder], nextCursor: null }));
+    expect(screen.queryByRole("button", { name: /order_old_only/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /order_consumption_002/ }));
+    expect(await screen.findByText("Order detail is unavailable.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Retry order detail" }));
+    await waitFor(() => expect(newClient.getOrder).toHaveBeenLastCalledWith({
+      sessionRef: "session_new",
+      orderRef: "order_consumption_002"
+    }));
+    expect(await screen.findByText(/order_consumption_002/, {
+      selector: ".portal-order-detail-meta dd"
+    }))
+      .toBeInTheDocument();
+  });
+
+  test("keeps an in-flight read across a callback-only rerender and uses the latest committed callback", async () => {
+    const initialRead = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const firstCallback = vi.fn();
+    const latestCallback = vi.fn();
+    const client = {
+      listOrders: vi.fn()
+        .mockImplementationOnce(() => initialRead.promise)
+        .mockRejectedValueOnce(new PortalCoinCommerceClientError("commerce_session_invalid", false))
+    } as unknown as PortalCoinCommerceClient;
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_stable",
+      sessionGeneration: 8,
+      onSessionInvalid: firstCallback,
+    }));
+    await waitFor(() => expect(client.listOrders).toHaveBeenCalledTimes(1));
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_stable",
+      sessionGeneration: 8,
+      onSessionInvalid: latestCallback,
+    }));
+    await act(async () => initialRead.resolve({ orders: [ORDER], nextCursor: null }));
+    expect(await screen.findByRole("button", { name: /order_consumption_001/ })).toBeInTheDocument();
+    selectOrderFilter("plans_services");
+    selectOrderFilter("all");
+    await waitFor(() => expect(latestCallback).toHaveBeenCalledTimes(1));
+    expect(firstCallback).not.toHaveBeenCalled();
+  });
+
+  test("clears old detail immediately after a client, session, or generation change", async () => {
+    const changedList = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const firstClient = {
+      listOrders: vi.fn().mockResolvedValue({ orders: [ORDER], nextCursor: null }),
+      getOrder: vi.fn().mockResolvedValue(ORDER)
+    } as unknown as PortalCoinCommerceClient;
+    const changedClient = {
+      listOrders: vi.fn(() => changedList.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: firstClient,
+      sessionRef: "session_before",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    await screen.findByRole("button", { name: /order_consumption_001/ });
+    fireEvent.click(screen.getByRole("button", { name: /order_consumption_001/ }));
+    expect(await screen.findByRole("region", { name: "Coins consumption order detail" })).toBeInTheDocument();
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: changedClient,
+      sessionRef: "session_after",
+      sessionGeneration: 2,
+      onSessionInvalid: vi.fn(),
+    }));
+    expect(screen.queryByRole("region", { name: "Coins consumption order detail" })).toBeNull();
+  });
+
+  test("clears an expanded legacy detail when the Portal identity changes", () => {
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: "session_legacy_before",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [PAYMENT_ORDER]
+    }));
+    fireEvent.click(screen.getByRole("button", {
+      name: /View.*pay_001.*Basic monthly.*Payment failed/i
+    }));
+    expect(screen.getByRole("region", {
+      name: /Plan payment details: P-001/i
+    })).toBeInTheDocument();
+
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: null,
+      sessionRef: "session_legacy_after",
+      sessionGeneration: 2,
+      onSessionInvalid: vi.fn(),
+      legacyPaymentOrders: [PAYMENT_ORDER]
+    }));
+
+    expect(screen.queryByRole("region", {
+      name: /Plan payment details: P-001/i
+    })).toBeNull();
+    expect(screen.getByRole("button", {
+      name: /View.*pay_001.*Basic monthly.*Payment failed/i
+    })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("rejects a duplicate cross-page ref and does not let an old same-cursor finalizer unlock the new request", async () => {
+    const oldPage = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const newPage = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const page = {
+      orders: [ORDER],
+      nextCursor: { afterCreatedAt: ORDER.createdAt, afterOrderRef: ORDER.orderRef }
+    };
+    const oldClient = {
+      listOrders: vi.fn().mockResolvedValueOnce(page).mockImplementationOnce(() => oldPage.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const newClient = {
+      listOrders: vi.fn().mockResolvedValueOnce(page).mockImplementationOnce(() => newPage.promise)
+    } as unknown as PortalCoinCommerceClient;
+    const view = render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: oldClient,
+      sessionRef: "session_same_cursor",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    await screen.findByRole("button", { name: /order_consumption_001/ });
+    fireEvent.click(screen.getByRole("button", { name: "Load more consumption orders" }));
+    view.rerender(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: newClient,
+      sessionRef: "session_same_cursor",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    await waitFor(() => expect(newClient.listOrders).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Load more consumption orders" }));
+    await act(async () => oldPage.resolve({ orders: [ORDER], nextCursor: null }));
+    fireEvent.click(screen.getByRole("button", { name: "Load more consumption orders" }));
+    expect(newClient.listOrders).toHaveBeenCalledTimes(2);
+    await act(async () => newPage.resolve({ orders: [ORDER], nextCursor: null }));
+    expect(await screen.findByText("Some Marketplace orders are temporarily unavailable")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Retry consumption orders" }));
+    await waitFor(() => expect(newClient.listOrders).toHaveBeenLastCalledWith({
+      sessionRef: "session_same_cursor",
+      limit: 25,
+      afterCreatedAt: ORDER.createdAt,
+      afterOrderRef: ORDER.orderRef
+    }));
+  });
+
+  test("retains page one after a load-more failure and appends page two on the paired retry", async () => {
+    const secondOrder = { ...ORDER, orderRef: "order_consumption_002", createdAt: "2026-07-27T11:00:00.000Z" };
+    const cursor = { afterCreatedAt: ORDER.createdAt, afterOrderRef: ORDER.orderRef };
+    const retryPage = deferred<{ orders: PortalCoinOrder[]; nextCursor: null }>();
+    const client = {
+      listOrders: vi.fn()
+        .mockResolvedValueOnce({ orders: [ORDER], nextCursor: cursor })
+        .mockRejectedValueOnce(new PortalCoinCommerceClientError("commerce_unavailable", true))
+        .mockImplementationOnce(() => retryPage.promise)
+    } as unknown as PortalCoinCommerceClient;
+    render(createElement(PortalOrdersPanel, {
+      locale: "en",
+      commerceClient: client,
+      sessionRef: "session_retry_cursor",
+      sessionGeneration: 1,
+      onSessionInvalid: vi.fn(),
+    }));
+    await screen.findByRole("button", { name: /order_consumption_001/ });
+    fireEvent.click(screen.getByRole("button", { name: "Load more consumption orders" }));
+    expect(await screen.findByText("Some Marketplace orders are temporarily unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /order_consumption_001/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more consumption orders" })).toBeNull();
+    const retry = screen.getByRole("button", { name: "Retry consumption orders" });
+    fireEvent.click(retry);
+    fireEvent.click(retry);
+    expect(client.listOrders).toHaveBeenCalledTimes(3);
+    await waitFor(() => expect(client.listOrders).toHaveBeenLastCalledWith({
+      sessionRef: "session_retry_cursor",
+      limit: 25,
+      ...cursor
+    }));
+    await act(async () => retryPage.resolve({ orders: [secondOrder], nextCursor: null }));
+    expect(await screen.findByRole("button", { name: /order_consumption_002/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /order_consumption_001/ })).toBeInTheDocument();
+  });
+});
