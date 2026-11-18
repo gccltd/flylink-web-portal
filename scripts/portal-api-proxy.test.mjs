@@ -169,28 +169,85 @@ test("read-only quote preview is allowed but purchase and recharge writes are bl
   }), rechargeRes);
   assert.equal(rechargeRes.statusCode, 403);
   assert.equal(calls, 1);
+
+  const productionHost = "flylink-web-portal.vercel.app";
+  const productionHandler = createPortalApiProxyHandler({
+    env: { ...ENV, VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: productionHost },
+    fetchImpl: async () => { calls += 1; return upstreamResponse(); },
+  });
+  const productionPurchaseRes = makeResponse();
+  await productionHandler(makeRequest({
+    path: "commerce/orders",
+    method: "POST",
+    body: { offerRef: "offer_1" },
+    headers: {
+      host: productionHost,
+      origin: "https://" + productionHost,
+      "content-type": "application/json",
+    },
+  }), productionPurchaseRes);
+  assert.equal(productionPurchaseRes.statusCode, 403);
+  assert.deepEqual(JSON.parse(productionPurchaseRes.body), { error: "preview_read_only" });
+  assert.equal(calls, 1);
 });
 
-test("production deployments and hosts outside the current Preview are unavailable", async () => {
+test("production proxy accepts only the stable project domain and Preview rejects it", async () => {
+  const productionHost = "flylink-web-portal.vercel.app";
   let calls = 0;
-  const handler = createPortalApiProxyHandler({
+  let capturedUrl;
+  const productionHandler = createPortalApiProxyHandler({
+    env: {
+      ...ENV,
+      VERCEL_ENV: "production",
+      VERCEL_PROJECT_PRODUCTION_URL: productionHost,
+    },
+    fetchImpl: async (url) => {
+      calls += 1;
+      capturedUrl = String(url);
+      return upstreamResponse({ body: { session: null } });
+    },
+  });
+
+  const productionRes = makeResponse();
+  await productionHandler(makeRequest({
+    path: "browser-session",
+    headers: { host: productionHost, origin: "https://" + productionHost },
+  }), productionRes);
+  assert.equal(productionRes.statusCode, 200);
+  assert.equal(capturedUrl, "https://portal.gccwebos.com/api/portal/browser-session");
+  assert.equal(calls, 1);
+
+  for (const host of ["attacker.example", ENV.VERCEL_URL, ENV.VERCEL_BRANCH_URL]) {
+    const rejected = makeResponse();
+    await productionHandler(makeRequest({
+      path: "browser-session",
+      headers: { host, origin: "https://" + host },
+    }), rejected);
+    assert.equal(rejected.statusCode, 404);
+  }
+
+  const missingProductionHost = createPortalApiProxyHandler({
     env: { ...ENV, VERCEL_ENV: "production" },
     fetchImpl: async () => { calls += 1; return upstreamResponse(); },
   });
-  const res = makeResponse();
-  await handler(makeRequest({ path: "browser-session" }), res);
-  assert.equal(res.statusCode, 404);
-  assert.equal(calls, 0);
+  const missingRes = makeResponse();
+  await missingProductionHost(makeRequest({
+    path: "browser-session",
+    headers: { host: productionHost, origin: "https://" + productionHost },
+  }), missingRes);
+  assert.equal(missingRes.statusCode, 404);
 
   const previewHandler = createPortalApiProxyHandler({
-    env: ENV,
+    env: { ...ENV, VERCEL_PROJECT_PRODUCTION_URL: productionHost },
     fetchImpl: async () => { calls += 1; return upstreamResponse(); },
   });
-  const wrongHost = makeRequest({ path: "browser-session", headers: { host: "attacker.example" } });
-  const wrongHostRes = makeResponse();
-  await previewHandler(wrongHost, wrongHostRes);
-  assert.equal(wrongHostRes.statusCode, 404);
-  assert.equal(calls, 0);
+  const productionHostOnPreview = makeResponse();
+  await previewHandler(makeRequest({
+    path: "browser-session",
+    headers: { host: productionHost, origin: "https://" + productionHost },
+  }), productionHostOnPreview);
+  assert.equal(productionHostOnPreview.statusCode, 404);
+  assert.equal(calls, 1);
 });
 
 test("cross-origin, non-browser, malformed session, and unapproved read requests fail closed", async () => {
