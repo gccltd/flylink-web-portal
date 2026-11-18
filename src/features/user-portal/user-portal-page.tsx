@@ -74,6 +74,7 @@ import { useDesktopScrollRegion } from "./use-desktop-scroll-region";
 import { PortalAppShell } from "./layout/portal-app-shell";
 import { PortalSidebar } from "./layout/portal-sidebar";
 import { PortalTopbar } from "./layout/portal-topbar";
+import { DashboardOverviewCard } from "./dashboard/dashboard-overview-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
 import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange, writePortalLocation } from "./portal-browser-session";
 import { portalAssetPath, portalRoutePath } from "./portal-entry";
@@ -3323,86 +3324,24 @@ function DashboardPanel({
   return (
     <div className="portal-v2-stack">
       {desktopViewport ? (
-        <section className="portal-v2-hero-block" aria-label={uiText(locale, "账户总览", "Account overview")}>
-          <div className="portal-v2-greeting">
-            <h2>{portalGreeting(locale)}</h2>
-            <p>{uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}</p>
-          </div>
-          <div className="portal-v2-hero-card">
-            <div className="portal-v2-hero-card__cell">
-              <span className="portal-card-label"><ShieldCheck aria-hidden="true" /> {uiText(locale, "当前套餐", "Current plan")}</span>
-              <strong>{currentPlanLabel ?? uiText(locale, "未开通套餐", "No active plan")}</strong>
-              <small>
-                {resourceState === "active" ? (
-                  <>
-                    <span className={cn("portal-order-status", "active")}>{uiText(locale, "使用中", "In use")}</span>
-                    {" "}
-                    {uiText(locale, "有效期至 ", "Valid until ")}
-                    {resourceExpiry}
-                  </>
-                ) : resourceReconciliation
-                  ? uiText(locale, "资源状态核对中", "Resource state is being reconciled")
-                  : uiText(locale, "前往商城开通服务", "Buy a service in the Marketplace")}
-              </small>
-            </div>
-            <div className="portal-v2-hero-card__cell">
-              <span className="portal-card-label"><BarChart3 aria-hidden="true" /> {uiText(locale, "本月剩余流量", "Monthly traffic left")}</span>
-              <strong>{trafficHeroLabel}</strong>
-              {hasTrafficAccess && planTrafficBytes > 0 && remainingTrafficBytes !== null ? (
-                <div className="portal-traffic-meter" aria-hidden="true">
-                  <span style={{ width: `${Math.min(100, Math.max(0, remainingTrafficPercent))}%` }} />
-                </div>
-              ) : (
-                <small>{resourceReconciliation
-                  ? uiText(locale, "核对完成前暂不展示流量数据", "Traffic details are hidden until reconciliation completes")
-                  : hasTrafficAccess
-                    ? uiText(locale, "当前资源接口未提供实时用量", "Live usage is not available from the current resource API")
-                    : uiText(locale, "资源开通后显示", "Shown after the resource is active")}</small>
-              )}
-            </div>
-            <div className="portal-v2-hero-card__cell">
-              <span className="portal-card-label"><WalletCards aria-hidden="true" /> {uiText(locale, "钱包余额", "Wallet balance")}</span>
-              <strong>{walletBalance === null ? "—" : `${walletBalance} Coins`}</strong>
-              <small>{uiText(locale, "可用于套餐续费与抵扣", "Usable for plan renewal and credit")}</small>
-            </div>
-            <div className="portal-v2-hero-card__actions">
-              <button
-                className="portal-v2-hero-action portal-v2-hero-action--primary"
-                type="button"
-                onClick={onRenewCurrentPlan ?? (() => setActiveView("marketplace"))}
-              >
-                <Zap aria-hidden="true" />
-                {resourceState === "active" && currentPlan
-                  ? uiText(locale, "一键续费", "Renew in one tap")
-                  : uiText(locale, "去商城选套餐", "Browse plans")}
-              </button>
-              <button
-                className="portal-v2-hero-action"
-                type="button"
-                onClick={() => setActiveView("wallet")}
-              >
-                <WalletCards aria-hidden="true" />
-                {uiText(locale, "去充值", "Top up")}
-              </button>
-              <button
-                className="portal-v2-hero-action"
-                type="button"
-                onClick={() => setActiveView("orders")}
-              >
-                <ReceiptText aria-hidden="true" />
-                {uiText(locale, "我的订单", "My orders")}
-              </button>
-              <button
-                className="portal-v2-hero-action"
-                type="button"
-                onClick={() => setActiveView("start")}
-              >
-                <Rocket aria-hidden="true" />
-                {uiText(locale, "开始使用", "Start using")}
-              </button>
-            </div>
-          </div>
-        </section>
+        <DashboardOverviewCard
+          locale={locale}
+          greeting={portalGreeting(locale)}
+          description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
+          currentPlanLabel={currentPlanLabel}
+          hasCurrentPlan={Boolean(currentPlan)}
+          resourceState={resourceState}
+          resourceReconciliation={resourceReconciliation}
+          resourceExpiry={resourceExpiry}
+          hasTrafficAccess={hasTrafficAccess}
+          planTrafficBytes={planTrafficBytes}
+          remainingTrafficBytes={remainingTrafficBytes}
+          remainingTrafficPercent={remainingTrafficPercent}
+          trafficHeroLabel={trafficHeroLabel}
+          walletBalance={walletBalance}
+          onRenewCurrentPlan={onRenewCurrentPlan}
+          onNavigate={setActiveView}
+        />
       ) : null}
 
 
