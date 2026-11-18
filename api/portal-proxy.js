@@ -36,6 +36,19 @@ const ALLOWED_POST_PATHS = new Set([
   "/api/portal/commerce/deferred/checkout-preview",
 ]);
 
+// Query parameters the Preview proxy may forward to the real Portal, per
+// endpoint. Vercel appends the rewrite capture as `path=<captured>` to the
+// proxy invocation, so every other parameter must be explicitly allowed:
+// anything not listed here is dropped. That matters because the backend
+// rejects any `?` in the raw URL of browser-session bootstrap and logout
+// with 403, so a forwarded routing artifact would break the whole login
+// flow on Preview. Endpoints not listed here forward no query parameters.
+const ALLOWED_QUERY_PARAMS = new Map([
+  ["/api/portal/coins/wallet/ledger", new Set(["page", "limit", "afterOccurredAt", "afterEntryRef"])],
+  ["/api/portal/access-requests/current", new Set(["portalUserRef"])],
+  ["/api/portal/commerce/orders", new Set(["limit", "afterCreatedAt", "afterOrderRef"])],
+]);
+
 function readHeader(req, name) {
   const value = req?.headers?.[name.toLowerCase()];
   if (Array.isArray(value)) return value.length === 1 ? value[0] : undefined;
@@ -86,9 +99,10 @@ function resolvePortalRequestUrl(requestUrl, requestHost) {
   }
 
   const pathname = "/api/portal/" + segments.join("/");
+  const allowedQuery = ALLOWED_QUERY_PARAMS.get(pathname) ?? new Set();
   const query = new URLSearchParams();
   for (const [key, value] of parsed.searchParams) {
-    if (key !== "__portal_path") query.append(key, value);
+    if (key !== "__portal_path" && allowedQuery.has(key)) query.append(key, value);
   }
 
   return { pathname, query };

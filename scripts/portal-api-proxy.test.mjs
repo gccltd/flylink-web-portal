@@ -237,3 +237,64 @@ test("Vercel rewrite routes Portal API paths to the single protected proxy funct
     destination: "/api/portal-proxy?__portal_path=:path*",
   });
 });
+
+test("Vercel rewrite capture is not forwarded: browser-session reaches upstream with no query string", async () => {
+  // Regression: Vercel appends the rewrite capture as `path=<captured>` to
+  // the proxy invocation, and the backend rejects any `?` in the raw URL
+  // of browser-session bootstrap and logout with 403. The proxy must drop
+  // that routing artifact instead of forwarding it.
+  let captured;
+  const handler = createPortalApiProxyHandler({
+    env: ENV,
+    fetchImpl: async (url) => {
+      captured = String(url);
+      return upstreamResponse({ body: { session: null } });
+    },
+  });
+
+  const restoreRes = makeResponse();
+  await handler(makeRequest({ path: "browser-session", query: { path: "browser-session" } }), restoreRes);
+  assert.equal(restoreRes.statusCode, 200);
+  assert.equal(captured, "https://portal.gccwebos.com/api/portal/browser-session");
+
+  const logoutRes = makeResponse();
+  await handler(makeRequest({
+    path: "browser-session/logout",
+    method: "POST",
+    query: { path: "browser-session/logout" },
+    body: {},
+    headers: {
+      "content-type": "application/json",
+      "x-portal-session-context": SESSION_CONTEXT,
+    },
+  }), logoutRes);
+  assert.equal(logoutRes.statusCode, 200);
+  assert.equal(captured, "https://portal.gccwebos.com/api/portal/browser-session/logout");
+});
+
+test("only allowlisted query parameters reach upstream, per endpoint", async () => {
+  let captured;
+  const handler = createPortalApiProxyHandler({
+    env: ENV,
+    fetchImpl: async (url) => {
+      captured = String(url);
+      return upstreamResponse({ body: { ledger: [] } });
+    },
+  });
+
+  const ledgerRes = makeResponse();
+  await handler(makeRequest({
+    path: "coins/wallet/ledger",
+    query: { page: 2, limit: 20, path: "coins/wallet/ledger", injected: "no" },
+  }), ledgerRes);
+  assert.equal(ledgerRes.statusCode, 200);
+  assert.equal(captured, "https://portal.gccwebos.com/api/portal/coins/wallet/ledger?page=2&limit=20");
+
+  const currentRes = makeResponse();
+  await handler(makeRequest({
+    path: "access-requests/current",
+    query: { portalUserRef: "user_1", path: "access-requests/current" },
+  }), currentRes);
+  assert.equal(currentRes.statusCode, 200);
+  assert.equal(captured, "https://portal.gccwebos.com/api/portal/access-requests/current?portalUserRef=user_1");
+});
