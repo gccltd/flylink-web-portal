@@ -3454,7 +3454,7 @@ function DashboardPanel({
     : 0;
   const trafficHeroLabel = !hasTrafficAccess
     ? "—"
-    : resourceAvailable && resourceUsageUnavailableLabel(locale)
+    : resourceAvailable
       ? uiText(locale, "用量待同步", "Usage pending")
       : planTrafficBytes > 0 && remainingTrafficBytes !== null
         ? `${formatTrafficBytes(remainingTrafficBytes)} / ${formatTrafficBytes(planTrafficBytes)}`
@@ -3624,7 +3624,11 @@ function DashboardPanel({
         </article>
         <article className="portal-v2-metric-card">
           <span><BarChart3 aria-hidden="true" /> {uiText(locale, "剩余流量", "Remaining traffic")}</span>
-          <strong>{hasTrafficAccess && planTrafficBytes > 0 ? formatTrafficBytes(remainingTrafficBytes) : "—"}</strong>
+          <strong>{hasTrafficAccess && planTrafficBytes > 0
+            ? remainingTrafficBytes === null
+              ? uiText(locale, "用量待同步", "Usage pending")
+              : formatTrafficBytes(remainingTrafficBytes)
+            : "—"}</strong>
           <small>{hasTrafficAccess && planTrafficBytes > 0
             ? uiText(locale, `本月额度 ${formatTrafficBytes(planTrafficBytes)}`, `${formatTrafficBytes(planTrafficBytes)} monthly quota`)
             : uiText(locale, "资源开通后显示当前额度", "Current quota appears after the resource is active")}</small>
