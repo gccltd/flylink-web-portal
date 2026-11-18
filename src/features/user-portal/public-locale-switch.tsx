@@ -35,7 +35,9 @@ function isPublicTheme(value: string | null): value is PublicTheme {
   return value === "light" || value === "dark";
 }
 
-function detectPublicTheme(defaultTheme: PublicTheme = "light"): PublicTheme {
+function detectPublicTheme(defaultTheme: PublicTheme = "dark"): PublicTheme {
+  // Concept art and the PR #892 visual review are dark. The stored value
+  // still wins when present; this default only applies to first visits.
   if (typeof window === "undefined") return defaultTheme;
   const storedTheme = window.localStorage.getItem(PUBLIC_THEME_STORAGE_KEY);
   return isPublicTheme(storedTheme) ? storedTheme : defaultTheme;
@@ -65,7 +67,7 @@ export function usePublicLocalePreference(defaultLocale: PublicLocale = "zh") {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components -- paired theme hook; same barrel-rename reason as usePublicLocalePreference
-export function usePublicThemePreference(defaultTheme: PublicTheme = "light") {
+export function usePublicThemePreference(defaultTheme: PublicTheme = "dark") {
   const [theme, setTheme] = useState<PublicTheme>(() => detectPublicTheme(defaultTheme));
 
   useEffect(() => {

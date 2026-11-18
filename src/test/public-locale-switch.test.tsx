@@ -13,7 +13,7 @@ afterEach(() => {
   document.documentElement.removeAttribute("data-portal-theme");
 });
 
-function ThemeHarness({ defaultTheme = "light" }: { defaultTheme?: PublicTheme }) {
+function ThemeHarness({ defaultTheme }: { defaultTheme?: PublicTheme }) {
   const { theme, setTheme } = usePublicThemePreference(defaultTheme);
   return (
     <div>
@@ -41,6 +41,13 @@ describe("public portal preference switch", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dark theme" }));
 
     expect(changes).toEqual(["dark"]);
+  });
+
+  test("defaults to dark when nothing is stored", () => {
+    render(<ThemeHarness />);
+
+    expect(screen.getByTestId("active-theme").textContent).toBe("dark");
+    expect(document.documentElement.dataset.portalTheme).toBe("dark");
   });
 
   test("persists selected theme and applies it to the document", () => {

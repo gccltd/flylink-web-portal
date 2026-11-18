@@ -351,20 +351,20 @@ describe("Portal Coins dialogs", () => {
       ...insufficientQuote,
       purchaseAvailability: "available",
       shortfallUnits: 0,
-      amountUnits: 5,
-      allocation: [{ coinType: "paid_coins", amountUnits: 5 }],
+      amountUnits: 10,
+      allocation: [{ coinType: "paid_coins", amountUnits: 10 }],
       balances: {
         before: { ...insufficientQuote.balances.before, paidCoins: 100 },
         after: {
           ...insufficientQuote.balances.after,
-          paidCoins: 95,
-          heldCoins: 5
+          paidCoins: 90,
+          heldCoins: 10
         }
       },
       planSwitch: {
         kind: "upgrade_inplace",
         creditUnits: 5,
-        chargeUnits: 5,
+        chargeUnits: 10,
         effectiveAt: null,
         cancelsPendingDowngrade: false
       }
@@ -386,7 +386,7 @@ describe("Portal Coins dialogs", () => {
     expect(dialog).toHaveTextContent(rules);
     // Server-projected amounts only: list price from the offer, credit and
     // charge from planSwitch, actual payment from amountUnits. No client
-    // recompute: 15 list − 5 credit = 5 due is shown, never derived here.
+    // recompute: 15 list − 5 credit = 10 due is shown, never derived here.
     expect(dialog).toHaveAttribute("aria-labelledby");
     expect(screen.getByRole("dialog", {
       name: locale === "zh" ? "套餐升级" : "Upgrade plan"
@@ -399,7 +399,7 @@ describe("Portal Coins dialogs", () => {
     expect(within(dialog).getByText(credit).parentElement)
       .toHaveTextContent(`${credit}− 5 Coins`);
     expect(within(dialog).getByText(due).parentElement)
-      .toHaveTextContent(`${due}5 Coins`);
+      .toHaveTextContent(`${due}10 Coins`);
   });
 
   test("a quote without a plan switch omits the switch rules", () => {
