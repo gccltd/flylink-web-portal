@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type {
   PortalCoinCommerceClientErrorCode,
   PortalCoinCommerceClient,
@@ -14,6 +14,7 @@ import {
   CoinsDialogFrame
 } from "./product-detail-dialog";
 import { CoinsPaymentStatusCard } from "./coins-payment-status-card";
+import { formatQuoteCountdown, useQuoteCountdown } from "./quote-countdown";
 import { portalCoinCommerceErrorText } from "../commerce-error-presentation";
 import { isPortalCoinOrderTerminal } from "../use-coins-purchase-flow";
 import { PortalDataPackSubscription } from "./portal-data-pack-subscription";
@@ -66,38 +67,6 @@ function deliveryText(quote: PortalCoinQuote, locale: CommerceLocale) {
     `${delivery.trafficGb} GB · 永不过期`,
     `${delivery.trafficGb} GB · never expires`
   );
-}
-
-export function formatQuoteCountdown(remainingMs: number) {
-  const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const twoDigits = (value: number) => String(value).padStart(2, "0");
-  if (hours > 0) {
-    return `${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}`;
-  }
-  return `${twoDigits(minutes)}:${twoDigits(seconds)}`;
-}
-
-/**
- * Display-only quote countdown anchored at the server-issued `expiresAt`.
- * It never gates the confirm action: quote validity is decided by the
- * server (`quote_expired` / `quote_stale`), never by this tick.
- */
-export function useQuoteCountdown(expiresAt: string) {
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [expiresAt]);
-  const remainingMs = Date.parse(expiresAt) - nowMs;
-  return {
-    remainingMs,
-    expired: Number.isFinite(remainingMs) && remainingMs <= 0
-  };
 }
 
 function balanceTotal(balance: PortalCoinQuote["balances"]["before"]) {
