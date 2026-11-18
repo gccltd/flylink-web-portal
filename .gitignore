@@ -1,0 +1,15 @@
+# Dependencies and build outputs
+node_modules/
+dist/
+dist-portal-web/
+coverage/
+
+# Environment files (never commit real values)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS and editor artefacts
+.DS_Store
+*.log
