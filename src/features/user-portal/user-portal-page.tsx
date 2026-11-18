@@ -3486,16 +3486,7 @@ function DashboardPanel({
     : selectedOrder
       ? expiryDisplay(created, lifecycle, locale)
       : entitlementExpiryDisplay(currentEntitlement, locale);
-  const resourceActionView: PortalView = resourceState === "active"
-    ? "start"
-    : resourceState === "pending"
-      ? "orders"
-      : "marketplace";
-  const resourceActionLabel = resourceState === "active"
-    ? uiText(locale, "开始使用", "Start using")
-    : resourceState === "pending"
-      ? uiText(locale, "查看订单", "View orders")
-      : uiText(locale, "前往商城", "Go to Marketplace");
+
 
   return (
     <div className="portal-v2-stack">
