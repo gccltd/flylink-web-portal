@@ -89,20 +89,32 @@ function QuoteFacts({
     <div className="portal-coins-purchase-dialog__quote">
       <h3>{locale === "zh" ? quote.offer.title.zh : quote.offer.title.en}</h3>
       <p>{deliveryText(quote, locale)}</p>
-      {notices.length > 0 ? (
-        <ul aria-label={localized(locale, "购买须知", "Purchase terms")}>
-          {notices.map((notice, index) => <li key={`${index}:${notice}`}>{notice}</li>)}
-        </ul>
-      ) : null}
-      {quote.planSwitch ? (
-        <p>
-          {localized(
-            locale,
-            "升级立即生效，不退款；降级在当前周期结束后生效，已支付不退款；续费或升级会取消待生效的降级。",
-            "An upgrade takes effect immediately and is not refunded. A downgrade takes effect after the current period and the amount already paid is not refunded. Renewing or upgrading cancels a pending downgrade."
-          )}
-        </p>
-      ) : null}
+      <details className="portal-coins-purchase-dialog__business-notes">
+          <summary>
+            {localized(locale, "业务说明", "Service notes")}
+            <span aria-hidden="true" className="portal-coins-dialog__business-notes-chevron">⌄</span>
+          </summary>
+          {notices.length > 0 ? (
+            <ul aria-label={localized(locale, "购买须知", "Purchase terms")}>
+              {notices.map((notice, index) => <li key={`${index}:${notice}`}>{notice}</li>)}
+            </ul>
+          ) : null}
+          {quote.planSwitch ? (
+            <p>
+              {localized(
+                locale,
+                "升级立即生效，不退款；降级在当前周期结束后生效，已支付不退款；续费或升级会取消待生效的降级。",
+                "An upgrade takes effect immediately and is not refunded. A downgrade takes effect after the current period and the amount already paid is not refunded. Renewing or upgrading cancels a pending downgrade."
+              )}
+            </p>
+          ) : null}
+          <ul aria-label={localized(locale, "四类余额明细", "Balance details")}>
+            <li>{portalCoinTypeLabel("bonus_coins", locale)}: {before.bonusCoins} → {after.bonusCoins}</li>
+            <li>{portalCoinTypeLabel("paid_coins", locale)}: {before.paidCoins} → {after.paidCoins}</li>
+            <li>{portalCoinTypeLabel("reward_coins", locale)}: {before.rewardCoins} → {after.rewardCoins}</li>
+            <li>{portalCoinTypeLabel("held_coins", locale)}: {before.heldCoins} → {after.heldCoins}</li>
+          </ul>
+      </details>
       <dl>
         <div>
           <dt>{localized(locale, "接受的 Coins", "Accepted Coins")}</dt>
@@ -152,12 +164,6 @@ function QuoteFacts({
             <span>{localized(locale, "之前", "Before")}: {balanceTotal(before)}</span>
             {" · "}
             <span>{localized(locale, "之后", "After")}: {balanceTotal(after)}</span>
-            <ul>
-              <li>{portalCoinTypeLabel("bonus_coins", locale)}: {before.bonusCoins} → {after.bonusCoins}</li>
-              <li>{portalCoinTypeLabel("paid_coins", locale)}: {before.paidCoins} → {after.paidCoins}</li>
-              <li>{portalCoinTypeLabel("reward_coins", locale)}: {before.rewardCoins} → {after.rewardCoins}</li>
-              <li>{portalCoinTypeLabel("held_coins", locale)}: {before.heldCoins} → {after.heldCoins}</li>
-            </ul>
           </dd>
         </div>
         <div>

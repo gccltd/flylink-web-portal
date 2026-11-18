@@ -869,3 +869,56 @@ describe("Portal Coins dialogs", () => {
     expect(document.body.style.overflow).toBe("");
   });
 });
+
+describe("OBS-2 business notes disclosure", () => {
+  test("folds the switch rules, purchase terms, and per-type balances behind a closed-by-default disclosure", () => {
+    const quote: PortalCoinQuote = {
+      ...insufficientQuote,
+      purchaseAvailability: "available",
+      shortfallUnits: 0,
+      amountUnits: 10,
+      allocation: [{ coinType: "paid_coins", amountUnits: 10 }],
+      balances: {
+        before: { ...insufficientQuote.balances.before, paidCoins: 100 },
+        after: {
+          ...insufficientQuote.balances.after,
+          paidCoins: 90,
+          heldCoins: 10
+        }
+      },
+      planSwitch: {
+        kind: "upgrade_inplace",
+        creditUnits: 5,
+        chargeUnits: 10,
+        effectiveAt: null,
+        cancelsPendingDowngrade: false
+      }
+    };
+    const { container } = render(createElement(CoinsPurchaseDialog, {
+      locale: "zh",
+      quote,
+      order: null,
+      submitting: false,
+      cancelling: false,
+      errorCode: null,
+      onConfirm: vi.fn(),
+      onCancel: vi.fn(),
+      onRefresh: vi.fn(),
+      onRequestClose: vi.fn()
+    }));
+    const details = container.querySelector("details.portal-coins-purchase-dialog__business-notes");
+    expect(details).not.toBeNull();
+    expect((details as HTMLDetailsElement).open).toBe(false);
+    const summary = within(details as HTMLElement).getByText("业务说明");
+    // Wording is verbatim; only the presentation folds.
+    expect(details as HTMLElement).toHaveTextContent("升级立即生效，不退款");
+    expect(details as HTMLElement).toHaveTextContent("购买后按订单状态交付");
+    // Amount rows and the countdown stay outside the disclosure.
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("本次实际支付").parentElement)
+      .toHaveTextContent("本次实际支付10 Coins");
+    expect(within(dialog).getByText("剩余时间").parentElement).toBeInTheDocument();
+    fireEvent.click(summary);
+    expect((details as HTMLDetailsElement).open).toBe(true);
+  });
+});

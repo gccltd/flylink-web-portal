@@ -2998,6 +2998,53 @@
   font-size: 20px;
 }
 
+/* OBS-2: business notes (purchase terms, switch rules, per-type balance
+   detail) fold into a closed-by-default disclosure so the amount rows,
+   countdown, and footer actions stay visible in a 900px viewport. The
+   folded content is unmodified; <details> keeps it in the DOM. */
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes {
+  margin: 0;
+  border: 1px solid var(--portal-coins-dialog-border);
+  border-radius: 12px;
+  padding: 0 12px;
+}
+
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--portal-coins-dialog-text);
+  cursor: pointer;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes > summary::-webkit-details-marker {
+  display: none;
+}
+
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes > summary:focus-visible {
+  outline: 2px solid var(--portal-coins-dialog-accent);
+  outline-offset: 2px;
+}
+
+.portal-coins-dialog__business-notes-chevron {
+  color: var(--portal-coins-dialog-muted);
+  transition: transform 0.15s ease;
+}
+
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes[open] > summary .portal-coins-dialog__business-notes-chevron {
+  transform: rotate(180deg);
+}
+
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes > ul,
+.portal-coins-dialog-theme .portal-coins-purchase-dialog__business-notes > p {
+  margin: 0 0 12px;
+}
+
 .portal-coins-dialog-theme
   .portal-coins-dialog__body
   .portal-coins-purchase-dialog__amount dd {

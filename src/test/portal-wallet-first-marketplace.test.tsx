@@ -692,3 +692,23 @@ describe("wallet-first quote facts and auto-renew revision", () => {
     expect(walletFirst.previewDeferredCheckout).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("wallet-first purchase terms disclosure", () => {
+  test("folds the purchase terms behind a closed-by-default disclosure", async () => {
+    const legacy = legacyClient();
+    const walletFirst = walletFirstClient();
+    renderMarketplace({ legacy, model: "wallet_first_unique_v1", walletFirst });
+
+    fireEvent.click(await screen.findByRole("button", { name: "使用 Coins 预约：年度套餐" }));
+    const dialog = await screen.findByRole("dialog", { name: "确认 Coins 服务切换" });
+    const details = dialog.querySelector("details.portal-coins-purchase-dialog__business-notes");
+    expect(details).not.toBeNull();
+    expect((details as HTMLDetailsElement).open).toBe(false);
+    expect(details as HTMLElement).toHaveTextContent("按订阅周期交付");
+    // Amount rows stay outside the disclosure.
+    expect(within(dialog).getByText("本次实际支付").parentElement)
+      .toHaveTextContent("本次实际支付200 Coins");
+    fireEvent.click(within(details as HTMLElement).getByText("购买须知"));
+    expect((details as HTMLDetailsElement).open).toBe(true);
+  });
+});

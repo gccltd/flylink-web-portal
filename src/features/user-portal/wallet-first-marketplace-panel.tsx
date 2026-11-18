@@ -782,11 +782,17 @@ export function WalletFirstMarketplacePanel({
               </div>
             </dl>
             {flow.quote.offer.importantNotices[locale].length > 0 ? (
-              <ul aria-label={zh ? "购买须知" : "Purchase terms"}>
-                {flow.quote.offer.importantNotices[locale].map((notice, index) => (
-                  <li key={`${index}:${notice}`}>{notice}</li>
-                ))}
-              </ul>
+              <details className="portal-coins-purchase-dialog__business-notes">
+                <summary>
+                  {zh ? "购买须知" : "Purchase terms"}
+                  <span aria-hidden="true" className="portal-coins-dialog__business-notes-chevron">⌄</span>
+                </summary>
+                <ul aria-label={zh ? "购买须知" : "Purchase terms"}>
+                  {flow.quote.offer.importantNotices[locale].map((notice, index) => (
+                    <li key={`${index}:${notice}`}>{notice}</li>
+                  ))}
+                </ul>
+              </details>
             ) : null}
             {flow.quote.purchaseAvailability === "insufficient_balance" ? (
               <button
