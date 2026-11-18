@@ -3481,20 +3481,6 @@ function DashboardPanel({
       : pendingOrders > 0
         ? "pending"
         : "empty";
-  const resourceHeading = resourceState === "active"
-    ? currentPlanLabel ?? uiText(locale, "账户资源已开通", "Account resource is active")
-    : resourceReconciliation
-      ? uiText(locale, "资源状态核对中", "Resource state is being reconciled")
-      : resourceState === "pending"
-        ? uiText(locale, "服务订单处理中", "Service order is processing")
-        : uiText(locale, "账户尚未开通服务", "No account service yet");
-  const resourceDescription = resourceState === "active"
-    ? uiText(locale, "当前资源已下发到账户；套餐与有效期以服务端当前资源记录为准。", "The current resource is available to this account; plan and expiry follow the server resource record.")
-    : resourceReconciliation
-      ? uiText(locale, "资源状态正在核对。核对完成前不展示推测的套餐与流量数据。", "The resource state is being reconciled. Plan and traffic details are withheld until it is resolved.")
-      : resourceState === "pending"
-        ? uiText(locale, "订单确认完成后，服务资源会自动下发到当前账户。", "After the order is confirmed, the service resource is delivered to this account automatically.")
-        : uiText(locale, "在商城购买服务后，资源会下发到当前账户。", "After you buy a service in Marketplace, its resource is delivered to this account.");
   const resourceExpiry = resourceAvailable
     ? formatDateTime(resourceAvailable.validUntil, locale)
     : selectedOrder
