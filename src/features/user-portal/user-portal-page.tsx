@@ -3114,33 +3114,26 @@ export function UserPortalPage({
           ) : null}
 
           {activeView === "dashboard" ? (
-            walletFirstCurrentResource ? (
-              <WalletFirstCurrentResourceStatus
-                resource={walletFirstCurrentResource}
-                locale={locale}
-                onOpenMarketplace={openMarketplace}
-              />
-            ) : (
-              <DashboardPanel
-                created={created}
-                lifecycle={lifecycle}
-                orderRows={orderRows}
-                currentEntitlement={currentEntitlement}
-                selectedOrder={selectedOrder}
-                setActiveView={setActiveView}
-                trafficPercent={trafficPercent}
-                trafficSummary={trafficSummary}
-                locale={locale}
-                walletBalance={authoritativeWalletBalance}
-                onRenewCurrentPlan={requestRenewal}
-                commerceClient={portalClient.commerce ?? null}
-                commerceModelClient={portalClient.commerceModel ?? null}
-                walletFirstCommerceClient={portalClient.walletFirstCommerce ?? null}
-                sessionRef={portalSession.sessionRef ?? null}
-                sessionGeneration={sessionGeneration}
-                onOpenMarketplace={openMarketplace}
-              />
-            )
+            <DashboardPanel
+              created={created}
+              lifecycle={lifecycle}
+              orderRows={orderRows}
+              currentEntitlement={currentEntitlement}
+              selectedOrder={selectedOrder}
+              currentResource={walletFirstCurrentResource}
+              setActiveView={setActiveView}
+              trafficPercent={trafficPercent}
+              trafficSummary={trafficSummary}
+              locale={locale}
+              walletBalance={authoritativeWalletBalance}
+              onRenewCurrentPlan={requestRenewal}
+              commerceClient={portalClient.commerce ?? null}
+              commerceModelClient={portalClient.commerceModel ?? null}
+              walletFirstCommerceClient={portalClient.walletFirstCommerce ?? null}
+              sessionRef={portalSession.sessionRef ?? null}
+              sessionGeneration={sessionGeneration}
+              onOpenMarketplace={openMarketplace}
+            />
           ) : null}
           {activeView === "usage" ? (
             walletFirstCurrentResource ? (
@@ -3386,6 +3379,7 @@ function DashboardPanel({
   orderRows,
   currentEntitlement,
   selectedOrder,
+  currentResource,
   setActiveView,
   trafficPercent,
   trafficSummary,
@@ -3404,6 +3398,7 @@ function DashboardPanel({
   orderRows: PortalOrderRow[];
   currentEntitlement: PortalAccountEntitlement | null;
   selectedOrder: PortalOrderRow | null;
+  currentResource?: PortalCurrentResource | null;
   setActiveView: (value: PortalView) => void;
   trafficPercent: number;
   trafficSummary: ReturnType<typeof aggregateTrafficUsage>;
@@ -3426,14 +3421,44 @@ function DashboardPanel({
       ? selectedPlan(entitlementPlanId, locale)
       : null;
   const entitlementActive = Boolean(currentEntitlement);
+  const resourceAvailable = currentResource?.state === "available" ? currentResource : null;
+  const resourceReconciliation = currentResource?.state === "reconciliation_required";
+  const resourcePlanLabel = resourceAvailable
+    ? resourceAvailable.plan.monthlyTrafficGb > 0
+      ? uiText(
+        locale,
+        `${resourceAvailable.plan.monthlyTrafficGb} GB ${resourceAvailable.plan.durationDays === 365 ? "年度套餐" : `${resourceAvailable.plan.durationDays} 天套餐`}`,
+        `${resourceAvailable.plan.monthlyTrafficGb} GB · ${resourceAvailable.plan.durationDays} days`
+      )
+      : uiText(locale, "套餐已开通", "Plan active")
+    : null;
+  const currentPlanLabel = currentPlan?.label ?? resourcePlanLabel;
   const orderPlanTrafficBytes = (currentPlan?.monthlyTrafficGb ?? 0) > 0
     ? (currentPlan?.monthlyTrafficGb ?? 0) * 1024 ** 3
     : 0;
   const entitlementQuotaBytes = currentEntitlement ? entitlementTrafficBytes(currentEntitlement) : 0;
-  const planTrafficBytes = entitlementQuotaBytes || orderPlanTrafficBytes || trafficSummary.totalBytes;
-  const remainingTrafficBytes = planTrafficBytes > 0
-    ? Math.max(0, planTrafficBytes - trafficSummary.usedBytes)
+  const resourceQuotaBytes = resourceAvailable && resourceAvailable.plan.monthlyTrafficGb > 0
+    ? resourceAvailable.plan.monthlyTrafficGb * 1024 ** 3
     : 0;
+  const planTrafficBytes = resourceQuotaBytes || entitlementQuotaBytes || orderPlanTrafficBytes || trafficSummary.totalBytes;
+  const hasTrafficAccess = Boolean(resourceAvailable) || entitlementActive || selectedOrder?.status === "active";
+  // Wallet-first current-resource read does not expose a usage counter.
+  // Never derive a remaining balance from a quota without a measured usage sample.
+  const remainingTrafficBytes = resourceAvailable
+    ? null
+    : planTrafficBytes > 0
+      ? Math.max(0, planTrafficBytes - trafficSummary.usedBytes)
+      : null;
+  const remainingTrafficPercent = remainingTrafficBytes !== null && planTrafficBytes > 0
+    ? (remainingTrafficBytes / planTrafficBytes) * 100
+    : 0;
+  const trafficHeroLabel = !hasTrafficAccess
+    ? "—"
+    : resourceAvailable && resourceUsageUnavailableLabel(locale)
+      ? uiText(locale, "用量待同步", "Usage pending")
+      : planTrafficBytes > 0 && remainingTrafficBytes !== null
+        ? `${formatTrafficBytes(remainingTrafficBytes)} / ${formatTrafficBytes(planTrafficBytes)}`
+        : uiText(locale, "未设置额度", "No quota");
   const recentOrders = orderRows.slice(0, 3);
   // P2-1 (2026-11-17, NOT closed): these rows are PortalServiceOrder
   // records (requestRef, no amount field). Neither candidate source
@@ -3448,19 +3473,33 @@ function DashboardPanel({
   const heavyUsageOrders = [...orderRows]
     .sort((left, right) => orderUsageSortValue(right) - orderUsageSortValue(left))
     .slice(0, 3);
-  const hasTrafficAccess = entitlementActive || selectedOrder?.status === "active";
-  const currentStatus = selectedOrder?.status ?? (entitlementActive ? "active" : "pending");
-  const resourceState = hasTrafficAccess ? "active" : pendingOrders > 0 ? "pending" : "empty";
+  const currentStatus = selectedOrder?.status ?? (entitlementActive || Boolean(resourceAvailable) ? "active" : "pending");
+  const resourceState = resourceReconciliation
+    ? "pending"
+    : hasTrafficAccess
+      ? "active"
+      : pendingOrders > 0
+        ? "pending"
+        : "empty";
   const resourceHeading = resourceState === "active"
-    ? currentPlan?.label ?? uiText(locale, "账户资源已开通", "Account resource is active")
-    : resourceState === "pending"
-      ? uiText(locale, "服务订单处理中", "Service order is processing")
-      : uiText(locale, "账户尚未开通服务", "No account service yet");
+    ? currentPlanLabel ?? uiText(locale, "账户资源已开通", "Account resource is active")
+    : resourceReconciliation
+      ? uiText(locale, "资源状态核对中", "Resource state is being reconciled")
+      : resourceState === "pending"
+        ? uiText(locale, "服务订单处理中", "Service order is processing")
+        : uiText(locale, "账户尚未开通服务", "No account service yet");
   const resourceDescription = resourceState === "active"
-    ? uiText(locale, "当前资源已下发到账户；续期会更新账户的可用时间。", "The current resource is available to this account; renewal updates its available time.")
-    : resourceState === "pending"
-      ? uiText(locale, "订单确认完成后，服务资源会自动下发到当前账户。", "After the order is confirmed, the service resource is delivered to this account automatically.")
-      : uiText(locale, "在商城购买服务后，资源会下发到当前账户。", "After you buy a service in Marketplace, its resource is delivered to this account.");
+    ? uiText(locale, "当前资源已下发到账户；套餐与有效期以服务端当前资源记录为准。", "The current resource is available to this account; plan and expiry follow the server resource record.")
+    : resourceReconciliation
+      ? uiText(locale, "资源状态正在核对。核对完成前不展示推测的套餐与流量数据。", "The resource state is being reconciled. Plan and traffic details are withheld until it is resolved.")
+      : resourceState === "pending"
+        ? uiText(locale, "订单确认完成后，服务资源会自动下发到当前账户。", "After the order is confirmed, the service resource is delivered to this account automatically.")
+        : uiText(locale, "在商城购买服务后，资源会下发到当前账户。", "After you buy a service in Marketplace, its resource is delivered to this account.");
+  const resourceExpiry = resourceAvailable
+    ? formatDateTime(resourceAvailable.validUntil, locale)
+    : selectedOrder
+      ? expiryDisplay(created, lifecycle, locale)
+      : entitlementExpiryDisplay(currentEntitlement, locale);
   const resourceActionView: PortalView = resourceState === "active"
     ? "start"
     : resourceState === "pending"
@@ -3483,31 +3522,29 @@ function DashboardPanel({
           <div className="portal-v2-hero-card">
             <div className="portal-v2-hero-card__cell">
               <span className="portal-card-label"><ShieldCheck aria-hidden="true" /> {uiText(locale, "当前套餐", "Current plan")}</span>
-              <strong>{currentPlan ? currentPlan.label : uiText(locale, "未开通套餐", "No active plan")}</strong>
+              <strong>{currentPlanLabel ?? uiText(locale, "未开通套餐", "No active plan")}</strong>
               <small>
                 {resourceState === "active" ? (
                   <>
                     <span className={cn("portal-order-status", "active")}>{uiText(locale, "使用中", "In use")}</span>
                     {" "}
                     {uiText(locale, "有效期至 ", "Valid until ")}
-                    {selectedOrder ? expiryDisplay(created, lifecycle, locale) : entitlementExpiryDisplay(currentEntitlement, locale)}
+                    {resourceExpiry}
                   </>
                 ) : uiText(locale, "前往商城开通服务", "Buy a service in the Marketplace")}
               </small>
             </div>
             <div className="portal-v2-hero-card__cell">
               <span className="portal-card-label"><BarChart3 aria-hidden="true" /> {uiText(locale, "本月剩余流量", "Monthly traffic left")}</span>
-              <strong>
-                {hasTrafficAccess && planTrafficBytes > 0
-                  ? `${formatTrafficBytes(remainingTrafficBytes)} / ${formatTrafficBytes(planTrafficBytes)}`
-                  : "—"}
-              </strong>
-              {hasTrafficAccess && planTrafficBytes > 0 ? (
+              <strong>{trafficHeroLabel}</strong>
+              {hasTrafficAccess && planTrafficBytes > 0 && remainingTrafficBytes !== null ? (
                 <div className="portal-traffic-meter" aria-hidden="true">
-                  <span style={{ width: `${Math.min(100, Math.max(0, 100 - trafficPercent))}%` }} />
+                  <span style={{ width: `${Math.min(100, Math.max(0, remainingTrafficPercent))}%` }} />
                 </div>
               ) : (
-                <small>{uiText(locale, "资源开通后显示", "Shown after the resource is active")}</small>
+                <small>{hasTrafficAccess
+                  ? uiText(locale, "当前资源接口未提供实时用量", "Live usage is not available from the current resource API")
+                  : uiText(locale, "资源开通后显示", "Shown after the resource is active")}</small>
               )}
             </div>
             <div className="portal-v2-hero-card__cell">
@@ -3554,47 +3591,9 @@ function DashboardPanel({
           </div>
         </section>
       ) : null}
-      {desktopViewport ? <section
-        className="portal-v2-resource-state"
-        aria-label={uiText(locale, "账户资源状态", "Account resource status")}
-        aria-live="polite"
-        data-state={resourceState}
-      >
-        <div className="portal-v2-resource-state-copy">
-          <span className="portal-card-label"><Activity aria-hidden="true" /> {uiText(locale, "账户资源", "Account resource")}</span>
-          <h2>{resourceHeading}</h2>
-          <p>{resourceDescription}</p>
-        </div>
-        {resourceState === "active" ? (
-          <dl className="portal-v2-resource-state-details">
-            <div>
-              <dt>{uiText(locale, "可用时间", "Available time")}</dt>
-              <dd>{selectedOrder ? expiryDisplay(created, lifecycle, locale) : entitlementExpiryDisplay(currentEntitlement, locale)}</dd>
-            </div>
-            <div>
-              <dt>{uiText(locale, "当前额度", "Current quota")}</dt>
-              <dd>{planTrafficBytes > 0 ? formatTrafficBytes(planTrafficBytes) : uiText(locale, "未设置", "Not set")}</dd>
-            </div>
-          </dl>
-        ) : null}
-        <div className="portal-v2-resource-state-actions">
-          <span className={cn("portal-order-status", resourceState === "active" ? "active" : "pending")}>
-            {resourceState === "active"
-              ? uiText(locale, "生效中", "Active")
-              : resourceState === "pending"
-                ? uiText(locale, "处理中", "Processing")
-                : uiText(locale, "待开通", "Not active")}
-          </span>
-          <button
-            className="portal-primary-button compact"
-            type="button"
-            onClick={() => setActiveView(resourceActionView)}
-          >
-            {resourceActionLabel}
-          </button>
-        </div>
-      </section> : null}
 
+
+      {!desktopViewport ? (
       <section className="portal-v2-metric-grid" aria-label={uiText(locale, "账户指标", "Account metrics")}>
         <article className="portal-v2-metric-card">
           <span><Activity aria-hidden="true" /> {uiText(locale, "服务状态", "Service status")}</span>
@@ -3631,6 +3630,9 @@ function DashboardPanel({
             : uiText(locale, "资源开通后显示当前额度", "Current quota appears after the resource is active")}</small>
         </article>
       </section>
+      ) : null}
+
+
 
       <section className="portal-v2-dashboard-grid">
         {!desktopViewport ? <article className="portal-v2-panel portal-v2-subscription-panel">
@@ -3681,7 +3683,7 @@ function DashboardPanel({
           sessionRef={sessionRef ?? null}
         />
 
-        <article className="portal-v2-panel">
+        <article className="portal-v2-panel portal-v2-dashboard-orders">
           <div className="portal-v2-panel-header">
             <div>
               <span className="portal-card-label">{uiText(locale, "最近订单", "Recent orders")}</span>
@@ -3722,7 +3724,7 @@ function DashboardPanel({
           )}
         </article>
 
-        <article className="portal-v2-panel">
+        {!desktopViewport ? <article className="portal-v2-panel portal-v2-dashboard-usage">
           <div className="portal-v2-panel-header">
             <div>
               <span className="portal-card-label">{uiText(locale, "用量排行", "Usage ranking")}</span>
@@ -3751,9 +3753,34 @@ function DashboardPanel({
               <span>{uiText(locale, "开始使用后会在这里显示流量。", "Traffic appears here after you start using the service.")}</span>
             </div>
           )}
-        </article>
+        </article> : null}
 
-        <article className="portal-v2-panel">
+        {desktopViewport ? (
+          <article className="portal-v2-panel portal-v2-dashboard-wallet">
+            <div className="portal-v2-panel-header">
+              <div>
+                <span className="portal-card-label">{uiText(locale, "钱包余额", "Wallet balance")}</span>
+                <h3>{uiText(locale, "账户 Coins", "Account Coins")}</h3>
+              </div>
+              <WalletCards aria-hidden="true" />
+            </div>
+            <div className="portal-v2-dashboard-wallet-balance">
+              <strong>{walletBalance === null ? "—" : walletBalance}</strong>
+              <span>Coins</span>
+            </div>
+            <p>{uiText(locale, "可用于套餐续费、购买与抵扣。", "Use Coins for renewals, purchases, and credits.")}</p>
+            <button
+              className="portal-primary-button compact"
+              type="button"
+              onClick={() => setActiveView("wallet")}
+            >
+              <Plus aria-hidden="true" />
+              {uiText(locale, "去充值", "Top up")}
+            </button>
+          </article>
+        ) : null}
+
+        <article className="portal-v2-panel portal-v2-dashboard-start">
           <div className="portal-v2-panel-header">
             <div>
               <span className="portal-card-label">{uiText(locale, "开始使用", "Start using")}</span>
