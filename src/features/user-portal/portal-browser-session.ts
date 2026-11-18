@@ -143,6 +143,10 @@ export function readPortalLocation(): PortalLocation {
     || !["profile", "security"].includes(profile)) return { ...DEFAULT_LOCATION };
   return { view: view as PortalLocation["view"], orderFilter: filter as PortalLocation["orderFilter"], profileSubview: profile as PortalLocation["profileSubview"] };
 }
+export function hasExplicitPortalView(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.hash.slice(1)).has("portal");
+}
 export function writePortalLocation(location: PortalLocation) {
   if (typeof window === "undefined") return;
   const hash = new URLSearchParams({ portal: location.view });

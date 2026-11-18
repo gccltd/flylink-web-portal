@@ -75,7 +75,7 @@ import {
 } from "./recharge";
 import { useDesktopScrollRegion } from "./use-desktop-scroll-region";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
-import { broadcastPortalSessionChange, clearPendingPortalLogout, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange, writePortalLocation } from "./portal-browser-session";
+import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange, writePortalLocation } from "./portal-browser-session";
 import { portalAssetPath, portalRoutePath } from "./portal-entry";
 import {
   PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY,
@@ -1894,7 +1894,16 @@ export function UserPortalPage({
       setHistorySummary(portalState.historySummary ?? subscriptionRequests.flatMap((request) => request.historySummary ?? []));
       setActivePaymentOrderRef(null);
       setOrderCenterFilter(readPortalLocation().orderFilter);
-      setActiveView(destination);
+      // Landing: an entitled account that opened the portal without an
+      // explicit view lands on the dashboard; a fresh account stays on the
+      // start guide, and an explicit #portal=… in the URL always wins.
+      const hasActiveEntitlement = accountEntitlementRows.some(
+        (entitlement) => entitlement.status === "active" && entitlement.usable
+      );
+      const landingView = destination === "start" && !hasExplicitPortalView() && hasActiveEntitlement
+        ? "dashboard"
+        : destination;
+      setActiveView(landingView);
     })();
     return { isCurrent, promise };
   }, [

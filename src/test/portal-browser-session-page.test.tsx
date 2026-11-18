@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { UserPortalPage } from "../features/user-portal/user-portal-page";
 import { createLocalUserPortalClient } from "../features/user-portal/user-portal-preview-client";
 import type { PortalSession } from "../features/user-portal/user-portal-client";
+import type { PortalAccountEntitlement } from "../features/user-portal/user-portal-types";
 import { PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY, PORTAL_REGISTRATION_SESSION_STORAGE_KEY } from "../features/user-portal/user-portal-types";
 
 const session: PortalSession = { status: "authenticated_preview", transport: "cookie", sessionRef: `portalctx_${"a".repeat(64)}`, expiresAt: "2026-09-07T00:30:00.000Z", registeredAt: "2026-09-07T00:00:00.000Z", userRef: "test_account", displayName: "Test Account", authMode: "password", safety: { noAdminApi: true, noPublicAuthActivated: true, noRawPasswordReturned: true } };
@@ -227,4 +228,48 @@ test("concept topbar: brand in header, bell opens orders without a badge, help o
   expect(within(menu).getByText("Test Account")).toBeInTheDocument();
   fireEvent.click(within(menu).getByRole("menuitem", { name: "退出登录" }));
   await waitFor(() => expect(c.logout).toHaveBeenCalledTimes(1));
+});
+
+const entitledFixture: PortalAccountEntitlement = {
+  entitlementRef: "ent_preview_yearly_001",
+  plan: "yearly",
+  status: "active",
+  usable: true,
+  validUntil: "2027-10-14T00:00:00.000Z",
+  quota: { trafficGb: 200 }
+};
+
+function entitledClient() {
+  const c = client();
+  const realFetchCurrentState = c.fetchCurrentState.bind(c);
+  c.fetchCurrentState = vi.fn(async (...args: Parameters<typeof realFetchCurrentState>) => {
+    const state = await realFetchCurrentState(...args);
+    return { ...state, accountEntitlements: [entitledFixture] };
+  });
+  return c;
+}
+
+test("restore with an active entitlement lands on the dashboard when no view was requested", async () => {
+  const c = entitledClient();
+  render(<UserPortalPage portalClient={c} />);
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  await waitFor(() => expect(window.location.hash).toBe("#portal=dashboard"));
+  expect(screen.getAllByRole("heading", { name: "账户概览", level: 1 }).length).toBeGreaterThan(0);
+});
+
+test("restore without an active entitlement stays on the start guide when no view was requested", async () => {
+  const c = client();
+  render(<UserPortalPage portalClient={c} />);
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  await waitFor(() => expect(window.location.hash).toBe("#portal=start"));
+  expect(screen.getAllByRole("heading", { name: "开始使用", level: 1 }).length).toBeGreaterThan(0);
+});
+
+test("restore with an active entitlement respects an explicit #portal=start in the URL", async () => {
+  window.history.replaceState(null, "", "/#portal=start");
+  const c = entitledClient();
+  render(<UserPortalPage portalClient={c} />);
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  await waitFor(() => expect(window.location.hash).toBe("#portal=start"));
+  expect(screen.getAllByRole("heading", { name: "开始使用", level: 1 }).length).toBeGreaterThan(0);
 });

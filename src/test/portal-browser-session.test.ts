@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { broadcastPortalSessionChange, subscribePortalSessionChange, createPortalBrowserFetch, readPortalLocation, writePortalLocation, withPortalAuthLock, readCookieSession } from "../features/user-portal/portal-browser-session";
+import { broadcastPortalSessionChange, subscribePortalSessionChange, createPortalBrowserFetch, hasExplicitPortalView, readPortalLocation, writePortalLocation, withPortalAuthLock, readCookieSession } from "../features/user-portal/portal-browser-session";
 import { createHttpUserPortalClient } from "../features/user-portal/user-portal-client";
 
 const context = `portalctx_${"a".repeat(64)}`;
@@ -203,4 +203,17 @@ test("location persists only allowlisted non-sensitive navigation", () => {
   expect(readPortalLocation()).toMatchObject({ view: "orders", orderFilter: "coin_recharge" });
   window.location.hash = "#portal=wallet&orderRef=private&sessionRef=secret";
   expect(readPortalLocation()).toEqual({ view: "start", orderFilter: "all", profileSubview: "profile" });
+});
+
+test("explicit portal hash is distinguishable from the default start location", () => {
+  expect(hasExplicitPortalView()).toBe(false);
+  window.history.replaceState(null, "", "/#portal=start");
+  expect(hasExplicitPortalView()).toBe(true);
+  expect(readPortalLocation().view).toBe("start");
+  window.history.replaceState(null, "", "/#portal=dashboard");
+  expect(hasExplicitPortalView()).toBe(true);
+  expect(readPortalLocation().view).toBe("dashboard");
+  window.history.replaceState(null, "", "/#portal=bogus");
+  expect(hasExplicitPortalView()).toBe(true);
+  expect(readPortalLocation().view).toBe("start");
 });
