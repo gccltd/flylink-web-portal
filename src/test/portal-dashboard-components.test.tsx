@@ -15,19 +15,26 @@ describe("Portal Dashboard components", () => {
       <DashboardRecentOrders
         locale="zh"
         orders={[{
-          requestRef: "service-1",
+          key: "service_access:service-1",
           orderNumber: "FL-1001",
-          planLabel: "年度套餐",
-          createdAt: "2026-11-18 10:00",
+          productLabel: "年度套餐",
+          kindLabel: "服务记录",
+          createdAtLabel: "11/18 10:00",
+          amountLabel: null,
+          amountDetail: null,
           status: "active",
-          statusLabel: "生效中"
+          statusLabel: "已完成"
         }]}
+        phase="ready"
+        retryable={false}
+        onRetry={vi.fn()}
         onOpenOrders={onOpenOrders}
       />
     );
 
     expect(screen.getByText("FL-1001")).toBeTruthy();
-    expect(screen.getByText("年度套餐 · 2026-11-18 10:00")).toBeTruthy();
+    expect(screen.getByText("年度套餐")).toBeTruthy();
+    expect(screen.getByText("服务记录 · FL-1001 · 11/18 10:00")).toBeTruthy();
     expect(screen.queryByText(/Coins/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "查看订单" }));
     fireEvent.click(screen.getByRole("button", { name: /FL-1001/ }));
