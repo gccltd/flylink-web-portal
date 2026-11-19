@@ -259,7 +259,7 @@ test("wallet-first Dashboard treats an available current resource as an active p
   window.history.replaceState(null, "", "/#portal=dashboard");
   const c = client();
   c.commerceModel = {
-    getCommerceModel: vi.fn(async () => "wallet_first_unique_v1")
+    getCommerceModel: vi.fn(async () => "wallet_first_unique_v1" as const)
   };
   c.fetchSecurityState = vi.fn(async () => ({
     authenticatorBound: false,
