@@ -43,7 +43,10 @@ export function DashboardRecentOrders({
               <button key={order.key} type="button" onClick={onOpenOrders}>
                 <span className="portal-v2-dashboard-order-main">
                   <strong>{order.productLabel}</strong>
-                  <small>{order.kindLabel} · {order.orderNumber} · {order.createdAtLabel}</small>
+                  <span className="portal-v2-dashboard-order-detail">
+                    <small>{order.kindLabel} · {order.orderNumber}</small>
+                    <small>{order.createdAtLabel}</small>
+                  </span>
                 </span>
                 <span className="portal-v2-dashboard-order-meta">
                   {order.amountLabel ? (
