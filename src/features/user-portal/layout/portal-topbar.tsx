@@ -1,0 +1,173 @@
+import { Bell, CircleHelp, LogOut, Search, ShieldCheck } from "lucide-react";
+import { PublicPreferenceSwitch } from "../public-locale-switch";
+
+type PortalTopbarProps = {
+  locale: "zh" | "en";
+  pageTitle: string;
+  mobileTitle: string;
+  ordersActive: boolean;
+  supportActive: boolean;
+  orderSearch: string;
+  onOrderSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
+  onOpenOrders: () => void;
+  onOpenSupport: () => void;
+  userDisplayName: string;
+  userMenuOpen: boolean;
+  onUserMenuOpenChange: (open: boolean) => void;
+  onLogout: () => void;
+  theme: "light" | "dark";
+  onLocaleChange: (locale: "zh" | "en") => void;
+  onThemeChange: (theme: "light" | "dark") => void;
+  preferencesLabel: string;
+  languageLabel: string;
+  themeLabel: string;
+};
+
+export function PortalTopbar({
+  locale,
+  pageTitle,
+  mobileTitle,
+  ordersActive,
+  supportActive,
+  orderSearch,
+  onOrderSearchChange,
+  onSearchSubmit,
+  onOpenOrders,
+  onOpenSupport,
+  userDisplayName,
+  userMenuOpen,
+  onUserMenuOpenChange,
+  onLogout,
+  theme,
+  onLocaleChange,
+  onThemeChange,
+  preferencesLabel,
+  languageLabel,
+  themeLabel
+}: PortalTopbarProps) {
+  const zh = locale === "zh";
+
+  return (
+    <>
+      <header className="portal-use-topbar portal-v2-topbar">
+        <div className="portal-v2-brand portal-v2-topbar-brand" aria-label="飞连VPN">
+          <span className="portal-v2-logo">
+            <ShieldCheck aria-hidden="true" />
+          </span>
+          <div>
+            <strong>飞连VPN</strong>
+            <small>{zh ? "用户中心" : "User center"}</small>
+          </div>
+        </div>
+        <div className="portal-v2-page-title">
+          <h1>{pageTitle}</h1>
+        </div>
+        <div className="portal-v2-topbar-actions">
+          <form
+            className="portal-v2-primary-actions portal-v2-global-search-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onSearchSubmit();
+            }}
+          >
+            <label className="portal-v2-global-search" htmlFor="portal-global-search">
+              <Search aria-hidden="true" />
+              <span className="sr-only">{zh ? "订单搜索" : "Orders search"}</span>
+              <input
+                id="portal-global-search"
+                type="search"
+                aria-label={zh ? "订单搜索" : "Orders search"}
+                value={orderSearch}
+                onChange={(event) => onOrderSearchChange(event.target.value)}
+                placeholder={zh ? "搜索订单、套餐或状态" : "Search orders, plans, or status"}
+              />
+            </label>
+          </form>
+          <div className="portal-v2-utility-actions" aria-label={zh ? "快速操作" : "Quick actions"}>
+            {/* There is no backend notification source; the bell opens Order Management. */}
+            <button
+              type="button"
+              className={["portal-v2-topbar-icon-button", ordersActive && "active"].filter(Boolean).join(" ")}
+              aria-label={zh ? "订单管理" : "Order management"}
+              title={zh ? "订单管理" : "Order management"}
+              onClick={onOpenOrders}
+            >
+              <Bell aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={["portal-v2-topbar-icon-button", supportActive && "active"].filter(Boolean).join(" ")}
+              aria-label={zh ? "帮助" : "Help"}
+              title={zh ? "帮助" : "Help"}
+              onClick={onOpenSupport}
+            >
+              <CircleHelp aria-hidden="true" />
+            </button>
+            <div className="portal-v2-topbar-user">
+              <button
+                type="button"
+                className="portal-v2-topbar-user-button"
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                aria-label={zh ? "账户菜单" : "Account menu"}
+                onClick={() => onUserMenuOpenChange(!userMenuOpen)}
+              >
+                <span className="portal-avatar" aria-hidden="true">{userDisplayName.charAt(0).toUpperCase()}</span>
+                <span className="portal-v2-topbar-user-name">{userDisplayName}</span>
+              </button>
+              {userMenuOpen ? (
+                <>
+                  <button
+                    type="button"
+                    className="portal-v2-topbar-user-backdrop"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    onClick={() => onUserMenuOpenChange(false)}
+                  />
+                  <div
+                    className="portal-v2-topbar-user-menu"
+                    role="menu"
+                    aria-label={zh ? "账户菜单" : "Account menu"}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") onUserMenuOpenChange(false);
+                    }}
+                  >
+                    <p className="portal-v2-topbar-user-menu-name">
+                      <strong>{userDisplayName}</strong>
+                    </p>
+                    <button
+                      type="button"
+                      className="portal-v2-topbar-user-menu-logout"
+                      role="menuitem"
+                      onClick={() => {
+                        onUserMenuOpenChange(false);
+                        onLogout();
+                      }}
+                    >
+                      <LogOut aria-hidden="true" />
+                      {zh ? "退出登录" : "Sign out"}
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </div>
+            <PublicPreferenceSwitch
+              ariaLabel={preferencesLabel}
+              localeAriaLabel={languageLabel}
+              themeAriaLabel={themeLabel}
+              locale={locale}
+              theme={theme}
+              onLocaleChange={onLocaleChange}
+              onThemeChange={onThemeChange}
+              className="portal-v2-preference-switch"
+            />
+          </div>
+        </div>
+      </header>
+      <div className="portal-v2-mobile-title">
+        <h1>{mobileTitle}</h1>
+      </div>
+    </>
+  );
+}
