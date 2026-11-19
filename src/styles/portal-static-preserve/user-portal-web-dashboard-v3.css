@@ -1316,3 +1316,18 @@
     transform: none;
   }
 }
+
+/* Resolve baseline theme-specific chrome selectors without !important. */
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-sidebar,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-sidebar {
+    background: var(--web-glass-chrome);
+    border-right-color: rgba(192, 214, 255, 0.32);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-topbar,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-topbar {
+    background: var(--web-glass-top);
+    border-bottom-color: rgba(189, 212, 252, 0.34);
+  }
+}
