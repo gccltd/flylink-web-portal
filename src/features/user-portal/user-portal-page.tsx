@@ -53,6 +53,7 @@ import {
   type PortalWalletFirstCommerceClient
 } from "./commerce";
 import { PortalOrdersPanel } from "./orders/portal-orders-panel";
+import { PortalWalletFirstOrdersPanel } from "./orders/portal-wallet-first-orders-panel";
 import { DataPackRotationProvider } from "./commerce/data-pack-rotation-context";
 import type { PortalServiceOrder } from "./orders/portal-order-center-model";
 import { PortalPersonalCenterPanel } from "./profile/portal-personal-center-panel";
@@ -1083,8 +1084,8 @@ function WalletFirstOrdersNotice({
           <p>
             {uiText(
               locale,
-              "此账户使用 Coins 服务资源模型。服务切换和交付状态请在商城中查看。",
-              "This account uses the Coins service-resource model. View service transitions and delivery in Marketplace."
+              "此账户使用 Coins 服务资源模型，不生成传统订单号。下方展示服务端返回的服务切换记录；套餐和报价可在商城查看。",
+              "This account uses the Coins service-resource model and does not create traditional order numbers. Server-projected service transitions appear below; browse plans and quotes in Marketplace."
             )}
           </p>
         </div>
@@ -2996,18 +2997,27 @@ export function UserPortalPage({
             />
           ) : null}
           {activeView === "orders" && commerceModel === "wallet_first_unique_v1" ? (
-            walletFirstCurrentResource ? (
-              <WalletFirstCurrentResourceStatus
-                resource={walletFirstCurrentResource}
+            <>
+              {walletFirstCurrentResource ? (
+                <WalletFirstCurrentResourceStatus
+                  resource={walletFirstCurrentResource}
+                  locale={locale}
+                  onOpenMarketplace={openMarketplace}
+                />
+              ) : (
+                <WalletFirstOrdersNotice
+                  locale={locale}
+                  onOpenMarketplace={openMarketplace}
+                />
+              )}
+              <PortalWalletFirstOrdersPanel
+                commerceClient={portalClient.walletFirstCommerce ?? null}
                 locale={locale}
-                onOpenMarketplace={openMarketplace}
+                sessionGeneration={sessionGeneration}
+                sessionRef={portalSession.sessionRef ?? null}
+                onSessionInvalid={invalidateSession}
               />
-            ) : (
-              <WalletFirstOrdersNotice
-                locale={locale}
-                onOpenMarketplace={openMarketplace}
-              />
-            )
+            </>
           ) : activeView === "orders" && paymentFlowActive ? renderLegacyPaymentFlow() : null}
           {activeView === "orders" && commerceModel !== "wallet_first_unique_v1" && !paymentFlowActive ? (
             <PortalOrdersPanel

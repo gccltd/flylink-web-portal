@@ -6,6 +6,7 @@ import { UserPortalPage } from "../features/user-portal/user-portal-page";
 import { createLocalUserPortalClient } from "../features/user-portal/user-portal-preview-client";
 import type { PortalSession } from "../features/user-portal/user-portal-client";
 import type { PortalAccountEntitlement } from "../features/user-portal/user-portal-types";
+import type { PortalDeferredTransition } from "../features/user-portal/commerce";
 import { PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY, PORTAL_REGISTRATION_SESSION_STORAGE_KEY } from "../features/user-portal/user-portal-types";
 
 const session: PortalSession = { status: "authenticated_preview", transport: "cookie", sessionRef: `portalctx_${"a".repeat(64)}`, expiresAt: "2026-09-07T00:30:00.000Z", registeredAt: "2026-09-07T00:00:00.000Z", userRef: "test_account", displayName: "Test Account", authMode: "password", safety: { noAdminApi: true, noPublicAuthActivated: true, noRawPasswordReturned: true } };
@@ -292,6 +293,74 @@ test("wallet-first Dashboard treats an available current resource as an active p
   expect(screen.queryByRole("button", { name: "一键续费" })).not.toBeInTheDocument();
   fireEvent.click(renewButton);
   await waitFor(() => expect(window.location.hash).toBe("#portal=marketplace"));
+});
+
+test("wallet-first Orders shows server-projected service transition history", async () => {
+  window.history.replaceState(null, "", "/#portal=orders");
+  const c = client();
+  c.commerceModel = {
+    getCommerceModel: vi.fn(async () => "wallet_first_unique_v1" as const)
+  };
+  c.fetchSecurityState = vi.fn(async () => ({
+    authenticatorBound: false,
+    initialAccount: false,
+    passkeyEnabled: false,
+    passkeyExported: false,
+    setupRequired: false
+  }));
+  c.fetchCurrentResource = vi.fn(async () => ({
+    state: "available" as const,
+    plan: {
+      id: "monthly_basic",
+      durationDays: 30,
+      monthlyTrafficGb: 50
+    },
+    validUntil: "2027-10-14T00:00:00.000Z",
+    setupAvailable: false
+  }));
+  const transition: PortalDeferredTransition = {
+    transitionRef: "transition_wallet_first_orders_1",
+    offer: {
+      offerRef: "offer_annual_orders_test",
+      offerVersionRef: "offer_version_annual_orders_test",
+      category: "plan",
+      title: { zh: "年度套餐", en: "Annual plan" },
+      summary: { zh: "年度服务", en: "Annual service" },
+      importantNotices: { zh: [], en: [] },
+      baseCoinUnits: 200,
+      referencePrice: { currency: "CNY", amountMinor: 20_000 },
+      acceptedCoinTypes: ["paid_coins"],
+      delivery: {
+        kind: "subscription_plan",
+        durationDays: 365,
+        monthlyTrafficGb: 200,
+        trafficGb: null,
+        neverExpires: false,
+        discountBasisPoints: 0
+      }
+    },
+    amountUnits: 200,
+    flowKind: "scheduled_switch",
+    scheduledFor: "2027-08-13T00:00:00.000Z",
+    state: "reserved",
+    safeCode: null,
+    reservedAt: "2026-08-13T00:00:00.000Z",
+    settledAt: null,
+    createdAt: "2026-08-13T00:00:00.000Z",
+    updatedAt: "2026-08-13T00:00:00.000Z"
+  };
+  const listDeferredTransitions = vi.fn(async () => [transition]);
+  c.walletFirstCommerce = {
+    listDeferredTransitions
+  } as unknown as NonNullable<typeof c.walletFirstCommerce>;
+
+  render(<UserPortalPage portalClient={c} />);
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  expect(await screen.findByRole("heading", { name: "服务切换记录" })).toBeInTheDocument();
+  expect(await screen.findByText("年度套餐")).toBeInTheDocument();
+  expect(screen.getByText("已预留，等待执行")).toBeInTheDocument();
+  expect(listDeferredTransitions).toHaveBeenCalledWith({ sessionRef: session.sessionRef });
+  expect(screen.queryByRole("button", { name: "取消预留" })).not.toBeInTheDocument();
 });
 
 test("restore with an active entitlement lands on the dashboard when no view was requested", async () => {
