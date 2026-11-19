@@ -20,6 +20,7 @@ describe("Portal desktop shell components", () => {
     );
 
     expect(document.querySelector(".portal-v2-shell")?.getAttribute("data-portal-theme")).toBe("dark");
+    expect(document.querySelector(".portal-v2-shell")?.classList.contains("portal-v2-shell-payment")).toBe(true);
     expect(screen.getByLabelText("sidebar")).toBeTruthy();
     expect(screen.getByRole("main").className).toContain("portal-v2-main-payment");
     expect(screen.getByRole("heading", { name: "Account overview" })).toBeTruthy();
