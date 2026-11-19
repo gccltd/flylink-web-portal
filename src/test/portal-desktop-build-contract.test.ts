@@ -23,12 +23,19 @@ describe("portal desktop build boundary", () => {
     expect(packageJson.scripts?.["verify:portal:web"]).toContain("dist-portal-web");
   });
 
-  test("keeps tiny Web-only brand assets and responsive scene gating", () => {
+  test("keeps full-resolution but compressed Web-only assets and responsive scene gating", () => {
     expect(robotLogo.byteLength).toBeLessThan(12 * 1024);
-    expect(cityScene.byteLength).toBeLessThan(24 * 1024);
+    expect(cityScene.byteLength).toBeGreaterThan(24 * 1024);
+    expect(cityScene.byteLength).toBeLessThan(180 * 1024);
+    expect(cityScene.toString("ascii", 0, 4)).toBe("RIFF");
+    expect(cityScene.toString("ascii", 8, 12)).toBe("WEBP");
+    expect(cityScene.toString("ascii", 12, 16)).toBe("VP8 ");
+    expect(cityScene.readUInt16LE(26) & 0x3fff).toBe(1600);
+    expect(cityScene.readUInt16LE(28) & 0x3fff).toBe(900);
     expect(webCss).toContain("portal-v2-shell--web");
     expect(webCss).toContain("@media (min-width: 1200px)");
     expect(webCss).toContain("prefers-reduced-data");
+    expect(webCss).toContain("background-size:100% 100%,100% auto");
   });
 
   test("keeps desktop public URLs separate from the legacy mobile entry", () => {

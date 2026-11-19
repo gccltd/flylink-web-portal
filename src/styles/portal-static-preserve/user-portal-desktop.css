@@ -7711,12 +7711,12 @@
 @media (min-width: 1200px) {
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] {
     background-image:linear-gradient(180deg,rgba(7,15,39,.75),rgba(11,21,45,.90) 65%,#0c1733),url("/web/portal-dashboard-scene.webp");
-    background-size:cover,cover;background-position:center top;background-repeat:no-repeat;
+    background-size:100% 100%,100% auto;background-position:center top;background-repeat:no-repeat;
     background-attachment:scroll;
   }
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] {
     background-image:linear-gradient(180deg,rgba(248,250,255,.93),rgba(245,248,255,.95) 70%,#f5f8ff),url("/web/portal-dashboard-scene.webp");
-    background-size:cover,cover;background-position:center top;background-repeat:no-repeat;
+    background-size:100% 100%,100% auto;background-position:center top;background-repeat:no-repeat;
     background-attachment:scroll;
   }
 }
