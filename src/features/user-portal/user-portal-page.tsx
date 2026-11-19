@@ -66,7 +66,8 @@ import {
 import {
   clearPortalRechargeReturn,
   readPortalRechargeReturn,
-  usePortalRecharge
+  usePortalRecharge,
+  type PortalRechargeClient
 } from "./recharge";
 import { useDesktopScrollRegion } from "./use-desktop-scroll-region";
 import { PortalAppShell } from "./layout/portal-app-shell";
@@ -74,6 +75,8 @@ import { PortalSidebar } from "./layout/portal-sidebar";
 import { PortalTopbar } from "./layout/portal-topbar";
 import { DashboardOverviewCard } from "./dashboard/dashboard-overview-card";
 import { DashboardRecentOrders } from "./dashboard/dashboard-recent-orders";
+import { presentDashboardRecentOrders } from "./dashboard/dashboard-recent-orders-model";
+import { usePortalDashboardRecentActivity } from "./dashboard/use-portal-dashboard-recent-activity";
 import { DashboardWalletCard } from "./dashboard/dashboard-wallet-card";
 import { DashboardStartCard } from "./dashboard/dashboard-start-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
@@ -2933,6 +2936,7 @@ export function UserPortalPage({
               created={created}
               lifecycle={lifecycle}
               orderRows={orderRows}
+              legacyPaymentOrders={paymentOrders}
               currentEntitlement={currentEntitlement}
               selectedOrder={selectedOrder}
               currentResource={walletFirstCurrentResource}
@@ -2945,8 +2949,11 @@ export function UserPortalPage({
               commerceClient={portalClient.commerce ?? null}
               commerceModelClient={portalClient.commerceModel ?? null}
               walletFirstCommerceClient={portalClient.walletFirstCommerce ?? null}
+              rechargeClient={portalClient.recharge ?? null}
+              enableCoinOrders={commerceModel !== "wallet_first_unique_v1"}
               sessionRef={portalSession.sessionRef ?? null}
               sessionGeneration={sessionGeneration}
+              onSessionInvalid={invalidateSession}
               onOpenMarketplace={openMarketplace}
             />
           ) : null}
@@ -3203,13 +3210,18 @@ function DashboardPanel({
   commerceClient,
   commerceModelClient,
   walletFirstCommerceClient,
+  rechargeClient,
+  legacyPaymentOrders,
+  enableCoinOrders,
   sessionRef,
   sessionGeneration,
+  onSessionInvalid,
   onOpenMarketplace
 }: {
   created: CreatedSubscription | null;
   lifecycle: SubscriptionLifecycle;
   orderRows: PortalOrderRow[];
+  legacyPaymentOrders: PortalPaymentOrder[];
   currentEntitlement: PortalAccountEntitlement | null;
   selectedOrder: PortalOrderRow | null;
   currentResource?: PortalCurrentResource | null;
@@ -3222,11 +3234,25 @@ function DashboardPanel({
   commerceClient?: PortalCoinCommerceClient | null;
   commerceModelClient?: PortalCommerceModelClient | null;
   walletFirstCommerceClient?: PortalWalletFirstCommerceClient | null;
+  rechargeClient?: PortalRechargeClient | null;
+  enableCoinOrders: boolean;
   sessionRef?: string | null;
   sessionGeneration?: number;
+  onSessionInvalid: () => void;
   onOpenMarketplace?: () => void;
 }) {
   const desktopViewport = useDesktopScrollRegion();
+  const recentActivity = usePortalDashboardRecentActivity({
+    commerceClient: commerceClient ?? null,
+    rechargeClient: rechargeClient ?? null,
+    enableCoinOrders,
+    legacyPaymentOrders,
+    serviceOrders: orderRows,
+    sessionRef: sessionRef ?? null,
+    sessionGeneration: sessionGeneration ?? 0,
+    onSessionInvalid
+  });
+  const recentOrders = presentDashboardRecentOrders(recentActivity.items, locale).slice(0, 3);
   const pendingOrders = pendingOrderCount(orderRows);
   const entitlementPlanId = currentEntitlement ? planIdFromEntitlement(currentEntitlement) : null;
   const currentPlan = selectedOrder
@@ -3283,17 +3309,6 @@ function DashboardPanel({
       : planTrafficBytes > 0 && remainingTrafficBytes !== null
         ? `${formatTrafficBytes(remainingTrafficBytes)} / ${formatTrafficBytes(planTrafficBytes)}`
         : uiText(locale, "未设置额度", "No quota");
-  const recentOrders = orderRows.slice(0, 3);
-  // P2-1 (2026-11-17, NOT closed): these rows are PortalServiceOrder
-  // records (requestRef, no amount field). Neither candidate source
-  // joins to them — PortalCoinOrder has orderRef but no service
-  // request ref, and wallet ledger entries link via relatedOrderRef, an
-  // opaque order ref with no mapping to a service requestRef in this
-  // codebase (and one service order can map to several ledger entries).
-  // No amount column is rendered rather than inventing one. Closing
-  // P2-1 needs a backend field: amountUnits on the service-order read,
-  // or a coinOrderRef on the service order / serviceRequestRef on the
-  // coin order.
   const heavyUsageOrders = [...orderRows]
     .sort((left, right) => orderUsageSortValue(right) - orderUsageSortValue(left))
     .slice(0, 3);
@@ -3434,14 +3449,10 @@ function DashboardPanel({
 
         <DashboardRecentOrders
           locale={locale}
-          orders={recentOrders.map((order) => ({
-            requestRef: order.requestRef,
-            orderNumber: orderNumber(order.requestRef),
-            planLabel: selectedPlan(order.planId, locale).label,
-            createdAt: formatDateTime(order.createdAt, locale),
-            status: order.status,
-            statusLabel: orderStatusLabel(order.status, locale)
-          }))}
+          orders={recentOrders}
+          phase={recentActivity.phase}
+          retryable={recentActivity.retryable}
+          onRetry={recentActivity.retry}
           onOpenOrders={() => setActiveView("orders")}
         />
 
