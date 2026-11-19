@@ -1,4 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
+import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   PortalCoinCommerceClientError,

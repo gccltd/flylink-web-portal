@@ -299,6 +299,23 @@ test("wallet-first Orders shows server-projected service transition history", as
   c.commerceModel = {
     getCommerceModel: vi.fn(async () => "wallet_first_unique_v1" as const)
   };
+  c.fetchSecurityState = vi.fn(async () => ({
+    authenticatorBound: false,
+    initialAccount: false,
+    passkeyEnabled: false,
+    passkeyExported: false,
+    setupRequired: false
+  }));
+  c.fetchCurrentResource = vi.fn(async () => ({
+    state: "available" as const,
+    plan: {
+      id: "monthly_basic",
+      durationDays: 30,
+      monthlyTrafficGb: 50
+    },
+    validUntil: "2027-10-14T00:00:00.000Z",
+    setupAvailable: false
+  }));
   const transition: PortalDeferredTransition = {
     transitionRef: "transition_wallet_first_orders_1",
     offer: {
