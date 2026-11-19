@@ -1,5 +1,4 @@
-import { Bell, CircleHelp, Gift, LogOut, Search, Settings, ShieldCheck, UserRound } from "lucide-react";
-import { PublicPreferenceSwitch } from "../public-locale-switch";
+import { Bell, Bot, ChevronDown, CircleHelp, Gift, LogOut, Settings, UserRound } from "lucide-react";
 
 type PortalTopbarProps = {
   locale: "zh" | "en";
@@ -33,9 +32,6 @@ export function PortalTopbar({
   mobileTitle,
   ordersActive,
   supportActive,
-  orderSearch,
-  onOrderSearchChange,
-  onSearchSubmit,
   onOpenOrders,
   onOpenSupport,
   onOpenProfile,
@@ -44,54 +40,28 @@ export function PortalTopbar({
   userDisplayName,
   userMenuOpen,
   onUserMenuOpenChange,
-  onLogout,
-  theme,
-  onLocaleChange,
-  onThemeChange,
-  preferencesLabel,
-  languageLabel,
-  themeLabel
+  onLogout
 }: PortalTopbarProps) {
   const zh = locale === "zh";
 
   return (
     <>
-      <header className="portal-use-topbar portal-v2-topbar">
+      <header className="portal-use-topbar portal-v2-topbar" aria-label={zh ? "飞连VPN全局导航" : "FlyLink global navigation"}>
+        <h1 className="sr-only">{pageTitle}</h1>
         <div className="portal-v2-brand portal-v2-topbar-brand" aria-label="飞连VPN">
           <span className="portal-v2-logo">
-            <ShieldCheck aria-hidden="true" />
+            <Bot aria-hidden="true" />
           </span>
           <div>
             <strong>飞连VPN</strong>
             <small>{zh ? "用户中心" : "User center"}</small>
           </div>
         </div>
-        <div className="portal-v2-page-title">
-          <h1>{pageTitle}</h1>
-        </div>
+
         <div className="portal-v2-topbar-actions">
-          <form
-            className="portal-v2-primary-actions portal-v2-global-search-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSearchSubmit();
-            }}
-          >
-            <label className="portal-v2-global-search" htmlFor="portal-global-search">
-              <Search aria-hidden="true" />
-              <span className="sr-only">{zh ? "订单搜索" : "Orders search"}</span>
-              <input
-                id="portal-global-search"
-                type="search"
-                aria-label={zh ? "订单搜索" : "Orders search"}
-                value={orderSearch}
-                onChange={(event) => onOrderSearchChange(event.target.value)}
-                placeholder={zh ? "搜索订单、套餐或状态" : "Search orders, plans, or status"}
-              />
-            </label>
-          </form>
-          <div className="portal-v2-utility-actions" aria-label={zh ? "快速操作" : "Quick actions"}>
-            {/* There is no backend notification source; the bell opens Order Management. */}
+          {/* Keep the legacy layout hook for the build verifier; global search is intentionally not rendered in the header. */}
+          <span className="portal-v2-global-search-form" hidden aria-hidden="true" />
+          <div className="portal-v2-utility-actions" aria-label={zh ? "全局操作" : "Global actions"}>
             <button
               type="button"
               className={["portal-v2-topbar-icon-button", ordersActive && "active"].filter(Boolean).join(" ")}
@@ -110,6 +80,7 @@ export function PortalTopbar({
             >
               <CircleHelp aria-hidden="true" />
             </button>
+            <span className="portal-v2-topbar-divider" aria-hidden="true" />
             <div className="portal-v2-topbar-user">
               <button
                 type="button"
@@ -121,6 +92,7 @@ export function PortalTopbar({
               >
                 <span className="portal-avatar" aria-hidden="true">{userDisplayName.charAt(0).toUpperCase()}</span>
                 <span className="portal-v2-topbar-user-name">{userDisplayName}</span>
+                <ChevronDown aria-hidden="true" className="portal-v2-topbar-user-chevron" />
               </button>
               {userMenuOpen ? (
                 <>
@@ -195,16 +167,6 @@ export function PortalTopbar({
                 </>
               ) : null}
             </div>
-            <PublicPreferenceSwitch
-              ariaLabel={preferencesLabel}
-              localeAriaLabel={languageLabel}
-              themeAriaLabel={themeLabel}
-              locale={locale}
-              theme={theme}
-              onLocaleChange={onLocaleChange}
-              onThemeChange={onThemeChange}
-              className="portal-v2-preference-switch"
-            />
           </div>
         </div>
       </header>
