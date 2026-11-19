@@ -1906,7 +1906,9 @@ export function UserPortalPage({
   }, [
     advanceSessionGeneration,
     clearWalletFirstSetupIdempotencyKey,
-    portalClient
+    portalClient,
+    setActiveView,
+    setOrderCenterFilter
   ]);
 
   useEffect(() => {
@@ -2249,7 +2251,7 @@ export function UserPortalPage({
     } finally {
       endLinkOp(linkOpGeneration);
     }
-  }, [beginLinkOp, commerceModel, currentEntitlement, endLinkOp, historySummary, locale, portalClient, portalSession, selectedOrder, selectedPlanId]);
+  }, [beginLinkOp, commerceModel, currentEntitlement, endLinkOp, historySummary, locale, portalClient, portalSession, selectedOrder, selectedPlanId, setActiveView]);
 
   async function resetSubscriptionLink(idempotencyKey: string, requestRef: string): Promise<string> {
     const order = selectedOrder;
@@ -2349,7 +2351,7 @@ export function UserPortalPage({
   const requestRenewal = useCallback(() => {
     setRenewRevision((revision) => revision + 1);
     setActiveView("marketplace");
-  }, []);
+  }, [setActiveView]);
 
   function closeOrderForm() {
     if (pending) return;
