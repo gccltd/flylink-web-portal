@@ -255,6 +255,40 @@ function entitledClient() {
   return c;
 }
 
+test("wallet-first Dashboard treats an available current resource as an active plan", async () => {
+  window.history.replaceState(null, "", "/#portal=dashboard");
+  const c = client();
+  c.commerceModel = {
+    getCommerceModel: vi.fn(async () => "wallet_first_unique_v1")
+  };
+  c.fetchSecurityState = vi.fn(async () => ({
+    authenticatorBound: false,
+    initialAccount: false,
+    passkeyEnabled: false,
+    passkeyExported: false,
+    setupRequired: false
+  }));
+  c.fetchCurrentResource = vi.fn(async () => ({
+    state: "available" as const,
+    plan: {
+      id: "monthly_basic",
+      durationDays: 30,
+      monthlyTrafficGb: 50
+    },
+    validUntil: "2027-10-14T00:00:00.000Z",
+    setupAvailable: false
+  }));
+
+  render(<UserPortalPage portalClient={c} />);
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  await waitFor(() => expect(c.fetchCurrentResource).toHaveBeenCalledWith({
+    sessionRef: session.sessionRef
+  }));
+
+  expect(await screen.findByRole("button", { name: "一键续费" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "去商城选套餐" })).not.toBeInTheDocument();
+});
+
 test("restore with an active entitlement lands on the dashboard when no view was requested", async () => {
   const c = entitledClient();
   render(<UserPortalPage portalClient={c} />);
