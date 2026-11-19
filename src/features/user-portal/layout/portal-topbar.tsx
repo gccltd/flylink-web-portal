@@ -1,4 +1,4 @@
-import { Bell, Bot, ChevronDown, CircleHelp, Gift, LogOut, Settings, UserRound } from "lucide-react";
+import { Bell, Globe2, ChevronDown, CircleHelp, Gift, LogOut, Settings, UserRound } from "lucide-react";
 
 type PortalTopbarProps = {
   locale: "zh" | "en";
@@ -50,7 +50,7 @@ export function PortalTopbar({
         <h1 className="sr-only">{pageTitle}</h1>
         <div className="portal-v2-brand portal-v2-topbar-brand" aria-label="飞连VPN">
           <span className="portal-v2-logo">
-            <Bot aria-hidden="true" />
+            <Globe2 aria-hidden="true" />
           </span>
           <div>
             <strong>飞连VPN</strong>
