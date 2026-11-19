@@ -2537,7 +2537,9 @@ export function UserPortalPage({
     }
   }
 
-  if (!portalSession && ["restoring", "unavailable", "logging_out", "logout_failed"].includes(sessionPhase)) {
+  // Session restoration runs in the background. Keep the normal login entry mounted
+  // until a cookie session is confirmed instead of blocking every visit on a restore page.
+  if (!portalSession && ["unavailable", "logging_out", "logout_failed"].includes(sessionPhase)) {
     const failed = sessionPhase === "unavailable" || sessionPhase === "logout_failed";
     return <main className="portal-login-shell" data-portal-theme={theme}>
       <section className="portal-login-main" aria-label={uiText(locale, "登录状态", "Sign-in status")}>

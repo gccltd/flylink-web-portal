@@ -32,6 +32,23 @@ test("StrictMode restores once, reads fresh data and preserves safe wallet locat
   expect(window.sessionStorage.length).toBe(0);
 });
 
+test("pending session restore keeps the regular login entry visible without a restore interstitial", async () => {
+  const pending = deferred<PortalSession | null>();
+  const c = client();
+  c.restoreSession.mockReturnValueOnce(pending.promise);
+  render(<UserPortalPage portalClient={c} />);
+
+  expect(screen.getByRole("heading", { name: "账号登录" })).toBeInTheDocument();
+  expect(screen.queryByText(/正在恢复登录|Restoring sign-in/)).not.toBeInTheDocument();
+  expect(c.restoreSession).toHaveBeenCalledTimes(1);
+  expect(c.issueHumanChallenge).not.toHaveBeenCalled();
+
+  await act(async () => pending.resolve(session));
+  await screen.findByRole("navigation", { name: "用户中心导航" });
+  expect(screen.queryByRole("heading", { name: "账号登录" })).not.toBeInTheDocument();
+  expect(c.issueHumanChallenge).not.toHaveBeenCalled();
+});
+
 test("anonymous bootstrap shows login, while network failure offers retry without claiming logout", async () => {
   const c = client();
   c.restoreSession.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(null);
