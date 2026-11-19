@@ -32,16 +32,18 @@ test("StrictMode restores once, reads fresh data and preserves safe wallet locat
   expect(window.sessionStorage.length).toBe(0);
 });
 
-test("anonymous bootstrap shows login, while network failure offers retry without claiming logout", async () => {
+test("session restoration never blocks the login page; a failed restore is shown inline with retry", async () => {
   const c = client();
   c.restoreSession.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(null);
   render(<UserPortalPage portalClient={c}/>);
+  expect(await screen.findByRole("button", {name:"登录"})).toBeInTheDocument();
+  expect(screen.queryByText("正在恢复登录…")).not.toBeInTheDocument();
   expect(await screen.findByRole("alert")).toHaveTextContent("暂时无法恢复登录");
-  expect(c.issueHumanChallenge).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", {name:"重试恢复登录"}));
-  await screen.findByRole("button", {name:"登录"});
-  await waitFor(()=>expect(c.issueHumanChallenge).toHaveBeenCalledTimes(1));
-  expect(c.restoreSession).toHaveBeenCalledTimes(2);
+  expect(c.issueHumanChallenge).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", {name:"重试"}));
+  await waitFor(()=>expect(c.restoreSession).toHaveBeenCalledTimes(2));
+  expect(await screen.findByRole("button", {name:"登录"})).toBeInTheDocument();
+  expect(screen.queryByText("正在恢复登录…")).not.toBeInTheDocument();
 });
 
 test.each([false, true])("cookie mount removes only obsolete credential handoffs with pending logout=%s", async (pendingLogout) => {
@@ -299,6 +301,35 @@ test("restore with an active entitlement lands on the dashboard when no view was
   await waitFor(() => expect(window.location.hash).toBe("#portal=dashboard"));
   expect(screen.getAllByRole("heading", { name: "账户概览", level: 1 }).length).toBeGreaterThan(0);
 });
+
+test.each([390, 1280])("Dashboard keeps the same concept hierarchy at %i px", async (width) => {
+  const previousWidth = window.innerWidth;
+  const previousMatchMedia = window.matchMedia;
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+  Object.defineProperty(window, "matchMedia", { configurable: true, value: undefined });
+  window.history.replaceState(null, "", "/#portal=dashboard");
+
+  try {
+    const c = entitledClient();
+    render(<UserPortalPage portalClient={c} />);
+    const navigation = await screen.findByRole("navigation", { name: "用户中心导航" });
+    expect(within(navigation).getAllByRole("button")).toHaveLength(5);
+
+    expect(await screen.findByRole("region", { name: "账户总览" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "近期订单" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "账户 Coins" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "开始使用" })).toBeInTheDocument();
+
+    expect(document.querySelector(".portal-v2-metric-grid[aria-label='账户指标']")).toBeNull();
+    expect(document.querySelector(".portal-v2-subscription-panel")).toBeNull();
+    expect(document.querySelector(".portal-v2-dashboard-usage")).toBeNull();
+  } finally {
+    cleanup();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: previousWidth });
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: previousMatchMedia });
+  }
+});
+
 
 test("restore without an active entitlement stays on the start guide when no view was requested", async () => {
   const c = client();

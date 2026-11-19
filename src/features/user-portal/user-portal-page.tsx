@@ -553,20 +553,6 @@ function paymentStatusLabel(status: PortalPaymentOrder["status"], locale: Portal
   }
 }
 
-function orderHealthLabel(
-  orderRows: PortalOrderRow[],
-  accountEntitlements: PortalAccountEntitlement[] = [],
-  locale: PortalAuthLocale = "zh"
-) {
-  if (accountEntitlements.some((entitlement) => usableTrafficEntitlement(entitlement))) {
-    return uiText(locale, "服务可用", "Service available");
-  }
-  if (orderRows.length === 0) return uiText(locale, "未开通", "Not active");
-  if (activeOrderCount(orderRows) > 0) return uiText(locale, "服务可用", "Service available");
-  if (pendingOrderCount(orderRows) > 0) return uiText(locale, "开通中", "Activation pending");
-  return orderStatusLabel(orderRows[0].status, locale);
-}
-
 function expiryDisplay(created: CreatedSubscription | null, lifecycle: SubscriptionLifecycle, locale: PortalAuthLocale = "zh") {
   if (!created) return uiText(locale, "无", "None");
   if (lifecycle === "pending") return uiText(locale, "开通中", "Activation pending");
@@ -975,14 +961,6 @@ function aggregateTrafficUsage(orderRows: PortalOrderRow[], accountEntitlements:
 function aggregateTrafficPercent(summary: ReturnType<typeof aggregateTrafficUsage>) {
   if (summary.totalBytes <= 0) return 0;
   return Math.max(0, Math.min(100, (summary.usedBytes / summary.totalBytes) * 100));
-}
-
-function orderUsageSortValue(order: PortalOrderRow) {
-  return order.request.usage?.usedBytes ?? -1;
-}
-
-function activeOrderCount(orderRows: PortalOrderRow[]) {
-  return orderRows.filter((order) => order.status === "active").length;
 }
 
 function pendingOrderCount(orderRows: PortalOrderRow[]) {
@@ -1757,7 +1735,7 @@ export function UserPortalPage({
   }, [portalClient, locale]);
 
   useEffect(() => {
-    if (sessionPhase === "anonymous" && !portalSession && !initialSession) void refreshHumanChallenge();
+    if (["anonymous", "unavailable"].includes(sessionPhase) && !portalSession && !initialSession) void refreshHumanChallenge();
   }, [refreshHumanChallenge, sessionPhase, portalSession, initialSession]);
 
   const hydratePortalSession = useCallback((
@@ -2559,8 +2537,8 @@ export function UserPortalPage({
     }
   }
 
-  if (!portalSession && ["restoring", "unavailable", "logging_out", "logout_failed"].includes(sessionPhase)) {
-    const failed = sessionPhase === "unavailable" || sessionPhase === "logout_failed";
+  if (!portalSession && ["logging_out", "logout_failed"].includes(sessionPhase)) {
+    const failed = sessionPhase === "logout_failed";
     return <main className="portal-login-shell" data-portal-theme={theme}>
       <section className="portal-login-main" aria-label={uiText(locale, "登录状态", "Sign-in status")}>
         <div className="portal-login-form-card" role={failed ? "alert" : "status"}>
@@ -2707,6 +2685,15 @@ export function UserPortalPage({
             </div>
 
             <form className="portal-login-form" onSubmit={submitAuth}>
+              {sessionPhase === "unavailable" ? (
+                <p role="alert" className="portal-login-error">
+                  {uiText(locale, "暂时无法恢复登录，请检查网络后重试，或直接登录。", "Your saved session could not be restored. Check your connection and retry, or sign in below.")}
+                  {" "}
+                  <button type="button" className="portal-link-button" onClick={() => setBootstrapRevision((value) => value + 1)}>
+                    {uiText(locale, "重试", "Retry")}
+                  </button>
+                </p>
+              ) : null}
               {logoutContextRef.current ? <p role="alert" className="portal-login-error">{uiText(locale,
                 "上次注销结果尚未确认。不会自动恢复账户，请重新验证身份后登录。",
                 "The previous sign-out is not confirmed. Your account will not be restored automatically; verify your identity to sign in again.")}</p> : null}
@@ -2903,7 +2890,6 @@ export function UserPortalPage({
               selectedOrder={selectedOrder}
               currentResource={walletFirstCurrentResource}
               setActiveView={setActiveView}
-              trafficPercent={trafficPercent}
               trafficSummary={trafficSummary}
               locale={locale}
               walletBalance={authoritativeWalletBalance}
@@ -3164,7 +3150,6 @@ function DashboardPanel({
   selectedOrder,
   currentResource,
   setActiveView,
-  trafficPercent,
   trafficSummary,
   locale,
   walletBalance,
@@ -3188,7 +3173,6 @@ function DashboardPanel({
   selectedOrder: PortalOrderRow | null;
   currentResource?: PortalCurrentResource | null;
   setActiveView: (value: PortalView) => void;
-  trafficPercent: number;
   trafficSummary: ReturnType<typeof aggregateTrafficUsage>;
   locale: PortalAuthLocale;
   walletBalance: number | null;
@@ -3203,7 +3187,6 @@ function DashboardPanel({
   onSessionInvalid: () => void;
   onOpenMarketplace?: () => void;
 }) {
-  const desktopViewport = useDesktopScrollRegion();
   const recentActivity = usePortalDashboardRecentActivity({
     commerceClient: commerceClient ?? null,
     rechargeClient: rechargeClient ?? null,
@@ -3271,10 +3254,6 @@ function DashboardPanel({
       : planTrafficBytes > 0 && remainingTrafficBytes !== null
         ? `${formatTrafficBytes(remainingTrafficBytes)} / ${formatTrafficBytes(planTrafficBytes)}`
         : uiText(locale, "未设置额度", "No quota");
-  const heavyUsageOrders = [...orderRows]
-    .sort((left, right) => orderUsageSortValue(right) - orderUsageSortValue(left))
-    .slice(0, 3);
-  const currentStatus = selectedOrder?.status ?? (entitlementActive || Boolean(resourceAvailable) ? "active" : "pending");
   const resourceState = resourceReconciliation
     ? "pending"
     : hasTrafficAccess
@@ -3293,117 +3272,38 @@ function DashboardPanel({
 
   return (
     <div className="portal-v2-stack">
-      {desktopViewport ? (
-        <DashboardOverviewCard
-          locale={locale}
-          greeting={portalGreeting(locale)}
-          description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
-          currentPlanLabel={currentPlanLabel}
-          // Wallet-first current resources are authoritative even without legacy entitlement rows.
-          hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
-          renewActionLabel={resourceAvailable
-            ? uiText(locale, "选择续费套餐", "Choose a renewal plan")
-            : undefined}
-          resourceState={resourceState}
-          resourceReconciliation={resourceReconciliation}
-          resourceExpiry={resourceExpiry}
-          hasTrafficAccess={hasTrafficAccess}
-          planTrafficBytes={planTrafficBytes}
-          remainingTrafficBytes={remainingTrafficBytes}
-          remainingTrafficPercent={remainingTrafficPercent}
-          trafficHeroLabel={trafficHeroLabel}
-          walletBalance={walletBalance}
-          onRenewCurrentPlan={resourceAvailable
-            ? onOpenMarketplace ?? (() => setActiveView("marketplace"))
-            : onRenewCurrentPlan}
-          onNavigate={setActiveView}
-        />
-      ) : null}
+      <DashboardOverviewCard
+        locale={locale}
+        greeting={portalGreeting(locale)}
+        description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
+        currentPlanLabel={currentPlanLabel}
+        // Wallet-first current resources are authoritative even without legacy entitlement rows.
+        hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
+        renewActionLabel={resourceAvailable
+          ? uiText(locale, "选择续费套餐", "Choose a renewal plan")
+          : undefined}
+        resourceState={resourceState}
+        resourceReconciliation={resourceReconciliation}
+        resourceExpiry={resourceExpiry}
+        hasTrafficAccess={hasTrafficAccess}
+        planTrafficBytes={planTrafficBytes}
+        remainingTrafficBytes={remainingTrafficBytes}
+        remainingTrafficPercent={remainingTrafficPercent}
+        trafficHeroLabel={trafficHeroLabel}
+        walletBalance={walletBalance}
+        onRenewCurrentPlan={resourceAvailable
+          ? onOpenMarketplace ?? (() => setActiveView("marketplace"))
+          : onRenewCurrentPlan}
+        onNavigate={setActiveView}
+      />
 
 
-      {!desktopViewport ? (
-      <section className="portal-v2-metric-grid" aria-label={uiText(locale, "账户指标", "Account metrics")}>
-        <article className="portal-v2-metric-card">
-          <span><Activity aria-hidden="true" /> {uiText(locale, "服务状态", "Service status")}</span>
-          <strong>{resourceState === "active"
-            ? orderHealthLabel(orderRows, currentEntitlement ? [currentEntitlement] : [], locale)
-            : resourceState === "pending"
-              ? uiText(locale, "处理中", "Processing")
-              : uiText(locale, "待开通", "Not active")}</strong>
-          <small>{resourceState === "active"
-            ? uiText(locale, "当前账户资源可用", "Current account resource is available")
-            : resourceState === "pending"
-              ? uiText(locale, `${pendingOrders} 个服务订单待处理`, `${pendingOrders} service orders pending`)
-              : uiText(locale, "购买服务后开始计时", "Time starts after service delivery")}</small>
-        </article>
-        <article className="portal-v2-metric-card">
-          <span><ReceiptText aria-hidden="true" /> {uiText(locale, "订单记录", "Order records")}</span>
-          <strong>{orderRows.length}</strong>
-          <small>{pendingOrders > 0 ? uiText(locale, `${pendingOrders} 个待处理`, `${pendingOrders} pending`) : uiText(locale, "无待处理订单", "No pending orders")}</small>
-        </article>
-        <article className="portal-v2-metric-card">
-          <span><BarChart3 aria-hidden="true" /> {uiText(locale, "共享月流量", "Shared monthly traffic")}</span>
-          <strong>{hasTrafficAccess ? formatTrafficBytes(trafficSummary.usedBytes) : "—"}</strong>
-          <small>{hasTrafficAccess
-            ? trafficSummary.measuredOrders > 0
-              ? uiText(locale, "所有设备共享账户流量池", "All devices share the account pool")
-              : uiText(locale, "开始使用后显示", "Shown after you start using the service")
-            : uiText(locale, "资源开通后开始计量", "Measured after the resource is active")}</small>
-        </article>
-        <article className="portal-v2-metric-card">
-          <span><BarChart3 aria-hidden="true" /> {uiText(locale, "剩余流量", "Remaining traffic")}</span>
-          <strong>{hasTrafficAccess && planTrafficBytes > 0
-            ? remainingTrafficBytes === null
-              ? uiText(locale, "用量待同步", "Usage pending")
-              : formatTrafficBytes(remainingTrafficBytes)
-            : "—"}</strong>
-          <small>{hasTrafficAccess && planTrafficBytes > 0
-            ? uiText(locale, `本月额度 ${formatTrafficBytes(planTrafficBytes)}`, `${formatTrafficBytes(planTrafficBytes)} monthly quota`)
-            : uiText(locale, "资源开通后显示当前额度", "Current quota appears after the resource is active")}</small>
-        </article>
-      </section>
-      ) : null}
+
 
 
 
       <section className="portal-v2-dashboard-grid">
-        {!desktopViewport ? <article className="portal-v2-panel portal-v2-subscription-panel">
-          <div className="portal-v2-panel-header">
-            <div>
-              <span className="portal-card-label">{uiText(locale, "当前套餐", "Current plan")}</span>
-              <h3>{currentPlan ? currentPlan.label : uiText(locale, "未开通套餐", "No active plan")}</h3>
-            </div>
-            <span className={cn("portal-order-status", currentStatus)}>
-              {selectedOrder || entitlementActive ? orderStatusLabel(currentStatus, locale) : uiText(locale, "未开通", "Not active")}
-            </span>
-          </div>
-          <dl className="portal-v2-definition-list">
-            <div>
-              <dt>{uiText(locale, "最近订单", "Latest order")}</dt>
-              <dd>{selectedOrder ? orderNumber(selectedOrder.requestRef) : uiText(locale, "无", "None")}</dd>
-            </div>
-            <div>
-              <dt>{uiText(locale, "可用时间", "Available time")}</dt>
-              <dd>{selectedOrder ? expiryDisplay(created, lifecycle, locale) : entitlementExpiryDisplay(currentEntitlement, locale)}</dd>
-            </div>
-            <div>
-              <dt>{uiText(locale, "首选客户端", "Preferred client")}</dt>
-              <dd>{selectedOrder ? <NoTranslateText>{clientTargetLabel(selectedOrder.clientTarget)}</NoTranslateText> : uiText(locale, "待选择", "Not selected")}</dd>
-            </div>
-          </dl>
-          <div className="portal-v2-traffic-summary">
-            <div>
-              <strong>{trafficSummary.totalBytes > 0 ? `${Math.round(trafficPercent)}%` : uiText(locale, "不限量", "Unlimited")}</strong>
-              <span>{trafficSummary.totalBytes > 0 ? uiText(locale, "共享流量使用率", "Shared quota used") : uiText(locale, "暂无流量上限", "No traffic limit")}</span>
-            </div>
-            <div className="portal-traffic-meter" aria-hidden="true">
-              <span style={{ width: `${trafficPercent}%` }} />
-            </div>
-            <small>{trafficSummary.totalBytes > 0
-              ? `${formatTrafficBytes(trafficSummary.usedBytes)} / ${formatTrafficBytes(trafficSummary.totalBytes)}`
-              : uiText(locale, `${formatTrafficBytes(trafficSummary.usedBytes)} 已计量`, `${formatTrafficBytes(trafficSummary.usedBytes)} measured`)}</small>
-          </div>
-        </article> : null}
+
 
         <DashboardMarketplaceCard
           commerceClient={commerceClient ?? null}
@@ -3424,44 +3324,13 @@ function DashboardPanel({
           onOpenOrders={() => setActiveView("orders")}
         />
 
-        {!desktopViewport ? <article className="portal-v2-panel portal-v2-dashboard-usage">
-          <div className="portal-v2-panel-header">
-            <div>
-              <span className="portal-card-label">{uiText(locale, "用量排行", "Usage ranking")}</span>
-              <h3>{uiText(locale, "共享月流量", "Shared monthly traffic")}</h3>
-            </div>
-            <button className="portal-link-button" type="button" onClick={() => setActiveView("usage")}>{uiText(locale, "查看用量", "View usage")}</button>
-          </div>
-          {heavyUsageOrders.length > 0 ? (
-            <div className="portal-v2-usage-list">
-              {heavyUsageOrders.map((order) => (
-                <div key={order.requestRef}>
-                  <span>
-                    <strong>{selectedPlan(order.planId, locale).label}</strong>
-                    <small>{trafficUsageLabel(order, locale)}</small>
-                  </span>
-                  <div className="portal-traffic-meter" aria-hidden="true">
-                    <span style={{ width: `${trafficUsagePercent(order)}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="portal-v2-empty">
-              <LineChart aria-hidden="true" />
-              <strong>{uiText(locale, "使用后显示", "Shown after use")}</strong>
-              <span>{uiText(locale, "开始使用后会在这里显示流量。", "Traffic appears here after you start using the service.")}</span>
-            </div>
-          )}
-        </article> : null}
 
-        {desktopViewport ? (
-          <DashboardWalletCard
-            locale={locale}
-            walletBalance={walletBalance}
-            onOpenWallet={() => setActiveView("wallet")}
-          />
-        ) : null}
+
+        <DashboardWalletCard
+          locale={locale}
+          walletBalance={walletBalance}
+          onOpenWallet={() => setActiveView("wallet")}
+        />
 
         <DashboardStartCard
           locale={locale}
