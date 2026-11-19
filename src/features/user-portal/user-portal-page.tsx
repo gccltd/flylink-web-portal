@@ -73,6 +73,9 @@ import { PortalAppShell } from "./layout/portal-app-shell";
 import { PortalSidebar } from "./layout/portal-sidebar";
 import { PortalTopbar } from "./layout/portal-topbar";
 import { DashboardOverviewCard } from "./dashboard/dashboard-overview-card";
+import { DashboardRecentOrders } from "./dashboard/dashboard-recent-orders";
+import { DashboardWalletCard } from "./dashboard/dashboard-wallet-card";
+import { DashboardStartCard } from "./dashboard/dashboard-start-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
 import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange, writePortalLocation } from "./portal-browser-session";
 import { portalAssetPath, portalRoutePath } from "./portal-entry";
@@ -3437,46 +3440,18 @@ function DashboardPanel({
           sessionRef={sessionRef ?? null}
         />
 
-        <article className="portal-v2-panel portal-v2-dashboard-orders">
-          <div className="portal-v2-panel-header">
-            <div>
-              <span className="portal-card-label">{uiText(locale, "最近订单", "Recent orders")}</span>
-              <h3>{uiText(locale, "订单活动", "Order activity")}</h3>
-            </div>
-            <button
-              className="portal-link-button"
-              type="button"
-              onClick={() => setActiveView(desktopViewport ? "orders" : "usage")}
-            >
-              {desktopViewport
-                ? uiText(locale, "查看订单", "View orders")
-                : uiText(locale, "查看用量", "View usage")}
-            </button>
-          </div>
-          {recentOrders.length > 0 ? (
-            <div className="portal-v2-list">
-              {recentOrders.map((order) => (
-                <button
-                  key={order.requestRef}
-                  type="button"
-                  onClick={() => setActiveView(desktopViewport ? "orders" : "usage")}
-                >
-                  <span>
-                    <strong>{orderNumber(order.requestRef)}</strong>
-                    <small>{selectedPlan(order.planId, locale).label} · {formatDateTime(order.createdAt, locale)}</small>
-                  </span>
-                  <em className={cn("portal-order-status", order.status)}>{orderStatusLabel(order.status, locale)}</em>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="portal-v2-empty">
-              <ReceiptText aria-hidden="true" />
-              <strong>{uiText(locale, "暂无订单", "No orders yet")}</strong>
-              <span>{uiText(locale, "商城订单和续费记录会在这里显示。", "Marketplace orders and renewal records appear here.")}</span>
-            </div>
-          )}
-        </article>
+        <DashboardRecentOrders
+          locale={locale}
+          orders={recentOrders.map((order) => ({
+            requestRef: order.requestRef,
+            orderNumber: orderNumber(order.requestRef),
+            planLabel: selectedPlan(order.planId, locale).label,
+            createdAt: formatDateTime(order.createdAt, locale),
+            status: order.status,
+            statusLabel: orderStatusLabel(order.status, locale)
+          }))}
+          onOpenOrders={() => setActiveView("orders")}
+        />
 
         {!desktopViewport ? <article className="portal-v2-panel portal-v2-dashboard-usage">
           <div className="portal-v2-panel-header">
@@ -3510,51 +3485,17 @@ function DashboardPanel({
         </article> : null}
 
         {desktopViewport ? (
-          <article className="portal-v2-panel portal-v2-dashboard-wallet">
-            <div className="portal-v2-panel-header">
-              <div>
-                <span className="portal-card-label">{uiText(locale, "钱包余额", "Wallet balance")}</span>
-                <h3>{uiText(locale, "账户 Coins", "Account Coins")}</h3>
-              </div>
-              <WalletCards aria-hidden="true" />
-            </div>
-            <div className="portal-v2-dashboard-wallet-balance">
-              <strong>{walletBalance === null ? "—" : walletBalance}</strong>
-              <span>Coins</span>
-            </div>
-            <p>{uiText(locale, "可用于套餐续费、购买与抵扣。", "Use Coins for renewals, purchases, and credits.")}</p>
-            <button
-              className="portal-primary-button compact"
-              type="button"
-              onClick={() => setActiveView("wallet")}
-            >
-              <Plus aria-hidden="true" />
-              {uiText(locale, "去充值", "Top up")}
-            </button>
-          </article>
+          <DashboardWalletCard
+            locale={locale}
+            walletBalance={walletBalance}
+            onOpenWallet={() => setActiveView("wallet")}
+          />
         ) : null}
 
-        <article className="portal-v2-panel portal-v2-dashboard-start">
-          <div className="portal-v2-panel-header">
-            <div>
-              <span className="portal-card-label">{uiText(locale, "开始使用", "Start using")}</span>
-              <h3>{uiText(locale, "开始使用", "Start using")}</h3>
-            </div>
-          </div>
-          <p>{uiText(locale, "已完成购买？立即连接飞连VPN。", "Already purchased? Connect to FlinkVPN now.")}</p>
-          <button
-            className="portal-primary-button"
-            type="button"
-            onClick={() => setActiveView("start")}
-          >
-            {uiText(locale, "启动飞连VPN", "Launch FlinkVPN")}
-          </button>
-          <ul className="portal-v2-start-points">
-            <li>{uiText(locale, "全球加速", "Global acceleration")}</li>
-            <li>{uiText(locale, "稳定安全", "Stable and secure")}</li>
-            <li>{uiText(locale, "多端支持", "Multi-device support")}</li>
-          </ul>
-        </article>
+        <DashboardStartCard
+          locale={locale}
+          onStartUsing={() => setActiveView("start")}
+        />
       </section>
     </div>
   );
