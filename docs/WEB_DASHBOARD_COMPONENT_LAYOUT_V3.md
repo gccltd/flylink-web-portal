@@ -198,3 +198,41 @@ with the latest light-lilac Web Dashboard concept. All changes are /web-only.
   All changes retain the previous fixed-background/reduced-data guards.
 - Review gate: exact-head CI, authorized light/dark screenshots at
   768/1024/1280/1440/1920px, overflow and independent Review.
+
+## Visual revision v3.5 — concept-matched plan/order cards without nested scrolling (2026-11-20)
+
+**Source:** user-provided light-blue/lilac Web Dashboard component-spec image,
+2026-11-20. The image shows sample plans, amounts, order statuses and dates;
+those values are decorative examples, not production data.
+
+### Layout recalculation (CSS px, responsive and content-aware)
+
+| Element | New desktop contract | Behavior |
+| --- | --- | --- |
+| Account overview | 204px minimum, original data cells and actions | No business changes |
+| Top columns at 1101px+ | **50% : 50%** with 12px gap | Marketplace + Wallet (left); Recent Orders + Start (right) |
+| Marketplace card | **334px minimum**; 17px vertical/18px horizontal padding | Up to three real plan offers; grow to fit long title, context or errors |
+| Recent Orders card | **334px minimum**; same padding | Up to three actual records; grow for date, status, partial/loading or retry copy |
+| Individual plan row | **76px minimum**, icon / title+summary / Coins / existing CTA | One horizontal line on desktop, long copy wraps; no fixed row height |
+| Individual order row | **66px minimum**, 28px receipt icon / product+ref+date / actual status+amount | One horizontal line when space allows; grows if wrapping needed |
+| Wallet and Start | **182px minimum each** | Independent content, may grow for translations |
+| Main card rhythm | 12px between columns/panels, 7px within lists | Removes earlier unbalanced long blank space |
+| Browser 721–1100px | Single column, panel min-height reset to 0 | Natural-height document scroll |
+| Browser <=720px | One column with stacked offer actions, order metadata below description | Natural-height document scroll |
+
+**Scroll removal:** remove the former 233px Recent Orders and 306px Plan
+Marketplace `max-height` rules, remove scrollbar visual styling and use
+`max-height:none; overflow:visible; height:auto`. Users scroll the whole
+page once, with no nested list scrollbar, overscroll capture, or hidden
+items. Existing offer/order preview count is still max three, and the
+"View all"/"Go to Marketplace" destinations remain authoritative.
+
+**Accessibility:** the per-order Receipt icon is `aria-hidden`; original
+button text, real amounts/status, retry/error states and full Marketplace
+purchase flows are untouched. Panels are not given fixed heights. The
+fixed-city / reduced-data visual safeguards remain as in v3.4.
+
+**Acceptance:** exact commit CI including responsive source contract tests,
+authorized real-browser visual review at 768/1024/1280/1440/1920px with
+light/dark and long-data cases, independent reviewer; keep Draft and do
+not deploy production based only on Preview Ready.

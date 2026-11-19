@@ -703,32 +703,8 @@
       background-color 150ms ease, box-shadow 150ms ease;
   }
 
-  /* This scroll polish is local, keyboard scrollable, and only enabled
-     on roomy desktops; no whole-page fixed overlay or scroll hijacking. */
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(158, 161, 255, 0.78) rgba(132, 161, 231, 0.12);
-    scrollbar-gutter: stable;
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list::-webkit-scrollbar,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid::-webkit-scrollbar {
-    width: 7px;
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list::-webkit-scrollbar-track,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid::-webkit-scrollbar-track {
-    background: rgba(145, 169, 246, 0.12);
-    border-radius: 99px;
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list::-webkit-scrollbar-thumb,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid::-webkit-scrollbar-thumb {
-    border: 1px solid rgba(221, 228, 255, 0.28);
-    border-radius: 99px;
-    background: linear-gradient(180deg, rgba(60, 186, 236, 0.85), rgba(142, 94, 235, 0.83));
-  }
+  /* Dashboard cards no longer use independent scroll tracks.
+     Three actual offers/records expand naturally; page scrolling remains native. */
 
   /* Provide high contrast before and independently of blur support. */
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] {
@@ -794,20 +770,6 @@
     background-position: center top;
     background-repeat: no-repeat;
     background-attachment: scroll;
-  }
-}
-
-@media (min-width: 1101px) {
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list {
-    max-height: 233px;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid {
-    max-height: 306px;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
   }
 }
 
@@ -1753,4 +1715,227 @@
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions {justify-self: stretch;}
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions button {width: 100%;max-width: none;}
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout .portal-marketplace-card__price dd {text-align: left;}
+}
+
+/*
+ * Concept v3.5 — full-height, non-scrolling Dashboard overview cards.
+ * Based on the approved 2026-11-20 light lilac reference: compact 3-offer
+ * rows to the left, 3 actual recent activity rows to the right, then wallet
+ * and start underneath. The card grows for longer content; never clip it.
+ */
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list {
+  max-height: none;
+  height: auto;
+  overflow: visible;
+  overscroll-behavior-y: auto;
+  scrollbar-gutter: auto;
+  scrollbar-width: auto;
+}
+
+/* Cohesive header spacing and small row gaps, without a scroll viewport. */
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web {
+    --web-dashboard-gap: 12px;
+    --web-dashboard-top-min: 334px;
+    --web-dashboard-bottom-min: 182px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column {
+    gap: var(--web-dashboard-gap);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders {
+    min-height: var(--web-dashboard-top-min);
+    height: auto;
+    padding: 17px 18px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    min-height: var(--web-dashboard-bottom-min);
+    height: auto;
+    padding: 17px 18px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) .portal-v2-panel-header {
+    margin-bottom: 11px;
+    min-height: 40px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 7px;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Desktop plan row matches the concept: icon/summary | price | CTA.
+     Only the authoritative 3 plan offers are displayed. Long switch
+     messages add another natural-height row; no information is clipped. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article.portal-marketplace-card__dashboard-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(65px, auto) minmax(84px, auto);
+    grid-template-areas: "identity price action" "context context context";
+    gap: 6px 9px;
+    min-height: 76px;
+    padding: 10px 11px;
+    align-items: center;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__price {
+    grid-area: price;
+    align-self: center;
+    justify-self: end;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions {
+    grid-area: action;
+    align-self: center;
+    justify-self: stretch;
+    min-width: 84px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions button {
+    width: 100%;
+    min-width: 84px;
+    min-height: 34px;
+    max-width: none;
+    padding: 6px 7px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout .portal-marketplace-card__amount {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout .portal-marketplace-card__unit {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* A genuine recent order/transaction stays one whole row with
+     emblem + title/reference/date + state/amount. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) minmax(90px, auto);
+    grid-template-areas: "icon main meta";
+    gap: 9px;
+    min-height: 66px;
+    padding: 9px 10px;
+    align-items: center;
+    height: auto;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-icon {
+    grid-area: icon;
+    display: grid;
+    place-items: center;
+    align-self: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(171, 208, 255, 0.37);
+    border-radius: 9px;
+    color: #dff5ff;
+    background: linear-gradient(135deg, rgba(76, 181, 240, 0.42), rgba(139, 101, 234, 0.40));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main {
+    grid-area: main;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta {
+    grid-area: meta;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-content: center;
+    align-items: center;
+    gap: 3px 7px;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta .portal-order-status {
+    order: 0;
+    margin: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-amount {
+    order: 1;
+    white-space: nowrap;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-amount-detail {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders .portal-v2-dashboard-order-icon {
+    border-color: rgba(94, 151, 237, 0.32);
+    background: linear-gradient(135deg, rgba(107, 194, 251, 0.40), rgba(164, 144, 247, 0.45));
+    color: #2e5acc;
+  }
+}
+
+/* The two columns are nearly balanced in the approved concept rather than
+   the earlier left 45% / right 55%. Each remains an independent natural stack. */
+@media (min-width: 1101px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Below two columns, avoid forcing empty 334px blocks. Both panels now
+   expand to the actual rows/empty/loading states and the page scrolls once. */
+@media (min-width: 721px) and (max-width: 1100px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    grid-template-columns: 28px minmax(0, 1fr);
+    grid-template-areas: "icon main" ". meta";
+    gap: 6px 9px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-icon {
+    grid-area: icon;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: rgba(132, 157, 255, 0.24);
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main {grid-area: main;}
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta {
+    grid-area: meta;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article.portal-marketplace-card__dashboard-layout {
+    grid-template-areas: "identity" "price" "action" "context";
+  }
 }

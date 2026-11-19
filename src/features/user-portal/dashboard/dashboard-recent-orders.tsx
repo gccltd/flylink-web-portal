@@ -44,6 +44,7 @@ export function DashboardRecentOrders({
           <div className="portal-v2-list">
             {orders.slice(0, 3).map((order) => (
               <button key={order.key} type="button" onClick={onOpenOrders}>
+                <span className="portal-v2-dashboard-order-icon" aria-hidden="true"><ReceiptText /></span>
                 <span className="portal-v2-dashboard-order-main">
                   <strong>{order.productLabel}</strong>
                   <span className="portal-v2-dashboard-order-detail">

@@ -77,15 +77,17 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout).toContain('box-shadow: inset 0 1px 0');
   });
 
-  test("keeps scroll areas local and keyboard/touch behavior accessible", () => {
-    expect(webLayout).toContain('scrollbar-width: thin;');
-    expect(webLayout).toContain('::-webkit-scrollbar-thumb');
-    expect(webLayout).toContain('overscroll-behavior-y: contain;');
-    expect(webLayout).toContain('overflow-y: auto;');
-    expect(webLayout).toContain('overflow-y: visible;');
-    expect(webLayout).toContain('outline: 3px solid #48baf0;');
-    expect(webLayout).toContain('@media (hover: hover) and (pointer: fine)');
-    expect(webLayout).toContain('@media (prefers-reduced-motion: reduce)');
+  test("uses whole-page scroll instead of nested Dashboard offer/order scrollers", () => {
+    expect(webLayout).toContain("Concept v3.5");
+    expect(webLayout).toContain("max-height: none;");
+    expect(webLayout).toContain("overflow: visible;");
+    expect(webLayout).toContain("scrollbar-gutter: auto;");
+    expect(webLayout).not.toContain("max-height: 233px;");
+    expect(webLayout).not.toContain("max-height: 306px;");
+    expect(webLayout).not.toContain("overflow-y: auto;");
+    expect(webLayout).not.toContain("scrollbar-width: thin;");
+    expect(webLayout).toContain("outline: 3px solid #48baf0;");
+    expect(webLayout).toContain("@media (prefers-reduced-motion: reduce)");
   });
 
   test("preserves reduced-data priority after city background overrides", () => {
@@ -210,6 +212,34 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout).toContain('grid-template-areas: "identity price" "identity action" "context context"');
     expect(webLayout).toContain('grid-template-areas: "identity" "price" "action" "context"');
     expect(webLayout).toContain('grid-template-columns: 32px minmax(0, 1fr)');
+  });
+
+
+  test("keeps all three rows visible and balances Dashboard cards on wide screens", () => {
+    expect(webLayout).toContain("--web-dashboard-top-min: 334px;");
+    expect(webLayout).toContain("--web-dashboard-bottom-min: 182px;");
+    expect(webLayout).toContain("--web-dashboard-gap: 12px;");
+    expect(webLayout).toContain('grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);');
+    expect(webLayout).toContain('grid-template-areas: "identity price action" "context context context";');
+    expect(webLayout).toContain('grid-template-areas: "icon main meta";');
+    expect(webLayout).toContain('grid-template-areas: "icon main" ". meta";');
+    const offers = readFileSync(resolve("src/features/user-portal/portal-commerce-panels.tsx"), "utf8");
+    const orders = readFileSync(resolve("src/features/user-portal/dashboard/dashboard-recent-orders.tsx"), "utf8");
+    expect(offers).toContain("isPortalWebPath() ? planOffers.slice(0, 3) : planOffers");
+    expect(orders).toContain("orders.slice(0, 3)");
+    expect(orders).toContain('className="portal-v2-dashboard-order-icon" aria-hidden="true"');
+    expect(orders).toContain('onClick={onOpenOrders}');
+  });
+
+  test("preserves responsive height and genuine missing-data status cases", () => {
+    expect(webLayout).toContain("@media (min-width: 721px) and (max-width: 1100px)");
+    expect(webLayout).toContain("min-height: 0;");
+    expect(webLayout).toContain("height: auto;");
+    expect(webLayout).toContain("overflow-wrap: anywhere;");
+    const orders = readFileSync(resolve("src/features/user-portal/dashboard/dashboard-recent-orders.tsx"), "utf8");
+    expect(orders).toContain('{order.amountLabel ?');
+    expect(orders).toContain('{order.amountDetail ?');
+    expect(orders).toContain('{order.statusLabel}');
   });
 
 });
