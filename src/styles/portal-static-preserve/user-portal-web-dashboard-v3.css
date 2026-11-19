@@ -570,3 +570,344 @@
     transition: none;
   }
 }
+
+/*
+ * Concept v3.1: pale lilac / powder-blue cyber-city and restrained jelly glass.
+ * Progressive visual enhancement only; no API or navigation behavior changes.
+ * The 1600px skyline is still a single static WebP from the Shell, limited
+ * to wide viewports by the baseline CSS and disabled for reduced-data users.
+ */
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web {
+    --web-jelly-radius: 18px;
+    --web-jelly-stroke: rgba(190, 215, 255, 0.52);
+    --web-jelly-glow: 0 12px 28px rgba(26, 45, 112, 0.13);
+    --web-jelly-ink: #eff6ff;
+    --web-jelly-subtle: #c3d2f1;
+    --web-jelly-panel: linear-gradient(125deg,
+      rgba(23, 52, 115, 0.79) 0%,
+      rgba(35, 48, 108, 0.75) 48%,
+      rgba(56, 41, 115, 0.74) 100%);
+  }
+
+  /* Scene theme applies to the Dashboard only, protecting other pages'
+     existing contrast rules. :has() is progressive; unsupported browsers
+     retain the previous valid theme without breaking navigation or layout. */
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"]:has(.portal-v2-dashboard-column) {
+    background-color: #d0daf4;
+    color: #192e56;
+    background-image:
+      radial-gradient(650px 380px at 88% 7%, rgba(236, 194, 255, 0.36), transparent 72%),
+      linear-gradient(160deg, #dceaff 0%, #e6dcff 48%, #c6dafa 100%);
+    background-size: auto, 100% 100%;
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"]:has(.portal-v2-dashboard-column) {
+    background-color: #e9edff;
+    background-image:
+      radial-gradient(710px 440px at 92% 4%, rgba(227, 189, 250, 0.38), transparent 70%),
+      linear-gradient(154deg, #e9f4ff, #eee7ff 52%, #dbeaff);
+    background-size: auto, 100% 100%;
+    background-position: center top;
+    background-repeat: no-repeat;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) .portal-v2-greeting h2 {
+    color: #1b2b54;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.20);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) .portal-v2-greeting p {
+    color: #475c81;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar {
+    border-bottom-color: rgba(194, 213, 255, 0.33);
+    background: linear-gradient(110deg, rgba(21, 40, 97, 0.89), rgba(40, 44, 101, 0.78));
+    box-shadow: 0 7px 22px rgba(16, 31, 91, 0.12);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-sidebar {
+    border-right-color: rgba(192, 215, 255, 0.31);
+    background: linear-gradient(172deg, rgba(23, 45, 99, 0.83), rgba(40, 43, 100, 0.75));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card {
+    gap: 14px 17px;
+    padding: 21px 22px 16px;
+    border: 1px solid var(--web-jelly-stroke);
+    border-radius: 21px;
+    background: var(--web-jelly-panel);
+    color: var(--web-jelly-ink);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -1px 0 rgba(191, 211, 255, 0.08),
+      var(--web-jelly-glow);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    padding: 18px 19px;
+    border: 1px solid var(--web-jelly-stroke);
+    border-radius: var(--web-jelly-radius);
+    background: var(--web-jelly-panel);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(170, 195, 255, 0.09),
+      var(--web-jelly-glow);
+    color: var(--web-jelly-ink);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
+    gap: 14px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column {
+    gap: 14px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    border-color: rgba(190, 210, 255, 0.24);
+    border-radius: 13px;
+    background: linear-gradient(128deg,
+      rgba(128, 164, 245, 0.17), rgba(166, 133, 245, 0.15));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card h3,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main strong {
+    color: #f9fbff;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card > article > p,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main small,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > p,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > p {
+    color: var(--web-jelly-subtle);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__actions {
+    border-color: rgba(214, 228, 255, 0.27);
+    background: linear-gradient(100deg, rgba(113, 157, 240, 0.21), rgba(171, 123, 243, 0.13));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button {
+    border-radius: 11px;
+    transition: transform 150ms ease, border-color 150ms ease,
+      background-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  /* This scroll polish is local, keyboard scrollable, and only enabled
+     on roomy desktops; no whole-page fixed overlay or scroll hijacking. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(158, 161, 255, 0.78) rgba(132, 161, 231, 0.12);
+    scrollbar-gutter: stable;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list::-webkit-scrollbar,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list::-webkit-scrollbar-track,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid::-webkit-scrollbar-track {
+    background: rgba(145, 169, 246, 0.12);
+    border-radius: 99px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list::-webkit-scrollbar-thumb,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid::-webkit-scrollbar-thumb {
+    border: 1px solid rgba(221, 228, 255, 0.28);
+    border-radius: 99px;
+    background: linear-gradient(180deg, rgba(60, 186, 236, 0.85), rgba(142, 94, 235, 0.83));
+  }
+
+  /* Provide high contrast before and independently of blur support. */
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] {
+    --web-jelly-stroke: rgba(132, 163, 222, 0.48);
+    --web-jelly-glow: 0 10px 27px rgba(52, 67, 133, 0.10);
+    --web-jelly-ink: #1c2c51;
+    --web-jelly-subtle: #4e6285;
+    --web-jelly-panel: linear-gradient(129deg,
+      rgba(252, 254, 255, 0.84),
+      rgba(246, 248, 255, 0.73) 52%,
+      rgba(238, 232, 255, 0.79));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-topbar {
+    border-bottom-color: rgba(152, 173, 217, 0.34);
+    background: linear-gradient(115deg,
+      rgba(248, 251, 255, 0.94), rgba(238, 232, 255, 0.91));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-sidebar {
+    border-right-color: rgba(136, 159, 215, 0.28);
+    background: linear-gradient(170deg,
+      rgba(250, 252, 255, 0.94), rgba(231, 229, 253, 0.91));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__cell strong,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace .portal-marketplace-card h3,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders .portal-v2-dashboard-order-main strong {
+    color: #152544;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    background: linear-gradient(130deg, rgba(238, 246, 255, 0.88), rgba(240, 233, 255, 0.79));
+    border-color: rgba(135, 167, 231, 0.40);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders .portal-v2-dashboard-order-main small,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace .portal-marketplace-card > article > p,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-wallet > p,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-start > p {
+    color: #536785;
+  }
+}
+
+@media (min-width: 1200px) {
+  /* A lilac-blue wash keeps the static city readable without the former
+     75–90% black veil. The scene is loaded once via the original URL. */
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"]:has(.portal-v2-dashboard-column) {
+    background-image:
+      linear-gradient(180deg, rgba(175, 202, 254, 0.42) 0%, rgba(205, 185, 250, 0.48) 55%, rgba(208, 219, 251, 0.82) 100%),
+      url("/web/portal-dashboard-scene.webp");
+    background-size: 100% 100%, 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"]:has(.portal-v2-dashboard-column) {
+    background-image:
+      linear-gradient(180deg, rgba(240, 245, 255, 0.55), rgba(234, 226, 255, 0.59) 52%, rgba(232, 239, 255, 0.88) 100%),
+      url("/web/portal-dashboard-scene.webp");
+    background-size: 100% 100%, 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+  }
+}
+
+@media (min-width: 1101px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list {
+    max-height: 233px;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid {
+    max-height: 306px;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Blurring only the four local panels and account overview avoids a
+   costly full-screen composited blur while achieving a frosted effect. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  @media (min-width: 1024px) {
+    .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card,
+    .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+    .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+    .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+    .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      backdrop-filter: blur(8px) saturate(120%);
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start:hover {
+    border-color: rgba(172, 210, 255, 0.73);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      0 15px 32px rgba(29, 45, 110, 0.17),
+      0 0 0 1px rgba(126, 167, 250, 0.11);
+    transform: translateY(-1px);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article:hover {
+    border-color: rgba(170, 220, 255, 0.66);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.19),
+      0 5px 14px rgba(24, 48, 112, 0.12);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:hover {
+    border-radius: 9px;
+    background: rgba(165, 192, 255, 0.13);
+    box-shadow: inset 2px 0 0 rgba(66, 218, 247, 0.70);
+    transform: translateX(2px);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:not(:disabled) {
+    filter: brightness(1.07);
+    box-shadow: 0 7px 19px rgba(62, 97, 221, 0.19);
+    transform: translateY(-1px);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:active:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:active:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:active:not(:disabled) {
+    transform: translateY(0) scale(0.985);
+  }
+}
+
+.portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:focus-visible,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:focus-visible,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:focus-visible,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:focus-visible,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:focus-visible {
+  outline: 3px solid #48baf0;
+  outline-offset: 3px;
+}
+
+/* Honor accessibility and device constraints. The original broader
+   reduced-data skyline guard remains authoritative in user-portal-desktop.css. */
+@media (prefers-reduced-transparency: reduce), (max-width: 1023px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .portal-v2-shell.portal-v2-shell--web {
+    --web-jelly-panel: linear-gradient(120deg, #1e356c, #31376f);
+  }
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] {
+    --web-jelly-panel: linear-gradient(120deg, #fff, #f3f4ff);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    transition: none;
+    transform: none;
+  }
+}
