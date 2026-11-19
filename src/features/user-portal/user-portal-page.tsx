@@ -1735,7 +1735,7 @@ export function UserPortalPage({
   }, [portalClient, locale]);
 
   useEffect(() => {
-    if (sessionPhase === "anonymous" && !portalSession && !initialSession) void refreshHumanChallenge();
+    if (["anonymous", "unavailable"].includes(sessionPhase) && !portalSession && !initialSession) void refreshHumanChallenge();
   }, [refreshHumanChallenge, sessionPhase, portalSession, initialSession]);
 
   const hydratePortalSession = useCallback((
@@ -2537,8 +2537,8 @@ export function UserPortalPage({
     }
   }
 
-  if (!portalSession && ["restoring", "unavailable", "logging_out", "logout_failed"].includes(sessionPhase)) {
-    const failed = sessionPhase === "unavailable" || sessionPhase === "logout_failed";
+  if (!portalSession && ["logging_out", "logout_failed"].includes(sessionPhase)) {
+    const failed = sessionPhase === "logout_failed";
     return <main className="portal-login-shell" data-portal-theme={theme}>
       <section className="portal-login-main" aria-label={uiText(locale, "登录状态", "Sign-in status")}>
         <div className="portal-login-form-card" role={failed ? "alert" : "status"}>
@@ -2685,6 +2685,15 @@ export function UserPortalPage({
             </div>
 
             <form className="portal-login-form" onSubmit={submitAuth}>
+              {sessionPhase === "unavailable" ? (
+                <p role="alert" className="portal-login-error">
+                  {uiText(locale, "暂时无法恢复登录，请检查网络后重试，或直接登录。", "Your saved session could not be restored. Check your connection and retry, or sign in below.")}
+                  {" "}
+                  <button type="button" className="portal-link-button" onClick={() => setBootstrapRevision((value) => value + 1)}>
+                    {uiText(locale, "重试", "Retry")}
+                  </button>
+                </p>
+              ) : null}
               {logoutContextRef.current ? <p role="alert" className="portal-login-error">{uiText(locale,
                 "上次注销结果尚未确认。不会自动恢复账户，请重新验证身份后登录。",
                 "The previous sign-out is not confirmed. Your account will not be restored automatically; verify your identity to sign in again.")}</p> : null}

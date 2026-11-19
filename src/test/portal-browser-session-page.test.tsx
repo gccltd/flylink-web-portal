@@ -32,16 +32,18 @@ test("StrictMode restores once, reads fresh data and preserves safe wallet locat
   expect(window.sessionStorage.length).toBe(0);
 });
 
-test("anonymous bootstrap shows login, while network failure offers retry without claiming logout", async () => {
+test("session restoration never blocks the login page; a failed restore is shown inline with retry", async () => {
   const c = client();
   c.restoreSession.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(null);
   render(<UserPortalPage portalClient={c}/>);
+  expect(await screen.findByRole("button", {name:"登录"})).toBeInTheDocument();
+  expect(screen.queryByText("正在恢复登录…")).not.toBeInTheDocument();
   expect(await screen.findByRole("alert")).toHaveTextContent("暂时无法恢复登录");
-  expect(c.issueHumanChallenge).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", {name:"重试恢复登录"}));
-  await screen.findByRole("button", {name:"登录"});
-  await waitFor(()=>expect(c.issueHumanChallenge).toHaveBeenCalledTimes(1));
-  expect(c.restoreSession).toHaveBeenCalledTimes(2);
+  expect(c.issueHumanChallenge).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", {name:"重试"}));
+  await waitFor(()=>expect(c.restoreSession).toHaveBeenCalledTimes(2));
+  expect(await screen.findByRole("button", {name:"登录"})).toBeInTheDocument();
+  expect(screen.queryByText("正在恢复登录…")).not.toBeInTheDocument();
 });
 
 test.each([false, true])("cookie mount removes only obsolete credential handoffs with pending logout=%s", async (pendingLogout) => {
