@@ -300,6 +300,35 @@ test("restore with an active entitlement lands on the dashboard when no view was
   expect(screen.getAllByRole("heading", { name: "账户概览", level: 1 }).length).toBeGreaterThan(0);
 });
 
+test.each([390, 1280])("Dashboard keeps the same concept hierarchy at %i px", async (width) => {
+  const previousWidth = window.innerWidth;
+  const previousMatchMedia = window.matchMedia;
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+  Object.defineProperty(window, "matchMedia", { configurable: true, value: undefined });
+  window.history.replaceState(null, "", "/#portal=dashboard");
+
+  try {
+    const c = entitledClient();
+    render(<UserPortalPage portalClient={c} />);
+    const navigation = await screen.findByRole("navigation", { name: "用户中心导航" });
+    expect(within(navigation).getAllByRole("button")).toHaveLength(5);
+
+    expect(await screen.findByRole("region", { name: "账户总览" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "近期订单" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "账户 Coins" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "开始使用" })).toBeInTheDocument();
+
+    expect(document.querySelector(".portal-v2-metric-grid[aria-label='账户指标']")).toBeNull();
+    expect(document.querySelector(".portal-v2-subscription-panel")).toBeNull();
+    expect(document.querySelector(".portal-v2-dashboard-usage")).toBeNull();
+  } finally {
+    cleanup();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: previousWidth });
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: previousMatchMedia });
+  }
+});
+
+
 test("restore without an active entitlement stays on the start guide when no view was requested", async () => {
   const c = client();
   render(<UserPortalPage portalClient={c} />);
