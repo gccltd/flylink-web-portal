@@ -228,6 +228,8 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(offers).toContain("isPortalWebPath() ? planOffers.slice(0, 3) : planOffers");
     expect(orders).toContain("orders.slice(0, 3)");
     expect(orders).toContain('className="portal-v2-dashboard-order-icon" aria-hidden="true"');
+    expect(webLayout).toContain('.portal-v2-shell:not(.portal-v2-shell--web) .portal-v2-dashboard-order-icon');
+    expect(webLayout).toContain('display: none;');
     expect(orders).toContain('onClick={onOpenOrders}');
   });
 

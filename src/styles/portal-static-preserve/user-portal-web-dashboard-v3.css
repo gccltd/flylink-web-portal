@@ -1939,3 +1939,15 @@
     grid-template-areas: "identity" "price" "action" "context";
   }
 }
+
+/* The legacy /portal keeps its existing order-row presentation.
+   The new per-row receipt emblem belongs exclusively to the /web design. */
+.portal-v2-shell:not(.portal-v2-shell--web) .portal-v2-dashboard-order-icon {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    display: grid;
+  }
+}
