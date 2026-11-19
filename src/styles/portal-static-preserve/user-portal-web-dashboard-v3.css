@@ -1331,3 +1331,285 @@
     border-bottom-color: rgba(189, 212, 252, 0.34);
   }
 }
+
+/*
+ * Concept v3.3: tokenized shape system, restrained brand icons, and
+ * an ambient greeting fading into the existing city background.
+ * The values intentionally avoid per-frame animation and additional images.
+ */
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web {
+    --web-radius-card: 20px;
+    --web-radius-overview: 22px;
+    --web-radius-row: 13px;
+    --web-radius-action: 12px;
+    --web-radius-pill: 999px;
+    --web-spacing-cards: 14px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) .portal-v2-greeting {
+    position: relative;
+    isolation: isolate;
+    padding: 7px 12px 6px;
+    border-radius: 18px;
+    background: linear-gradient(90deg,
+      rgba(221, 231, 255, 0.36) 0%,
+      rgba(225, 216, 254, 0.21) 58%,
+      transparent 96%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) .portal-v2-hero-block {
+    gap: 6px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-sidebar .portal-use-nav-item,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button {
+    border-radius: var(--web-radius-action);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card {
+    border-radius: var(--web-radius-overview);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    border-radius: var(--web-radius-card);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button {
+    border-radius: var(--web-radius-action);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    border-radius: var(--web-radius-row);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-order-status,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card .portal-order-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+    border-radius: var(--web-radius-pill);
+    padding: 2px 9px;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 680;
+    line-height: 1.25;
+  }
+
+  /* Unified headings with lightweight, aria-hidden geometric icons.
+     First-party iconography is reused; no SVG image downloads. */
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-heading > div {
+    min-width: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-header-icon,
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-wallet-icon {
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(200, 223, 255, 0.48);
+    border-radius: 11px;
+    color: #edfbff;
+    background: linear-gradient(135deg,
+      rgba(52, 184, 243, 0.68),
+      rgba(118, 83, 242, 0.62));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      0 4px 12px rgba(45, 79, 190, 0.18);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-header-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-wallet-icon {
+    padding: 8px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell .portal-card-label {
+    gap: 9px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell .portal-card-label svg {
+    flex: 0 0 31px;
+    width: 31px;
+    height: 31px;
+    padding: 7px;
+    border: 1px solid rgba(202, 225, 255, 0.28);
+    border-radius: 10px;
+    color: #f1faff;
+    background: linear-gradient(135deg, rgba(67, 193, 245, 0.60), rgba(124, 94, 238, 0.58));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell:nth-child(1) .portal-card-label svg {
+    background: linear-gradient(135deg, rgba(136, 104, 251, 0.78), rgba(83, 152, 250, 0.66));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell:nth-child(3) .portal-card-label svg {
+    background: linear-gradient(135deg, rgba(51, 171, 239, 0.70), rgba(93, 98, 251, 0.65));
+  }
+
+  /* Each section has one signature static light aura, avoiding four
+     unrelated visual themes and preventing a busy marketing collage. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace {
+    --web-card-aura: radial-gradient(260px 150px at 0% 0%, rgba(83, 196, 255, 0.19), transparent 85%);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders {
+    --web-card-aura: radial-gradient(250px 150px at 100% 0%, rgba(146, 127, 255, 0.19), transparent 85%);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet {
+    --web-card-aura: radial-gradient(240px 170px at 10% 100%, rgba(72, 198, 238, 0.17), transparent 85%);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    --web-card-aura: radial-gradient(250px 170px at 100% 90%, rgba(170, 109, 252, 0.19), transparent 85%);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-start,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-start {
+    background: var(--web-card-aura), var(--web-jelly-panel);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__decor {
+    display: inline-grid;
+    flex: 0 0 28px;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(196, 224, 255, 0.35);
+    border-radius: 9px;
+    color: #e8faff;
+    background: linear-gradient(135deg, rgba(52, 180, 240, 0.48), rgba(105, 91, 245, 0.46));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__decor svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card:nth-child(2) .portal-marketplace-card__decor {
+    background: linear-gradient(135deg, rgba(140, 106, 248, 0.63), rgba(84, 130, 244, 0.52));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card:nth-child(3) .portal-marketplace-card__decor {
+    background: linear-gradient(135deg, rgba(64, 195, 231, 0.57), rgba(81, 136, 250, 0.50));
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-start-points li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-start-points li svg {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    color: #a9e7ff;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-dashboard-header-icon,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-dashboard-wallet-icon,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-marketplace-card__decor {
+    color: #fff;
+  }
+}
+
+/* Keep the existing /portal markup and legacy card styles untouched. */
+.portal-v2-shell:not(.portal-v2-shell--web) .portal-dashboard-header-icon,
+.portal-v2-shell:not(.portal-v2-shell--web) .portal-marketplace-card__decor,
+.portal-v2-shell:not(.portal-v2-shell--web) .portal-v2-start-points li svg {
+  display: none;
+}
+
+.portal-v2-shell:not(.portal-v2-shell--web) .portal-dashboard-heading {
+  display: contents;
+}
+
+@media (max-width: 720px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-greeting {
+    padding: 5px 8px 4px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, rgba(226, 232, 254, 0.33), transparent 96%);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    background: linear-gradient(120deg, #459efa, #8863fa);
+    color: white;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-header-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-start {
+    background: linear-gradient(120deg, #ffffff, #f2f5ff);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-start {
+    background: linear-gradient(120deg, #1f396f, #353770);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-v2-shell.portal-v2-shell--web .portal-dashboard-header-icon,
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__decor {
+    transition: none;
+    transform: none;
+  }
+}

@@ -134,3 +134,47 @@ proves acceptable frame rate.
   API and Android app remain unchanged.
 - Review 768, 1024, 1280, 1440 and 1920 CSS-pixel widths in both themes.
   All PRs stay Draft until authorized visual verification and independent review.
+
+## Visual revision v3.3 — 2026-11-20
+
+This is the first approved slice of the newly generated polished concept image
+`a_detailed_high_quality_ui_design_mockup_composit.png`: tighter greeting
+integrated into the pale lilac/powder-blue skyline, unified rounded components,
+lightweight section icons, and one distinct color aura per functional card.
+The concept image's coins, order amounts and dates remain examples, not data.
+
+### Finalized shape / spacing tokens
+
+| Element | Value | Implementation |
+| --- | --- | --- |
+| Overview radius | 22px | `--web-radius-overview` |
+| Main panel radius | 20px | `--web-radius-card` |
+| Offer / order row radius | 13px | `--web-radius-row` |
+| Nav / topbar buttons / CTA | 12px | `--web-radius-action` |
+| State badge | 999px pill, min 22px height | `--web-radius-pill` |
+| Card spacing | 14px | `--web-spacing-cards` |
+| Greeting | 7/12/6px padding, thin gradient fading to transparent at 96% | No separate hero banner |
+
+### Scope of current code slice
+
+- Web-only icon hierarchy: existing three Overview labels, Marketplace header,
+  Recent Orders header, Wallet emblem, Start Using header and its three
+  benefits. Dashboard-preview offer titles get a decorative Layers icon or
+  Crown for genuine `current_renew` state. All decorative glyphs are
+  `aria-hidden`; aria labels, order data and actions remain unchanged.
+- Personalized panels: a single restrained nonanimated blue/cyan/violet
+  aura per functional panel, using the same shared Jelly Glass base.
+- Unified selected-plan and order state pills by dimensions and radii;
+  original domain-specific badge colors and labels are preserved.
+- The legacy `/portal` route hides additional decorative icons and retains
+  its original layout. Full Marketplace does not receive Dashboard icon
+  markup; `dashboardAccent` is optional and defaults false.
+- Preserve background's fixed-width guard, reduced-data, reduced-motion
+  and reduced-transparency preferences from v3.2.
+
+### Deferred to later review
+
+Do not add recommendation campaigns, connection status feeds, new order
+statuses, avatar customization, or backend-powered alerts until source
+contracts and an explicit product need are established. Full payment/renewal
+dialog styling is also a separate focused validation step.

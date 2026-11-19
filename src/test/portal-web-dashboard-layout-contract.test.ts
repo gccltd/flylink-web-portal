@@ -144,4 +144,46 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(orderComponent).toContain('orders.slice(0, 3)');
   });
 
+
+  test("defines the compact greeting fade and unified radii only for Web Dashboard", () => {
+    expect(webLayout).toContain("Concept v3.3: tokenized shape system");
+    expect(webLayout).toContain("--web-radius-card: 20px;");
+    expect(webLayout).toContain("--web-radius-row: 13px;");
+    expect(webLayout).toContain("--web-radius-action: 12px;");
+    expect(webLayout).toContain("--web-radius-pill: 999px;");
+    expect(webLayout).toContain(".portal-v2-greeting");
+    expect(webLayout).toContain("linear-gradient(90deg");
+    expect(webLayout).toContain("transparent 96%");
+    expect(webLayout).toContain('portal-v2-shell--web');
+  });
+
+  test("keeps decorative icons in visual headings and per-offer accents without altering order data", () => {
+    const recent = readFileSync(resolve("src/features/user-portal/dashboard/dashboard-recent-orders.tsx"), "utf8");
+    const start = readFileSync(resolve("src/features/user-portal/dashboard/dashboard-start-card.tsx"), "utf8");
+    const wallet = readFileSync(resolve("src/features/user-portal/dashboard/dashboard-wallet-card.tsx"), "utf8");
+    const offer = readFileSync(resolve("src/features/user-portal/marketplace-offer-card.tsx"), "utf8");
+    expect(recent).toContain('className="portal-dashboard-header-icon" aria-hidden="true"');
+    expect(start).toContain("<Globe2 aria-hidden");
+    expect(start).toContain("<ShieldCheck aria-hidden");
+    expect(wallet).toContain('className="portal-dashboard-wallet-icon"');
+    expect(commerce).toContain("dashboardAccent={isPortalWebPath()}");
+    expect(offer).toContain("dashboardAccent = false");
+    expect(offer).toContain("planAction?.action === \"current_renew\"");
+    expect(webLayout).toContain(".portal-marketplace-card__decor");
+    expect(webLayout).toContain('portal-v2-shell:not(.portal-v2-shell--web)');
+    expect(recent).toContain("orders.slice(0, 3)");
+  });
+
+  test("adds nonsemantic card personality, state pills and focus without continuous animation", () => {
+    expect(webLayout).toContain("--web-card-aura:");
+    expect(webLayout).toContain(".portal-v2-dashboard-marketplace");
+    expect(webLayout).toContain(".portal-v2-dashboard-orders");
+    expect(webLayout).toContain(".portal-v2-dashboard-wallet");
+    expect(webLayout).toContain(".portal-v2-dashboard-start");
+    expect(webLayout).toContain(".portal-order-status");
+    expect(webLayout).toContain(":focus-visible");
+    expect(webLayout).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(webLayout).not.toContain("animation: infinite");
+  });
+
 });

@@ -20,7 +20,7 @@ export function DashboardWalletCard({
           <span className="portal-card-label">{zh ? "钱包余额" : "Wallet balance"}</span>
           <h3>{zh ? "账户 Coins" : "Account Coins"}</h3>
         </div>
-        <WalletCards aria-hidden="true" />
+        <WalletCards className="portal-dashboard-wallet-icon" aria-hidden="true" />
       </div>
       <div className="portal-v2-dashboard-wallet-balance">
         <strong>{walletBalance === null ? "—" : walletBalance}</strong>

@@ -5,7 +5,7 @@ import {
   useRef,
   useState
 } from "react";
-import { Circle, LoaderCircle } from "lucide-react";
+import { Circle, Layers, LoaderCircle } from "lucide-react";
 import {
   CoinsPurchaseDialog,
   isPortalCoinOrderTerminal,
@@ -850,9 +850,12 @@ export function DashboardMarketplaceCard({
   return (
     <article className="portal-v2-panel portal-v2-dashboard-marketplace">
       <div className="portal-v2-panel-header">
-        <div>
-          <span className="portal-card-label">{zh ? "套餐商城" : "Plan marketplace"}</span>
-          <h3>{zh ? "套餐商城" : "Plan marketplace"}</h3>
+        <div className="portal-dashboard-heading">
+          <span className="portal-dashboard-header-icon" aria-hidden="true"><Layers /></span>
+          <div>
+            <span className="portal-card-label">{zh ? "服务套餐" : "Plans & services"}</span>
+            <h3>{zh ? "套餐商城" : "Plan marketplace"}</h3>
+          </div>
         </div>
         <button className="portal-link-button" type="button" onClick={onOpenMarketplace}>
           {zh ? "去商城" : "Go to Marketplace"}
@@ -882,6 +885,7 @@ export function DashboardMarketplaceCard({
           {visiblePlanOffers.map((offer) => (
             <MarketplaceOfferCard
               busy={false}
+              dashboardAccent={isPortalWebPath()}
               key={offer.offerRef}
               locale={locale}
               mode={model === "wallet_first_unique_v1" ? "reserve" : "purchase"}

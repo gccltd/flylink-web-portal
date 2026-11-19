@@ -63,15 +63,18 @@ describe("Portal Dashboard components", () => {
   test("uses the compact wallet and start cards with working actions", () => {
     const onOpenWallet = vi.fn();
     const onStartUsing = vi.fn();
-    const { rerender } = render(
+    const { rerender, container } = render(
       <DashboardWalletCard locale="zh" walletBalance={70} onOpenWallet={onOpenWallet} />
     );
 
     expect(screen.getByText("70")).toBeTruthy();
+    expect(container.querySelector(".portal-dashboard-wallet-icon")).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "去充值" }));
     expect(onOpenWallet).toHaveBeenCalledTimes(1);
 
     rerender(<DashboardStartCard locale="zh" onStartUsing={onStartUsing} />);
+    expect(container.querySelector(".portal-dashboard-header-icon")).not.toBeNull();
+    expect(container.querySelectorAll(".portal-v2-start-points svg")).toHaveLength(3);
     fireEvent.click(screen.getByRole("button", { name: "启动飞连VPN" }));
     expect(onStartUsing).toHaveBeenCalledTimes(1);
   });

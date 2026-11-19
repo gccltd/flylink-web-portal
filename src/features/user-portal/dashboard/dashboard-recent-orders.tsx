@@ -28,9 +28,12 @@ export function DashboardRecentOrders({
   return (
     <article className="portal-v2-panel portal-v2-dashboard-orders">
       <div className="portal-v2-panel-header">
-        <div>
-          <span className="portal-card-label">{text(locale, "交易与订单", "Transactions")}</span>
-          <h3>{text(locale, "近期订单", "Recent activity")}</h3>
+        <div className="portal-dashboard-heading">
+          <span className="portal-dashboard-header-icon" aria-hidden="true"><ReceiptText /></span>
+          <div>
+            <span className="portal-card-label">{text(locale, "交易与订单", "Transactions")}</span>
+            <h3>{text(locale, "近期订单", "Recent activity")}</h3>
+          </div>
         </div>
         <button className="portal-link-button" type="button" onClick={onOpenOrders}>
           {text(locale, "查看全部", "View all")}

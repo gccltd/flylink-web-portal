@@ -1,3 +1,4 @@
+import { Crown, Layers } from "lucide-react";
 import type { MouseEvent } from "react";
 import type {
   PortalCoinCommerceClientErrorCode,
@@ -21,6 +22,7 @@ export type MarketplacePlanAction = {
 
 export type MarketplaceOfferCardProps = {
   busy: boolean;
+  dashboardAccent?: boolean;
   locale: PortalCommercePresentationLocale;
   mode: "purchase" | "reserve";
   offer: PortalCoinOffer;
@@ -69,6 +71,7 @@ function unavailableReason(
 
 export function MarketplaceOfferCard({
   busy,
+  dashboardAccent = false,
   locale,
   mode,
   offer,
@@ -97,7 +100,14 @@ export function MarketplaceOfferCard({
       }
     >
       <article>
-        <h3>{title}</h3>
+        <h3>
+          {dashboardAccent ? (
+            <span className="portal-marketplace-card__decor" aria-hidden="true">
+              {planAction?.action === "current_renew" ? <Crown /> : <Layers />}
+            </span>
+          ) : null}
+          {title}
+        </h3>
         <dl className="portal-marketplace-card__price">
           <dt>{zh ? "价格" : "Price"}</dt>
           <dd>
