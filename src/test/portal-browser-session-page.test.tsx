@@ -40,7 +40,7 @@ test("pending session restore keeps the regular login entry visible without a re
 
   expect(screen.getByRole("heading", { name: "账号登录" })).toBeInTheDocument();
   expect(screen.queryByText(/正在恢复登录|Restoring sign-in/)).not.toBeInTheDocument();
-  expect(c.restoreSession).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(c.restoreSession).toHaveBeenCalledTimes(1));
   expect(c.issueHumanChallenge).not.toHaveBeenCalled();
 
   await act(async () => pending.resolve(session));
