@@ -7753,8 +7753,11 @@
 @media (min-width: 721px) {
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] {
     color: #14213e;
-    background: radial-gradient(900px 460px at 90% 0%, rgba(124, 102, 244, .12), transparent 65%),
-      linear-gradient(155deg, #f8faff, #eef3ff 65%, #f9fbff);
+    background-color: #f5f8ff;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] {
+    background-color: #0a1532;
   }
 
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-topbar {
@@ -7784,5 +7787,12 @@
 
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-sidebar {
     background: rgba(9, 19, 44, .84);
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1199px) {
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] {
+    background-image: radial-gradient(900px 460px at 90% 0%, rgba(124, 102, 244, .12), transparent 65%),
+      linear-gradient(155deg, #f8faff, #eef3ff 65%, #f9fbff);
   }
 }
