@@ -81,7 +81,7 @@ import { DashboardStartCard } from "./dashboard/dashboard-start-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
 import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange } from "./portal-browser-session";
 import { usePortalNavigation, type PortalView } from "./use-portal-navigation";
-import { portalAssetPath, portalRoutePath } from "./portal-entry";
+import { isPortalWebPath, portalAssetPath, portalRoutePath } from "./portal-entry";
 import {
   PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY,
   PORTAL_REGISTRATION_SESSION_STORAGE_KEY
@@ -3326,11 +3326,13 @@ function DashboardPanel({
             sessionGeneration={sessionGeneration ?? 0}
             sessionRef={sessionRef ?? null}
           />
-          <DashboardWalletCard
-            locale={locale}
-            walletBalance={walletBalance}
-            onOpenWallet={() => setActiveView("wallet")}
-          />
+          {!isPortalWebPath() ? (
+            <DashboardWalletCard
+              locale={locale}
+              walletBalance={walletBalance}
+              onOpenWallet={() => setActiveView("wallet")}
+            />
+          ) : null}
         </div>
         <div className="portal-v2-dashboard-column portal-v2-dashboard-column--secondary">
           <DashboardRecentOrders

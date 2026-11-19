@@ -236,3 +236,71 @@ fixed-city / reduced-data visual safeguards remain as in v3.4.
 authorized real-browser visual review at 768/1024/1280/1440/1920px with
 light/dark and long-data cases, independent reviewer; keep Draft and do
 not deploy production based only on Preview Ready.
+
+## Visual revision v4 — independent brand rail & concept-designed plan previews (2026-11-20)
+
+**Source:** the user's selected third concept and its subsequent iteration:
+standalone lilac-blue sidebar, brand robot at top, realistic high-definition
+robot on a neon base at bottom, central plan-status overview with floating
+shield, and three differently decorated plan cards with prominent CTAs.
+Illustrated prices, durations, order values, names and labels in the concept
+are visual examples **only**. Runtime data remains authoritative.
+
+**Scope:** standalone `/web` user center. PR #17 remains stacked on PR #16.
+The legacy `/portal` and Android clients retain their existing layout,
+navigation, brand placement, and commerce behavior.
+
+### Navigation and chrome
+- From 1440px: 206px independent rounded rail, 12px outside inset.
+  From 1024–1439px: 196px rail. From 721–1023px: 76px icon rail;
+  below that, retain existing narrow-Web navigation.
+- The rail owns the original FlyLink robot brand/logo. It sits above the
+  page and is **not covered by the topbar**: the latter starts to the
+  right of the rail at the shared inset instead of spanning the viewport.
+- Six previously established navigation routes and their labels stay
+  intact. Selected state uses a cyan→blue→violet pill with distinct
+  keyboard focus; no new route is invented.
+- The lower sidebar uses the already supplied brand robot image
+  (standalone compressed 510×363 WebP, approximately 19 KiB) and static
+  CSS orbital/pedestal accents. The image is lazy-loaded; short viewports,
+  collapsed tablet rail and reduced-data mode hide the scene. No
+  animations, video or heavyweight composited background is introduced.
+
+### Overview / Marketplace
+- The three real account metrics and existing renew/top-up/order/start
+  controls remain intact. On roomy screens a decorative, aria-hidden
+  shield sits beside them; it must not overlap labels or traffic values.
+- The redundant lower **Wallet** card is removed **only from the /web
+  Dashboard**. The overview's live wallet balance and Wallet navigation
+  remain; the legacy `/portal` Dashboard keeps its lower Wallet card.
+- The Marketplace becomes a full-height left column aligned to the right
+  independent Orders+Start stack, with **no nested scrolling**.
+  Left panel minimum height ~528px; content always grows for longer
+  authoritative descriptions or alternative business states.
+- Up to three offers still come from `catalog.offers` (no hardcoded
+  durations, plan benefits, tiers, or prices). Position 0/1/2 gets
+  only different cyan, violet and warm-gold decorative treatments:
+  calendar, crystal and crown motifs respectively. These motifs and
+  glows do not constitute actual product recommendations.
+- Each offer has a light-glass stage with a left illustration,
+  real plan title and summary, real Coins price and the original
+  callback. In the /web preview, the normal buy/reserve button has
+  visually compact text (立即购买/立即预约); its full original
+  accessible label remains. Real renew/upgrade/downgrade and disabled
+  labels are left unchanged.
+- The right-side Recent Orders and Start cards keep their real data,
+  natural height, navigation and error behavior; no invented data.
+
+### Responsive / accessibility / performance
+- Main independent Dashboard columns at 1101px+; 721–1100px stacks
+  Marketplace→Orders→Start; long plan text wraps and cards grow rather
+  than hiding data. No internal offer/order scrolling.
+- Photo/illustration icons are decorative and aria-hidden. Navigation
+  focus and button accessible names remain. Hover glow is pointer-only
+  and motion is disabled when requested.
+- The original compressed static city scene, privacy, authentication,
+  checkout and business contracts are unchanged.
+- Validate Lint/Vitest/Desktop Build/Build Verify on exact HEAD,
+  followed by protected-preview browser review at
+  768,1024,1280,1440,1920 CSS pixels in both themes and long-label states.
+  Keep both stacked PRs Draft until pixel review and independent review.

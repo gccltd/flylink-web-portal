@@ -1,4 +1,4 @@
-import { Crown, Layers } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Crown, Gem } from "lucide-react";
 import type { MouseEvent } from "react";
 import type {
   PortalCoinCommerceClientErrorCode,
@@ -23,6 +23,7 @@ export type MarketplacePlanAction = {
 export type MarketplaceOfferCardProps = {
   busy: boolean;
   dashboardAccent?: boolean;
+  dashboardVariant?: 0 | 1 | 2;
   locale: PortalCommercePresentationLocale;
   mode: "purchase" | "reserve";
   offer: PortalCoinOffer;
@@ -72,6 +73,7 @@ function unavailableReason(
 export function MarketplaceOfferCard({
   busy,
   dashboardAccent = false,
+  dashboardVariant = 0,
   locale,
   mode,
   offer,
@@ -99,11 +101,20 @@ export function MarketplaceOfferCard({
           : "portal-marketplace-card"
       }
     >
-      <article className={dashboardAccent ? "portal-marketplace-card__dashboard-layout" : undefined}>
+      <article className={dashboardAccent
+        ? `portal-marketplace-card__dashboard-layout portal-marketplace-card__concept-${dashboardVariant}`
+        : undefined}>
         {dashboardAccent ? (
           <div className="portal-marketplace-card__identity">
-            <span className="portal-marketplace-card__decor" aria-hidden="true">
-              {planAction?.action === "current_renew" ? <Crown /> : <Layers />}
+            <span className="portal-marketplace-card__decor portal-marketplace-card__illustration" aria-hidden="true">
+              <span className="portal-marketplace-card__illustration-orbit" />
+              {planAction?.action === "current_renew"
+                ? <Crown />
+                : dashboardVariant === 0
+                  ? <CalendarDays />
+                  : dashboardVariant === 1
+                    ? <Gem />
+                    : <Crown />}
             </span>
             <div className="portal-marketplace-card__copy">
               <h3>{title}</h3>
@@ -132,7 +143,12 @@ export function MarketplaceOfferCard({
             disabled={busy || planAction?.action === "unavailable"}
             onClick={onPrimary}
           >
-            {primaryLabel}
+            {dashboardAccent && !planAction
+              ? mode === "purchase"
+                ? (zh ? "立即购买" : "Buy now")
+                : (zh ? "立即预约" : "Reserve now")
+              : primaryLabel}
+            {dashboardAccent ? <ArrowUpRight aria-hidden="true" /> : null}
           </button>
           {planAction?.action === "unavailable" ? (
             <p>{unavailableReason(planAction, locale)}</p>

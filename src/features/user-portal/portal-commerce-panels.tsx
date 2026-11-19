@@ -882,8 +882,9 @@ export function DashboardMarketplaceCard({
       ) : null}
       {catalog.status === "ready" && planOffers.length > 0 ? (
         <ul className="portal-marketplace-grid">
-          {visiblePlanOffers.map((offer) => (
+          {visiblePlanOffers.map((offer, index) => (
             <MarketplaceOfferCard
+              dashboardVariant={(index % 3) as 0 | 1 | 2}
               busy={false}
               dashboardAccent={isPortalWebPath()}
               key={offer.offerRef}

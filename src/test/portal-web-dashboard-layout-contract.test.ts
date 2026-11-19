@@ -244,4 +244,49 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(orders).toContain('{order.statusLabel}');
   });
 
+
+  test("loads the independent Web rail and three personalized offer treatments after v3 styles", () => {
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const sidebar = readFileSync(resolve("src/features/user-portal/layout/portal-sidebar.tsx"), "utf8");
+    const offer = readFileSync(resolve("src/features/user-portal/marketplace-offer-card.tsx"), "utf8");
+    expect(stylesheet.indexOf("user-portal-concept-v4.css")).toBeGreaterThan(
+      stylesheet.indexOf("user-portal-web-dashboard-v3.css")
+    );
+    expect(concept).toContain("--web-rail-width: 196px;");
+    expect(concept).toContain("--web-rail-width:206px;");
+    expect(concept).toContain("left: calc(var(--web-rail-width) + 24px)");
+    expect(concept).toContain(".portal-v2-topbar-brand");
+    expect(concept).toContain(".portal-sidebar-scene__robot");
+    expect(sidebar).toContain('portalAssetPath("portal-brand-robot.webp")');
+    expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
+    expect(sidebar).toContain("isPortalWebPath()");
+    expect(offer).toContain("dashboardVariant?: 0 | 1 | 2");
+    expect(concept).toContain("portal-marketplace-card__concept-0");
+    expect(concept).toContain("portal-marketplace-card__concept-1");
+    expect(concept).toContain("portal-marketplace-card__concept-2");
+    expect(concept).toContain("min-height:122px;");
+  });
+
+  test("removes only Web Dashboard's redundant wallet while retaining actual overview balance", () => {
+    expect(page).toContain("!isPortalWebPath() ? (");
+    expect(page).toContain("<DashboardWalletCard");
+    const overview = readFileSync(resolve("src/features/user-portal/dashboard/dashboard-overview-card.tsx"), "utf8");
+    expect(overview).toContain('walletBalance === null ? "—" : walletBalance + " Coins"');
+    expect(overview).toContain('portal-v2-overview-crest');
+  });
+
+  test("keeps the mascot and plan art static, scoped and low-cost", () => {
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const sidebar = readFileSync(resolve("src/features/user-portal/layout/portal-sidebar.tsx"), "utf8");
+    const image = readFileSync(resolve("public/portal-sidebar-mascot.webp"));
+    expect(image.byteLength).toBeLessThan(32 * 1024);
+    expect(image.toString("ascii", 8, 12)).toBe("WEBP");
+    expect(sidebar).toContain('loading="lazy"');
+    expect(concept).toContain("(prefers-reduced-data:reduce)");
+    expect(concept).toContain("(max-width: 1023px)");
+    expect(concept).toContain("(prefers-reduced-motion:reduce)");
+    expect(concept).not.toContain("animation: infinite");
+    expect(concept).not.toContain("background-attachment: fixed;");
+  });
+
 });
