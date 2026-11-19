@@ -437,15 +437,15 @@ function localizedPortalViewCopy(view: PortalView, locale: PortalAuthLocale) {
       description: uiText(locale, "查看账户共享流量额度和使用情况。", "Review shared account traffic quota and usage.")
     },
     marketplace: {
-      label: uiText(locale, "套餐商城", "Marketplace"),
+      label: uiText(locale, "商城", "Marketplace"),
       description: uiText(locale, "浏览套餐和流量包，使用 Coins 完成购买。", "Browse plans and data packs, then purchase with Coins.")
     },
     orders: {
-      label: uiText(locale, "我的订单", "Orders"),
+      label: uiText(locale, "订单", "Orders"),
       description: uiText(locale, "统一查看商城消费、套餐付款和服务记录。", "Review Marketplace purchases, plan payments, and service records in one place.")
     },
     wallet: {
-      label: uiText(locale, "钱包余额", "Wallet balance"),
+      label: uiText(locale, "Coins 钱包", "Coins wallet"),
       description: uiText(locale, "查看可用余额、分类余额和钱包流水。", "Review spendable balance, balance categories, and Wallet activity.")
     },
     referrals: {
@@ -453,11 +453,11 @@ function localizedPortalViewCopy(view: PortalView, locale: PortalAuthLocale) {
       description: uiText(locale, "查看推荐链接、邀请进度和奖励。", "Review your referral link, invitation progress, and rewards.")
     },
     start: {
-      label: uiText(locale, "使用指南", "User guide"),
+      label: uiText(locale, "开始使用", "Start using"),
       description: uiText(locale, "选择设备、下载客户端并完成连接。", "Choose a device, download a client, and connect step by step.")
     },
     profile: {
-      label: uiText(locale, "个人资料", "Profile"),
+      label: uiText(locale, "个人中心", "Personal center"),
       description: uiText(locale, "管理账户信息、身份验证器和通行密钥。", "Manage account information, authenticators, and passkeys.")
     },
     settings: {
@@ -471,10 +471,19 @@ function localizedPortalViewCopy(view: PortalView, locale: PortalAuthLocale) {
   }[view];
 }
 
+const primaryNavigationLabels: Record<string, { zh: string; en: string }> = {
+  dashboard: { zh: "概览", en: "Overview" },
+  marketplace: { zh: "套餐商城", en: "Marketplace" },
+  orders: { zh: "我的订单", en: "Orders" },
+  wallet: { zh: "钱包余额", en: "Coins wallet" },
+  start: { zh: "使用指南", en: "User guide" }
+};
+
 function localizedNavItems(locale: PortalAuthLocale) {
   return navItems.map((item) => ({
     ...item,
-    ...localizedPortalViewCopy(item.id, locale)
+    ...localizedPortalViewCopy(item.id, locale),
+    label: uiText(locale, primaryNavigationLabels[item.id].zh, primaryNavigationLabels[item.id].en)
   }));
 }
 

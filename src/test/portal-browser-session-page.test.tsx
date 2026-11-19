@@ -11,6 +11,13 @@ import { PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY, PORTAL_REGISTRATION_SESSION_
 const session: PortalSession = { status: "authenticated_preview", transport: "cookie", sessionRef: `portalctx_${"a".repeat(64)}`, expiresAt: "2026-09-07T00:30:00.000Z", registeredAt: "2026-09-07T00:00:00.000Z", userRef: "test_account", displayName: "Test Account", authMode: "password", safety: { noAdminApi: true, noPublicAuthActivated: true, noRawPasswordReturned: true } };
 function deferred<T>() { let resolve!: (value:T)=>void; let reject!: (error:unknown)=>void; const promise = new Promise<T>((yes,no)=>{resolve=yes;reject=no;}); return {promise,resolve,reject}; }
 function client() { return { ...createLocalUserPortalClient(), restoreSession: vi.fn(async () => session as PortalSession | null), logout: vi.fn(async (_input: {sessionRef:string})=>{}), issueHumanChallenge: vi.fn(async () => ({ challengeId: "challenge_test", prompt: "1 + 2 = ?" })) }; }
+async function clickAccountLogout() {
+  const topbar = document.querySelector(".portal-v2-topbar") as HTMLElement;
+  fireEvent.click(within(topbar).getByRole("button", { name: "账户菜单" }));
+  const menu = await screen.findByRole("menu", { name: "账户菜单" });
+  fireEvent.click(within(menu).getByRole("menuitem", { name: "退出登录" }));
+}
+
 beforeEach(() => { vi.stubGlobal("BroadcastChannel", undefined); });
 afterEach(() => { cleanup(); window.sessionStorage.clear(); window.localStorage.clear(); window.history.replaceState(null,"","/"); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
@@ -57,8 +64,7 @@ test("logout failure keeps private UI cleared and cannot bootstrap itself back i
   c.logout.mockRejectedValueOnce(new Error("offline"));
   render(<UserPortalPage portalClient={c}/>);
   const nav = await screen.findByRole("navigation", {name:"用户中心导航"});
-  const logoutButton = screen.getAllByRole("button", {name:/退出|Log out|Sign out/})[0];
-  fireEvent.click(logoutButton);
+  await clickAccountLogout();
   await waitFor(()=>expect(nav).not.toBeInTheDocument());
   expect(await screen.findByRole("alert")).toHaveTextContent("注销尚未完成");
   expect(c.restoreSession).toHaveBeenCalledTimes(1);
@@ -72,7 +78,7 @@ test("reload while logout is unresolved retains only a public context and retrie
   const c = client(); c.logout.mockRejectedValueOnce(new Error("offline"));
   const first = render(<UserPortalPage portalClient={c}/>);
   await screen.findByRole("navigation",{name:"用户中心导航"});
-  fireEvent.click(screen.getByRole("button",{name:"退出登录"}));
+  await clickAccountLogout();
   expect(await screen.findByRole("alert")).toHaveTextContent("注销尚未完成");
   expect(window.sessionStorage.getItem("gccwebos-portal-logout-pending-v1")).toBe(session.sessionRef);
   first.unmount();

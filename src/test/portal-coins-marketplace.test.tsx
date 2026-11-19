@@ -360,7 +360,7 @@ async function openMarketplace(client: UserPortalClient) {
   const navigation = await screen.findByRole("navigation", {
     name: "用户中心导航"
   });
-  fireEvent.click(within(navigation).getByRole("button", { name: "商城" }));
+  fireEvent.click(within(navigation).getByRole("button", { name: "套餐商城" }));
 }
 
 async function loginAndOpenMarketplace(client: UserPortalClient) {
@@ -388,7 +388,13 @@ async function loginAndOpenMarketplace(client: UserPortalClient) {
   const navigation = await screen.findByRole("navigation", {
     name: "用户中心导航"
   });
-  fireEvent.click(within(navigation).getByRole("button", { name: "商城" }));
+  fireEvent.click(within(navigation).getByRole("button", { name: "套餐商城" }));
+}
+
+async function clickAccountLogout() {
+  fireEvent.click(screen.getByRole("button", { name: "账户菜单" }));
+  const menu = await screen.findByRole("menu", { name: "账户菜单" });
+  fireEvent.click(within(menu).getByRole("menuitem", { name: "退出登录" }));
 }
 
 afterEach(() => {
@@ -1090,7 +1096,7 @@ describe("Portal server-backed Marketplace", () => {
       name: "用户中心导航"
     });
     fireEvent.click(within(loadingNavigation).getByRole("button", {
-      name: "商城"
+      name: "套餐商城"
     }));
     const loadingNotice = screen.getByRole("status");
     expect(loadingNotice).toHaveTextContent("正在加载商城目录");
@@ -1723,7 +1729,7 @@ describe("Portal server-backed Marketplace", () => {
     const oldClient = portalClientWithCommerce(oldCommerce);
     oldClient.authenticate = vi.fn(async () => session);
     await loginAndOpenMarketplace(oldClient);
-    fireEvent.click(screen.getByRole("button", { name: "退出登录" }));
+    await clickAccountLogout();
     await act(async () => {
       oldCatalog.resolve([planOffer]);
       await oldCatalog.promise;
@@ -1831,7 +1837,7 @@ describe("Portal server-backed Marketplace", () => {
     fireEvent.click(within(orderDialog).getByRole("button", {
       name: "关闭"
     }));
-    fireEvent.click(screen.getByRole("button", { name: "退出登录" }));
+    await clickAccountLogout();
     expect(window.sessionStorage.getItem(PORTAL_COIN_ORDER_STORAGE_KEY))
       .toBeNull();
     cleanup();
@@ -1852,7 +1858,7 @@ describe("Portal server-backed Marketplace", () => {
       name: "用户中心导航"
     });
     fireEvent.click(within(navigation).getByRole("button", {
-      name: "商城"
+      name: "套餐商城"
     }));
     expect(await screen.findByRole("heading", {
       name: "服务端基础套餐"
@@ -1871,7 +1877,7 @@ describe("Portal server-backed Marketplace", () => {
       initialSession: session,
       portalClient: portalClientWithCommerce(commerceClient())
     }));
-    fireEvent.click(await screen.findByRole("button", { name: "退出登录" }));
+    await clickAccountLogout();
 
     expect(removeItem).toHaveBeenCalledWith(PORTAL_COIN_ORDER_STORAGE_KEY);
     expect(screen.getByRole("heading", { name: "账号登录" }))
