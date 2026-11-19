@@ -7411,7 +7411,9 @@
   }
 }
 
-.portal-v2-shell-payment .portal-v2-sidebar {
-  top: 0;
-  height: 100vh;
+@media (min-width: 721px) {
+  .portal-v2-shell-payment .portal-v2-sidebar {
+    top: 0;
+    height: 100vh;
+  }
 }
