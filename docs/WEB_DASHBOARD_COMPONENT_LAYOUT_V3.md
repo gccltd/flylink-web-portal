@@ -178,3 +178,23 @@ Do not add recommendation campaigns, connection status feeds, new order
 statuses, avatar customization, or backend-powered alerts until source
 contracts and an explicit product need are established. Full payment/renewal
 dialog styling is also a separate focused validation step.
+## Visual revision v3.4 — topbar adjacency & concept-aligned plan rows
+
+Accepted 2026-11-20: the greeting is raised to the top content edge,
+and the icon position of Overview, Wallet and plan-list rows is reconciled
+with the latest light-lilac Web Dashboard concept. All changes are /web-only.
+
+- Dashboard desktop begins at 72px (64px fixed topbar + 8px separation);
+  greeting inset is 4/10/3px. Other routes preserve their main padding.
+- Metric emblems now sit left of entire label/value/metadata groups
+  (36px glyph tiles, 44px first-cell inset, 64px for separated wide cells).
+- Wallet header icon is left-aligned on /web; legacy /portal keeps its
+  right-hand original icon without changing accessibility text.
+- Offer rows use explicit icon + plan title/description at left, and
+  authoritative Coins price + existing CTA at right, min-height 76px.
+  A genuine current-plan note extends across the row; no invented
+  recommendation badge, plan, price or payment action is introduced.
+- Narrow browser layouts stack the offer's left and right regions.
+  All changes retain the previous fixed-background/reduced-data guards.
+- Review gate: exact-head CI, authorized light/dark screenshots at
+  768/1024/1280/1440/1920px, overflow and independent Review.

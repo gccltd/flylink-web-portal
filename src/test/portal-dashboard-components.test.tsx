@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { DashboardRecentOrders } from "../features/user-portal/dashboard/dashboard-recent-orders";
 import { DashboardWalletCard } from "../features/user-portal/dashboard/dashboard-wallet-card";
 import { DashboardStartCard } from "../features/user-portal/dashboard/dashboard-start-card";
+import { MarketplaceOfferCard } from "../features/user-portal/marketplace-offer-card";
 import { presentDashboardRecentOrders } from "../features/user-portal/dashboard/dashboard-recent-orders-model";
 
 afterEach(() => cleanup());
@@ -174,4 +175,26 @@ test("renders the unified amount and status without inventing a service-order am
   expect(screen.getAllByText("已完成")).toHaveLength(2);
   fireEvent.click(screen.getByRole("button", { name: "查看全部" }));
   expect(onOpenOrders).toHaveBeenCalledTimes(1);
+});
+
+test("Web offer icon identity aligns with text while /portal markup remains intact", () => {
+  const onPrimary = vi.fn();
+  const offer = {
+    offerRef: "test-plan",
+    category: "plan",
+    title: { zh: "月卡（30 天）", en: "30-day plan" },
+    summary: { zh: "稳定连接", en: "Stable connection" },
+    baseCoinUnits: 20
+  } as never;
+  const { container, rerender } = render(<MarketplaceOfferCard
+    busy={false} dashboardAccent locale="zh" mode="purchase"
+    offer={offer} onPrimary={onPrimary} />);
+  expect(container.querySelector(".portal-marketplace-card__identity")).not.toBeNull();
+  expect(screen.getByText("稳定连接")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: /使用 Coins 购买：月卡/ }));
+  expect(onPrimary).toHaveBeenCalledTimes(1);
+  rerender(<MarketplaceOfferCard busy={false} locale="zh" mode="purchase"
+    offer={offer} onPrimary={onPrimary} />);
+  expect(container.querySelector(".portal-marketplace-card__identity")).toBeNull();
+  expect(screen.getByText("稳定连接")).toBeTruthy();
 });

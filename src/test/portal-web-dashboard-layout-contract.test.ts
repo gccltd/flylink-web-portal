@@ -186,4 +186,30 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout).not.toContain("animation: infinite");
   });
 
+
+  test("moves Web-only greeting up without touching other routes", () => {
+    expect(webLayout).toContain("Concept v3.4:");
+    expect(webLayout).toContain(".portal-v2-main:has(.portal-v2-dashboard-column)");
+    expect(webLayout).toContain("padding-top: 72px;");
+    expect(webLayout).toContain(".portal-v2-hero-block {gap: 6px;}");
+  });
+
+  test("places metric emblems beside the whole cell and restores separators", () => {
+    expect(webLayout).toContain("width: 36px;");
+    expect(webLayout).toContain("position: absolute;");
+    expect(webLayout).toContain(".portal-v2-hero-card__cell + .portal-v2-hero-card__cell");
+    expect(webLayout).toContain("left: 22px;");
+  });
+
+  test("matches plan row icon/description-left and Coins/CTA-right structure", () => {
+    const offer = readFileSync(resolve("src/features/user-portal/marketplace-offer-card.tsx"), "utf8");
+    expect(offer).toContain('portal-marketplace-card__dashboard-layout');
+    expect(offer).toContain('portal-marketplace-card__identity');
+    expect(offer).toContain('portal-marketplace-card__copy');
+    expect(offer).toContain('!dashboardAccent ? <p>{offer.summary[locale]}</p>');
+    expect(webLayout).toContain('grid-template-areas: "identity price" "identity action" "context context"');
+    expect(webLayout).toContain('grid-template-areas: "identity" "price" "action" "context"');
+    expect(webLayout).toContain('grid-template-columns: 32px minmax(0, 1fr)');
+  });
+
 });

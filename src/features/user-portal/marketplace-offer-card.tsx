@@ -99,15 +99,20 @@ export function MarketplaceOfferCard({
           : "portal-marketplace-card"
       }
     >
-      <article>
-        <h3>
-          {dashboardAccent ? (
+      <article className={dashboardAccent ? "portal-marketplace-card__dashboard-layout" : undefined}>
+        {dashboardAccent ? (
+          <div className="portal-marketplace-card__identity">
             <span className="portal-marketplace-card__decor" aria-hidden="true">
               {planAction?.action === "current_renew" ? <Crown /> : <Layers />}
             </span>
-          ) : null}
-          {title}
-        </h3>
+            <div className="portal-marketplace-card__copy">
+              <h3>{title}</h3>
+              <p>{offer.summary[locale]}</p>
+            </div>
+          </div>
+        ) : (
+          <h3>{title}</h3>
+        )}
         <dl className="portal-marketplace-card__price">
           <dt>{zh ? "价格" : "Price"}</dt>
           <dd>
@@ -115,8 +120,10 @@ export function MarketplaceOfferCard({
             <span className="portal-marketplace-card__unit">Coins</span>
           </dd>
         </dl>
-        <p>{offer.summary[locale]}</p>
-        {currentText ? <p>{currentText}</p> : null}
+        {!dashboardAccent ? <p>{offer.summary[locale]}</p> : null}
+        {currentText ? (
+          <p className={dashboardAccent ? "portal-marketplace-card__context" : undefined}>{currentText}</p>
+        ) : null}
         <div className="portal-marketplace-card__actions">
           <button
             aria-label={`${primaryLabel}${zh ? "：" : ": "}${title}`}
