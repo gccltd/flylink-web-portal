@@ -58,4 +58,43 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout).toContain('[data-portal-theme="light"]');
     expect(webLayout).toContain('@media (prefers-reduced-motion: reduce)');
   });
+
+  test("replaces the heavy black skyline with a pastel city wash without a second image", () => {
+    expect(webLayout).toContain('Concept v3.1: pale lilac / powder-blue');
+    expect(webLayout).toContain('rgba(175, 202, 254, 0.42)');
+    expect(webLayout).toContain('url("/web/portal-dashboard-scene.webp")');
+    expect(webLayout).toContain(':has(.portal-v2-dashboard-column)');
+    expect(webLayout).not.toContain('background-attachment: fixed;');
+    expect(webLayout).not.toContain('animation: infinite');
+  });
+
+  test("layers restrained frosted glass only on local Web cards", () => {
+    expect(webLayout).toContain('--web-jelly-panel: linear-gradient(');
+    expect(webLayout).toContain('backdrop-filter: blur(8px) saturate(120%)');
+    expect(webLayout).toContain('@supports (backdrop-filter: blur(1px))');
+    expect(webLayout).toContain('(prefers-reduced-transparency: reduce)');
+    expect(webLayout).toContain('data-portal-theme="light"] .portal-v2-hero-card');
+    expect(webLayout).toContain('box-shadow: inset 0 1px 0');
+  });
+
+  test("keeps scroll areas local and keyboard/touch behavior accessible", () => {
+    expect(webLayout).toContain('scrollbar-width: thin;');
+    expect(webLayout).toContain('::-webkit-scrollbar-thumb');
+    expect(webLayout).toContain('overscroll-behavior-y: contain;');
+    expect(webLayout).toContain('overflow-y: auto;');
+    expect(webLayout).toContain('overflow-y: visible;');
+    expect(webLayout).toContain('outline: 3px solid #48baf0;');
+    expect(webLayout).toContain('@media (hover: hover) and (pointer: fine)');
+    expect(webLayout).toContain('@media (prefers-reduced-motion: reduce)');
+  });
+
+  test("preserves reduced-data priority after city background overrides", () => {
+    const marker = 'Last in the cascade so the pale-skyline override';
+    const n = webLayout.lastIndexOf(marker);
+    expect(n).toBeGreaterThan(webLayout.lastIndexOf('url("/web/portal-dashboard-scene.webp")'));
+    expect(webLayout.slice(n)).toContain('@media (prefers-reduced-data: reduce)');
+    expect(webLayout.slice(n)).not.toContain('url("/web/portal-dashboard-scene.webp")');
+  });
+
+
 });
