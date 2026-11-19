@@ -64,7 +64,7 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout).toContain('rgba(175, 202, 254, 0.42)');
     expect(webLayout).toContain('url("/web/portal-dashboard-scene.webp")');
     expect(webLayout).toContain(':has(.portal-v2-dashboard-column)');
-    expect(webLayout).not.toContain('background-attachment: fixed;');
+    expect(webLayout).toContain('background-attachment: fixed;');
     expect(webLayout).not.toContain('animation: infinite');
   });
 
@@ -96,5 +96,50 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout.slice(n)).not.toContain('url("/web/portal-dashboard-scene.webp")');
   });
 
+
+
+  test("keeps the skyline fixed only on wide fine-pointer desktop and restores the fallbacks", () => {
+    expect(webLayout).toContain("Concept v3.2: unified glass depth");
+    expect(webLayout).toContain("@media (min-width: 1200px) and (hover: hover) and (pointer: fine)");
+    const fixed = webLayout.lastIndexOf("background-attachment: fixed;");
+    const fallback = webLayout.indexOf("background-attachment: scroll;", fixed);
+    expect(fixed).toBeGreaterThan(0);
+    expect(fallback).toBeGreaterThan(fixed);
+    const guard = webLayout.slice(fixed, fallback);
+    expect(guard).toContain("(prefers-reduced-motion: reduce)");
+    expect(guard).toContain("(prefers-reduced-transparency: reduce)");
+    expect(guard).toContain("(prefers-reduced-data: reduce)");
+    expect(guard).toContain("(max-width: 1199px)");
+    expect(webLayout).not.toContain("background-attachment: fixed !important");
+  });
+
+  test("unifies sidebar, topbar and five glass panels at descending opacity without new assets", () => {
+    expect(webLayout).toContain("--web-glass-chrome: linear-gradient(");
+    expect(webLayout).toContain("--web-glass-top: linear-gradient(");
+    expect(webLayout).toContain("--web-jelly-panel: linear-gradient(");
+    expect(webLayout).toContain("rgba(27, 47, 102, 0.79)");
+    expect(webLayout).toContain("rgba(32, 56, 115, 0.72)");
+    expect(webLayout).toContain("rgba(28, 55, 113, 0.70)");
+    expect(webLayout).toContain(".portal-v2-sidebar");
+    expect(webLayout).toContain(".portal-v2-topbar");
+    expect(webLayout).toContain("[data-portal-theme=\"light\"]");
+  });
+
+  test("makes the greeting compact and integrates plans and orders without altering data", () => {
+    expect(webLayout).toContain(".portal-v2-greeting");
+    expect(webLayout).toContain("gap: 7px;");
+    expect(webLayout).toContain("font-size: clamp(21px, 1.85vw, 26px)");
+    expect(webLayout).toContain("min-height: 204px;");
+    expect(webLayout).toContain(".portal-marketplace-card--current article");
+    expect(webLayout).toContain(".portal-v2-dashboard-order-detail");
+    expect(webLayout).toContain("font-variant-numeric: tabular-nums");
+    const orderComponent = readFileSync(
+      resolve("src/features/user-portal/dashboard/dashboard-recent-orders.tsx"), "utf8"
+    );
+    expect(orderComponent).toContain('className="portal-v2-dashboard-order-detail"');
+    expect(orderComponent).toContain('{order.orderNumber}');
+    expect(orderComponent).toContain('{order.createdAtLabel}');
+    expect(orderComponent).toContain('orders.slice(0, 3)');
+  });
 
 });
