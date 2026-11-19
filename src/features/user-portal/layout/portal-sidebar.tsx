@@ -59,6 +59,7 @@ export function PortalSidebar<TView extends string>({
                     type="button"
                     aria-label={item.label}
                     aria-current={current ? "page" : undefined}
+                    aria-describedby={item.id === ("wallet" as TView) ? "portal-wallet-nav-balance" : undefined}
                     data-portal-view={item.id}
                     className={cn("portal-use-nav-item", current && "active")}
                     onClick={() => onNavigate(item.id)}

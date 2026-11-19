@@ -1650,10 +1650,10 @@ describe("Portal server-backed Marketplace", () => {
   test("keeps bilingual capability parity and the unknown Wallet balance boundary", async () => {
     await openMarketplace(portalClientWithCommerce(commerceClient()));
     expect(await screen.findByText("Coins · --")).toBeInTheDocument();
-    const navigation = screen.getByRole("navigation", {
-      name: "用户中心导航"
-    });
-    fireEvent.click(within(navigation).getByRole("button", { name: "设置" }));
+    const topbar = document.querySelector(".portal-v2-topbar") as HTMLElement;
+    fireEvent.click(within(topbar).getByRole("button", { name: "账户菜单" }));
+    const accountMenu = screen.getByRole("menu", { name: "账户菜单" });
+    fireEvent.click(within(accountMenu).getByRole("menuitem", { name: "设置" }));
     // The topbar also carries a locale switch (concept topbar), so scope
     // the click to the Settings panel's own switch.
     const settingsPanel = document.querySelector(".portal-v2-settings-panel") as HTMLElement;
