@@ -28,6 +28,7 @@ type PortalTopbarProps = {
 
 export function PortalTopbar({
   locale,
+  pageTitle,
   mobileTitle,
   ordersActive,
   supportActive,
@@ -46,6 +47,7 @@ export function PortalTopbar({
   return (
     <>
       <header className="portal-use-topbar portal-v2-topbar" aria-label={zh ? "飞连VPN全局导航" : "FlyLink global navigation"}>
+        <h1 className="sr-only">{pageTitle}</h1>
         <div className="portal-v2-brand portal-v2-topbar-brand" aria-label="飞连VPN">
           <span className="portal-v2-logo">
             <Bot aria-hidden="true" />
@@ -61,8 +63,8 @@ export function PortalTopbar({
             <button
               type="button"
               className={["portal-v2-topbar-icon-button", ordersActive && "active"].filter(Boolean).join(" ")}
-              aria-label={zh ? "订单通知" : "Order notifications"}
-              title={zh ? "订单通知" : "Order notifications"}
+              aria-label={zh ? "订单管理" : "Order management"}
+              title={zh ? "订单管理" : "Order management"}
               onClick={onOpenOrders}
             >
               <Bell aria-hidden="true" />
