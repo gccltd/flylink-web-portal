@@ -7627,3 +7627,101 @@
     transform: none;
   }
 }
+
+/* Web-only brand assets and performance-aware cinematic treatment. */
+@media (min-width: 721px) {
+  .portal-v2-shell {
+    grid-template-columns: 168px minmax(0, 1fr);
+  }
+
+  .portal-v2-shell .portal-v2-sidebar {
+    width: 168px;
+    backdrop-filter: blur(14px) saturate(135%);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+  }
+
+  .portal-v2-shell .portal-use-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .portal-v2-shell .portal-use-nav-item {
+    width: 100%;
+  }
+
+  .portal-v2-shell .portal-v2-topbar {
+    backdrop-filter: blur(12px) saturate(132%);
+    -webkit-backdrop-filter: blur(12px) saturate(132%);
+  }
+
+  .portal-v2-shell .portal-v2-topbar-user-button .portal-avatar {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    overflow: hidden;
+    border: 1px solid rgba(99, 102, 241, 0.24);
+    border-radius: 11px;
+    background: linear-gradient(135deg, #172554, #312e81);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.20);
+  }
+
+  .portal-v2-shell .portal-v2-topbar-user-button .portal-avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 960px) {
+  .portal-v2-shell {
+    grid-template-columns: 152px minmax(0, 1fr);
+  }
+
+  .portal-v2-shell .portal-v2-sidebar {
+    width: 152px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .portal-v2-shell .portal-use-nav-item {
+    gap: 7px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* The scene is loaded only on the Web Dashboard and wide desktop viewports. */
+@media (min-width: 1200px) {
+  .portal-v2-shell .portal-v2-hero-card--scene {
+    background-image:
+      linear-gradient(105deg, rgba(7, 14, 35, 0.84) 0%, rgba(10, 18, 43, 0.72) 54%, rgba(12, 18, 42, 0.62) 100%),
+      url("/web/portal-dashboard-scene.webp");
+    background-position: center 56%;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .portal-v2-shell[data-portal-theme="light"] .portal-v2-hero-card--scene {
+    background-image:
+      linear-gradient(105deg, rgba(250, 252, 255, 0.94) 0%, rgba(250, 252, 255, 0.86) 54%, rgba(250, 252, 255, 0.74) 100%),
+      url("/web/portal-dashboard-scene.webp");
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .portal-v2-shell .portal-v2-hero-card--scene {
+    background-position: center 60%;
+  }
+}
+
+/* Respect browser data-saving preferences where the media feature is supported. */
+@media (prefers-reduced-data: reduce) {
+  .portal-v2-shell .portal-v2-hero-card--scene {
+    background-image: none;
+  }
+}

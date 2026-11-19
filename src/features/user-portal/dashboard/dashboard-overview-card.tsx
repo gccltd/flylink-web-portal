@@ -1,3 +1,4 @@
+import { isPortalWebPath } from "../portal-entry";
 import {
   BarChart3,
   ReceiptText,
@@ -53,6 +54,8 @@ export function DashboardOverviewCard({
   onRenewCurrentPlan,
   onNavigate
 }: DashboardOverviewCardProps) {
+  const showSceneBackground = isPortalWebPath();
+
   return (
     <section
       className="portal-v2-hero-block"
@@ -62,7 +65,7 @@ export function DashboardOverviewCard({
         <h2>{greeting}</h2>
         <p>{description}</p>
       </div>
-      <div className="portal-v2-hero-card">
+      <div className={["portal-v2-hero-card", showSceneBackground && "portal-v2-hero-card--scene"].filter(Boolean).join(" ")}>
         <div className="portal-v2-hero-card__cell">
           <span className="portal-card-label">
             <ShieldCheck aria-hidden="true" /> {uiText(locale, "当前套餐", "Current plan")}

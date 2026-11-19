@@ -11,6 +11,7 @@ import {
   Download,
   Eye,
   ExternalLink,
+  Gift,
   History,
   LayoutGrid,
   LineChart,
@@ -201,6 +202,7 @@ const navItems: Array<{ id: PortalView; label: string; description: string; icon
   { id: "marketplace", label: "套餐商城", description: "浏览套餐、流量包和增值服务。", icon: ShoppingBag },
   { id: "orders", label: "我的订单", description: "统一查看商城消费、充值和服务记录。", icon: ReceiptText },
   { id: "wallet", label: "钱包余额", description: "查看 Coins 可用余额和钱包流水。", icon: WalletCards },
+  { id: "referrals", label: "推荐", description: "邀请好友并查看推荐奖励。", icon: Gift },
   { id: "start", label: "使用指南", description: "选择设备、下载客户端并完成连接。", icon: Wifi }
 ];
 
@@ -216,7 +218,7 @@ const portalNavigationGroups: PortalNavigationGroup[] = [
     id: "primary",
     zh: "主导航",
     en: "Main navigation",
-    itemIds: ["dashboard", "marketplace", "orders", "wallet", "start"]
+    itemIds: ["dashboard", "marketplace", "orders", "wallet", "referrals", "start"]
   }
 ];
 
@@ -476,6 +478,7 @@ const primaryNavigationLabels: Record<string, { zh: string; en: string }> = {
   marketplace: { zh: "套餐商城", en: "Marketplace" },
   orders: { zh: "我的订单", en: "Orders" },
   wallet: { zh: "钱包余额", en: "Coins wallet" },
+  referrals: { zh: "推荐", en: "Referral" },
   start: { zh: "使用指南", en: "User guide" }
 };
 

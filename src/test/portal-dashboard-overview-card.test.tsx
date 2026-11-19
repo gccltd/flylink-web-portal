@@ -2,7 +2,10 @@ import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { DashboardOverviewCard } from "../features/user-portal/dashboard/dashboard-overview-card";
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  window.history.replaceState(null, "", "/");
+});
 
 test("renders authoritative overview values and keeps unavailable traffic usage explicit", () => {
   const onNavigate = vi.fn();
@@ -72,4 +75,36 @@ test("reconciliation state hides traffic details and sends unentitled accounts t
   expect(screen.queryByText("用量待同步")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "去商城选套餐" }));
   expect(onNavigate).toHaveBeenCalledWith("marketplace");
+});
+
+
+test("applies the cinematic scene treatment only to the dedicated Web Dashboard", () => {
+  const renderCard = () => render(
+    <DashboardOverviewCard
+      locale="zh"
+      greeting="欢迎回到飞连VPN"
+      description="管理你的套餐、流量与订单。"
+      currentPlanLabel="30 天套餐"
+      hasCurrentPlan
+      resourceState="active"
+      resourceReconciliation={false}
+      resourceExpiry="2027-11-19"
+      hasTrafficAccess={false}
+      planTrafficBytes={0}
+      remainingTrafficBytes={null}
+      remainingTrafficPercent={0}
+      trafficHeroLabel="—"
+      walletBalance={70}
+      onNavigate={vi.fn()}
+    />
+  );
+
+  window.history.replaceState(null, "", "/web/");
+  const webDashboard = renderCard();
+  expect(webDashboard.container.querySelector(".portal-v2-hero-card--scene")).not.toBeNull();
+  webDashboard.unmount();
+
+  window.history.replaceState(null, "", "/portal/");
+  const portalDashboard = renderCard();
+  expect(portalDashboard.container.querySelector(".portal-v2-hero-card--scene")).toBeNull();
 });

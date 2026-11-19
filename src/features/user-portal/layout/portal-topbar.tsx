@@ -1,4 +1,5 @@
-import { Bell, Globe2, ChevronDown, CircleHelp, Gift, LogOut, Settings, UserRound } from "lucide-react";
+import { Bell, ChevronDown, CircleHelp, Gift, Globe2, LogOut, Settings, UserRound } from "lucide-react";
+import { isPortalWebPath, portalAssetPath } from "../portal-entry";
 
 type PortalTopbarProps = {
   locale: "zh" | "en";
@@ -43,6 +44,7 @@ export function PortalTopbar({
   onLogout
 }: PortalTopbarProps) {
   const zh = locale === "zh";
+  const brandAvatarSrc = isPortalWebPath() ? portalAssetPath("portal-brand-robot.webp") : null;
 
   return (
     <>
@@ -90,7 +92,11 @@ export function PortalTopbar({
                 aria-label={zh ? "账户菜单" : "Account menu"}
                 onClick={() => onUserMenuOpenChange(!userMenuOpen)}
               >
-                <span className="portal-avatar" aria-hidden="true">{userDisplayName.charAt(0).toUpperCase()}</span>
+                <span className="portal-avatar" aria-hidden="true">
+                  {brandAvatarSrc ? (
+                    <img className="portal-avatar-image" src={brandAvatarSrc} alt="" decoding="async" />
+                  ) : userDisplayName.charAt(0).toUpperCase()}
+                </span>
                 <span className="portal-v2-topbar-user-name">{userDisplayName}</span>
                 <ChevronDown aria-hidden="true" className="portal-v2-topbar-user-chevron" />
               </button>
