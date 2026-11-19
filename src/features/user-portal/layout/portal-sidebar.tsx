@@ -19,6 +19,7 @@ export type PortalSidebarProps<TView extends string> = {
   locale: "zh" | "en";
   groups: readonly PortalSidebarGroup<TView>[];
   activeView: TView;
+  walletBalance: number | null;
   onNavigate: (view: TView) => void;
 };
 
@@ -26,6 +27,7 @@ export function PortalSidebar<TView extends string>({
   locale,
   groups,
   activeView,
+  walletBalance,
   onNavigate
 }: PortalSidebarProps<TView>) {
   const zh = locale === "zh";
@@ -66,6 +68,11 @@ export function PortalSidebar<TView extends string>({
                       <strong>{item.label}</strong>
                       <small>{item.description}</small>
                     </span>
+                    {item.id === ("wallet" as TView) ? (
+                      <span className="sr-only" id="portal-wallet-nav-balance">
+                        Coins · {walletBalance ?? "--"}
+                      </span>
+                    ) : null}
                   </button>
                 </Fragment>
               );

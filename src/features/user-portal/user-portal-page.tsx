@@ -2850,6 +2850,7 @@ export function UserPortalPage({
             locale={locale}
             groups={shellNavGroups}
             activeView={activeView === "usage" ? "dashboard" : activeView}
+            walletBalance={authoritativeWalletBalance}
             onNavigate={navigatePortalView}
           />
         }

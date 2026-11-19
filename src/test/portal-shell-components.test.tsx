@@ -42,6 +42,7 @@ describe("Portal desktop shell components", () => {
           ]
         }]}
         activeView="orders"
+        walletBalance={1200}
         onNavigate={onNavigate}
       />
     );
@@ -49,6 +50,7 @@ describe("Portal desktop shell components", () => {
     const navigation = screen.getByRole("navigation", { name: "用户中心导航" });
     expect(within(navigation).getAllByRole("button")).toHaveLength(5);
     expect(screen.getByRole("button", { name: "我的订单" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByText("Coins · 1200")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "个人资料" })).toBeNull();
     expect(screen.queryByRole("button", { name: "退出登录" })).toBeNull();
 

@@ -392,6 +392,7 @@ async function loginAndOpenMarketplace(client: UserPortalClient) {
 }
 
 async function clickAccountLogout() {
+  await screen.findByRole("navigation", { name: "用户中心导航" });
   fireEvent.click(screen.getByRole("button", { name: "账户菜单" }));
   const menu = await screen.findByRole("menu", { name: "账户菜单" });
   fireEvent.click(within(menu).getByRole("menuitem", { name: "退出登录" }));
