@@ -343,6 +343,7 @@
   font-size: 14px;
 }
 
+.portal-v2-topbar-user-menu-item,
 .portal-v2-topbar-user-menu-logout {
   display: flex;
   align-items: center;
@@ -359,15 +360,24 @@
   text-align: left;
 }
 
+.portal-v2-topbar-user-menu-item:hover,
+.portal-v2-topbar-user-menu-item:focus-visible,
 .portal-v2-topbar-user-menu-logout:hover,
 .portal-v2-topbar-user-menu-logout:focus-visible {
   background: rgba(148, 163, 184, 0.12);
   outline: 0;
 }
 
+.portal-v2-topbar-user-menu-item svg,
 .portal-v2-topbar-user-menu-logout svg {
   width: 16px;
   height: 16px;
+}
+
+.portal-v2-topbar-user-menu-separator {
+  height: 1px;
+  margin: 6px 4px;
+  background: #30363d;
 }
 
 .portal-v2-primary-actions,
@@ -4874,13 +4884,20 @@
 }
 
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-name strong,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-item,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout {
   color: #0f172a;
 }
 
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-item:hover,
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-item:focus-visible,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:focus-visible {
   background: #f1f5f9;
+}
+
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-separator {
+  background: #e2e8f0;
 }
 
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-start-points li {
@@ -5774,7 +5791,7 @@
 
   .portal-v2-shell .portal-use-nav {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0;
     width: 100%;
   }
@@ -5797,10 +5814,6 @@
 
   .portal-v2-shell .portal-use-nav-item.active {
     color: #20d5e8;
-  }
-
-  .portal-v2-shell .portal-use-nav-item[data-portal-view="support"] {
-    display: none !important;
   }
 
   .portal-v2-shell .portal-use-nav-item svg {

@@ -1,4 +1,4 @@
-import { Bell, CircleHelp, LogOut, Search, ShieldCheck } from "lucide-react";
+import { Bell, CircleHelp, Gift, LogOut, Search, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { PublicPreferenceSwitch } from "../public-locale-switch";
 
 type PortalTopbarProps = {
@@ -12,6 +12,9 @@ type PortalTopbarProps = {
   onSearchSubmit: () => void;
   onOpenOrders: () => void;
   onOpenSupport: () => void;
+  onOpenProfile: () => void;
+  onOpenReferrals: () => void;
+  onOpenSettings: () => void;
   userDisplayName: string;
   userMenuOpen: boolean;
   onUserMenuOpenChange: (open: boolean) => void;
@@ -35,6 +38,9 @@ export function PortalTopbar({
   onSearchSubmit,
   onOpenOrders,
   onOpenSupport,
+  onOpenProfile,
+  onOpenReferrals,
+  onOpenSettings,
   userDisplayName,
   userMenuOpen,
   onUserMenuOpenChange,
@@ -136,6 +142,43 @@ export function PortalTopbar({
                     <p className="portal-v2-topbar-user-menu-name">
                       <strong>{userDisplayName}</strong>
                     </p>
+                    <button
+                      type="button"
+                      className="portal-v2-topbar-user-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        onUserMenuOpenChange(false);
+                        onOpenProfile();
+                      }}
+                    >
+                      <UserRound aria-hidden="true" />
+                      {zh ? "个人资料" : "Profile"}
+                    </button>
+                    <button
+                      type="button"
+                      className="portal-v2-topbar-user-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        onUserMenuOpenChange(false);
+                        onOpenReferrals();
+                      }}
+                    >
+                      <Gift aria-hidden="true" />
+                      {zh ? "推荐奖励" : "Referral rewards"}
+                    </button>
+                    <button
+                      type="button"
+                      className="portal-v2-topbar-user-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        onUserMenuOpenChange(false);
+                        onOpenSettings();
+                      }}
+                    >
+                      <Settings aria-hidden="true" />
+                      {zh ? "设置" : "Settings"}
+                    </button>
+                    <div className="portal-v2-topbar-user-menu-separator" aria-hidden="true" />
                     <button
                       type="button"
                       className="portal-v2-topbar-user-menu-logout"

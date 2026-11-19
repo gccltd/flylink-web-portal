@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { LayoutGrid, ReceiptText, WalletCards } from "lucide-react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { LayoutGrid, ReceiptText, ShoppingBag, WalletCards, Wifi } from "lucide-react";
 import { PortalAppShell } from "../features/user-portal/layout/portal-app-shell";
 import { PortalSidebar } from "../features/user-portal/layout/portal-sidebar";
 import { PortalTopbar } from "../features/user-portal/layout/portal-topbar";
@@ -25,49 +25,46 @@ describe("Portal desktop shell components", () => {
     expect(screen.getByRole("heading", { name: "Account overview" })).toBeTruthy();
   });
 
-  test("renders active navigation and the selected order category", () => {
+  test("renders exactly five primary navigation entries without account actions", () => {
     const onNavigate = vi.fn();
-    const onNavigateOrderFilter = vi.fn();
     render(
       <PortalSidebar
         locale="zh"
         groups={[{
-          id: "service",
-          label: "服务",
+          id: "primary",
+          label: "主导航",
           items: [
             { id: "dashboard", label: "概览", description: "账户总览", icon: LayoutGrid },
-            { id: "orders", label: "订单管理", description: "查看订单", icon: ReceiptText },
-            { id: "wallet", label: "钱包", description: "Coins 余额", icon: WalletCards }
+            { id: "marketplace", label: "套餐商城", description: "浏览套餐", icon: ShoppingBag },
+            { id: "orders", label: "我的订单", description: "查看订单", icon: ReceiptText },
+            { id: "wallet", label: "钱包余额", description: "Coins 余额", icon: WalletCards },
+            { id: "start", label: "使用指南", description: "客户端连接步骤", icon: Wifi }
           ]
         }]}
         activeView="orders"
-        orderCenterFilter="coin_recharge"
-        orderCategories={[
-          { id: "coins_consumption", label: "商城消费" },
-          { id: "coin_recharge", label: "充值订单" }
-        ]}
-        showOrderCategories
-        desktopOrderNavigation
-        userDisplayName="Yi"
-        walletBalance={70}
+        walletBalance={1200}
         onNavigate={onNavigate}
-        onNavigateOrderFilter={onNavigateOrderFilter}
-        onLogout={vi.fn()}
       />
     );
 
-    expect(screen.getByRole("navigation", { name: "用户中心导航" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "充值订单" }).getAttribute("aria-current")).toBe("page");
+    const navigation = screen.getByRole("navigation", { name: "用户中心导航" });
+    expect(within(navigation).getAllByRole("button")).toHaveLength(5);
+    expect(screen.getByRole("button", { name: "我的订单" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByText("Coins · 1200")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "个人资料" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "退出登录" })).toBeNull();
+
     fireEvent.click(screen.getByRole("button", { name: "概览" }));
     expect(onNavigate).toHaveBeenCalledWith("dashboard");
-    fireEvent.click(screen.getByRole("button", { name: "商城消费" }));
-    expect(onNavigateOrderFilter).toHaveBeenCalledWith("coins_consumption");
   });
 
-  test("keeps search, help, and account-menu actions connected to their owners", () => {
+  test("keeps search, help, account destinations, and logout connected to their owners", () => {
     const onSearchSubmit = vi.fn();
     const onOrderSearchChange = vi.fn();
     const onOpenSupport = vi.fn();
+    const onOpenProfile = vi.fn();
+    const onOpenReferrals = vi.fn();
+    const onOpenSettings = vi.fn();
     const onUserMenuOpenChange = vi.fn();
     const onLogout = vi.fn();
 
@@ -83,6 +80,9 @@ describe("Portal desktop shell components", () => {
         onSearchSubmit={onSearchSubmit}
         onOpenOrders={vi.fn()}
         onOpenSupport={onOpenSupport}
+        onOpenProfile={onOpenProfile}
+        onOpenReferrals={onOpenReferrals}
+        onOpenSettings={onOpenSettings}
         userDisplayName="Yi"
         userMenuOpen
         onUserMenuOpenChange={onUserMenuOpenChange}
@@ -103,8 +103,16 @@ describe("Portal desktop shell components", () => {
     expect(onSearchSubmit).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: "帮助" }));
     expect(onOpenSupport).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "个人资料" }));
+    expect(onUserMenuOpenChange).toHaveBeenLastCalledWith(false);
+    expect(onOpenProfile).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("menuitem", { name: "推荐奖励" }));
+    expect(onOpenReferrals).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("menuitem", { name: "设置" }));
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("menuitem", { name: "退出登录" }));
-    expect(onUserMenuOpenChange).toHaveBeenCalledWith(false);
+    expect(onUserMenuOpenChange).toHaveBeenLastCalledWith(false);
     expect(onLogout).toHaveBeenCalledTimes(1);
   });
 });

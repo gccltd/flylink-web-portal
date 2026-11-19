@@ -528,7 +528,7 @@ describe("PortalOrdersPanel", () => {
     expect(items[2].source).toBe(ORDER);
   });
 
-  test("does not duplicate parent navigation with Orders type tabs or buttons", () => {
+  test("keeps order type filtering inside the Orders page instead of parent navigation", () => {
     render(createElement(PortalOrdersPanel, {
       locale: "zh",
       commerceClient: null,
@@ -537,7 +537,7 @@ describe("PortalOrdersPanel", () => {
       onSessionInvalid: vi.fn(),
     }));
     expect(screen.queryByRole("group", { name: "订单类型" })).toBeNull();
-    expect(screen.queryByRole("combobox", { name: "订单类型" })).toBeNull();
+    expect(screen.getByRole("combobox", { name: "订单类型" })).toBeInTheDocument();
     expect(document.querySelector(".portal-orders-filters")).toBeNull();
     expect(screen.queryByRole("button", { name: /^(全部|商城消费|充值订单|套餐与服务)$/ })).toBeNull();
     expect(screen.queryByRole("tab")).toBeNull();
@@ -546,7 +546,7 @@ describe("PortalOrdersPanel", () => {
     expect(screen.queryByRole("heading", { name: "历史订单" })).toBeNull();
   });
 
-  test.each(["zh", "en"] as const)("%s retains a native controlled order-type selector only on narrow screens", async (locale) => {
+  test.each(["zh", "en"] as const)("%s retains a native controlled order-type selector on narrow screens", async (locale) => {
     const restoreViewport = installMobileViewport();
     try {
       const fixture = compactOrderFixture(locale);

@@ -872,8 +872,7 @@ export function PortalOrdersPanel({
       </p>
 
       <div className="portal-order-toolbar">
-        {!desktopScrollRegion ? (
-          <label>
+        <label>
             <span>{copy(locale, "订单类型", "Order type")}</span>
             <select
               value={filter}
@@ -885,7 +884,6 @@ export function PortalOrdersPanel({
               <option value="plans_services">{copy(locale, "套餐与服务", "Plans and services")}</option>
             </select>
           </label>
-        ) : null}
         <label className="portal-order-search-control">
           <span>{copy(locale, "搜索订单", "Search orders")}</span>
           <span
