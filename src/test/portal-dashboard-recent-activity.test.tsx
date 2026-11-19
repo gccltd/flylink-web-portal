@@ -1,13 +1,10 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import {
   PortalCoinCommerceClientError,
   type PortalCoinCommerceClient
 } from "../features/user-portal/commerce";
-import {
-  PortalRechargeClientError,
-  type PortalRechargeClient
-} from "../features/user-portal/recharge";
+import { type PortalRechargeClient } from "../features/user-portal/recharge";
 import {
   usePortalDashboardRecentActivity
 } from "../features/user-portal/dashboard/use-portal-dashboard-recent-activity";
@@ -23,6 +20,8 @@ test("loads coin and recharge orders through the existing read clients", async (
         orderRef: "coin-order-1",
         createdAt: "2026-11-18T12:00:00.000Z",
         amountUnits: 180,
+        paymentStatus: "captured",
+        fulfillment: { status: "delivered", safeCode: null },
         offer: { category: "plan", title: { zh: "年度套餐", en: "Annual plan" } }
       }],
       nextCursor: null
@@ -32,7 +31,8 @@ test("loads coin and recharge orders through the existing read clients", async (
     listOrders: vi.fn().mockResolvedValue([{
       orderRef: "recharge-order-1",
       createdAt: "2026-11-18T11:00:00.000Z",
-      expectedPaidCoinUnits: 110
+      expectedPaidCoinUnits: 110,
+      status: "credited"
     }])
   } as unknown as PortalRechargeClient;
 
@@ -64,7 +64,8 @@ test("keeps successful source data visible when the other read source is unavail
     listOrders: vi.fn().mockResolvedValue([{
       orderRef: "recharge-order-2",
       createdAt: "2026-11-18T11:00:00.000Z",
-      expectedPaidCoinUnits: 110
+      expectedPaidCoinUnits: 110,
+      status: "credited"
     }])
   } as unknown as PortalRechargeClient;
 
