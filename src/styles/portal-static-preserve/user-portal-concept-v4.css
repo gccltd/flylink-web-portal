@@ -673,3 +673,19 @@
     -webkit-backdrop-filter:none;
   }
 }
+
+/* Existing v3 dark-theme Marketplace titles are white; the new pastel
+   offer surfaces explicitly require navy foreground in *both* themes. */
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__copy h3,
+.portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-marketplace .portal-marketplace-card__copy h3,
+.portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace .portal-marketplace-card__copy h3 {
+  color:#242e62;
+}
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__copy p,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__context,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__unit {
+  color:#53658c;
+}
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout .portal-marketplace-card__price dd {
+  color:#1e2857;
+}
