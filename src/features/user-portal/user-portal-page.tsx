@@ -11,8 +11,6 @@ import {
   Download,
   Eye,
   ExternalLink,
-  Gift,
-  Headphones,
   History,
   LayoutGrid,
   LineChart,
@@ -26,7 +24,6 @@ import {
   Settings,
   ShieldCheck,
   ShoppingBag,
-  UserCog,
   WalletCards,
   Wifi,
   type LucideIcon
@@ -55,7 +52,7 @@ import {
   type PortalCommerceModelClient,
   type PortalWalletFirstCommerceClient
 } from "./commerce";
-import { PortalOrdersPanel, type PortalOrdersFilter } from "./orders/portal-orders-panel";
+import { PortalOrdersPanel } from "./orders/portal-orders-panel";
 import { DataPackRotationProvider } from "./commerce/data-pack-rotation-context";
 import type { PortalServiceOrder } from "./orders/portal-order-center-model";
 import { PortalPersonalCenterPanel } from "./profile/portal-personal-center-panel";
@@ -69,7 +66,6 @@ import {
   usePortalRecharge,
   type PortalRechargeClient
 } from "./recharge";
-import { useDesktopScrollRegion } from "./use-desktop-scroll-region";
 import { PortalAppShell } from "./layout/portal-app-shell";
 import { PortalSidebar } from "./layout/portal-sidebar";
 import { PortalTopbar } from "./layout/portal-topbar";
@@ -200,26 +196,15 @@ const orderStatusTabs: Array<{ id: OrderStatusFilter; label: string }> = [
 ];
 
 const navItems: Array<{ id: PortalView; label: string; description: string; icon: LucideIcon }> = [
-  { id: "start", label: "开始使用", description: "下载客户端，并按步骤导入订阅。", icon: Wifi },
-  { id: "dashboard", label: "概览", description: "查看账户状态、当前套餐、流量和开始使用。", icon: LayoutGrid },
-  { id: "usage", label: "用量", description: "查看流量消耗、套餐额度和用量更新状态。", icon: LineChart },
-  { id: "marketplace", label: "商城", description: "浏览平台商品、套餐、流量包和增值项。", icon: ShoppingBag },
-  { id: "orders", label: "订单管理", description: "查看订单历史、支付状态和付款详情。", icon: ReceiptText },
-  { id: "wallet", label: "Coins 钱包", description: "查看可用余额、分类余额和钱包流水。", icon: WalletCards },
-  { id: "referrals", label: "推荐奖励", description: "查看推荐链接、邀请进度和奖励。", icon: Gift },
-  { id: "profile", label: "个人中心", description: "管理账户信息、身份验证器和通行密钥。", icon: UserCog },
-  { id: "settings", label: "设置", description: "管理界面语言和显示主题。", icon: Settings },
-  { id: "support", label: "支持", description: "提交订阅、客户端或账户问题并追踪处理编号。", icon: Headphones }
-];
-
-const portalOrderNavigationItems: Array<{ id: Exclude<PortalOrdersFilter, "all">; zh: string; en: string }> = [
-  { id: "coins_consumption", zh: "商城消费", en: "Marketplace purchases" },
-  { id: "coin_recharge", zh: "充值订单", en: "Coins recharges" },
-  { id: "plans_services", zh: "套餐与服务", en: "Plans and services" }
+  { id: "dashboard", label: "概览", description: "查看账户状态、当前套餐、流量和快捷操作。", icon: LayoutGrid },
+  { id: "marketplace", label: "套餐商城", description: "浏览套餐、流量包和增值服务。", icon: ShoppingBag },
+  { id: "orders", label: "我的订单", description: "统一查看商城消费、充值和服务记录。", icon: ReceiptText },
+  { id: "wallet", label: "钱包余额", description: "查看 Coins 可用余额和钱包流水。", icon: WalletCards },
+  { id: "start", label: "使用指南", description: "选择设备、下载客户端并完成连接。", icon: Wifi }
 ];
 
 type PortalNavigationGroup = {
-  id: "service" | "assets" | "account" | "help";
+  id: "primary";
   zh: string;
   en: string;
   itemIds: PortalView[];
@@ -227,28 +212,10 @@ type PortalNavigationGroup = {
 
 const portalNavigationGroups: PortalNavigationGroup[] = [
   {
-    id: "service",
-    zh: "服务与用量",
-    en: "Services and usage",
-    itemIds: ["start", "dashboard", "usage"]
-  },
-  {
-    id: "assets",
-    zh: "资产与权益",
-    en: "Assets and benefits",
-    itemIds: ["marketplace", "orders", "wallet", "referrals"]
-  },
-  {
-    id: "account",
-    zh: "账户",
-    en: "Account",
-    itemIds: ["profile", "settings"]
-  },
-  {
-    id: "help",
-    zh: "帮助",
-    en: "Help",
-    itemIds: ["support"]
+    id: "primary",
+    zh: "主导航",
+    en: "Main navigation",
+    itemIds: ["dashboard", "marketplace", "orders", "wallet", "start"]
   }
 ];
 
@@ -469,15 +436,15 @@ function localizedPortalViewCopy(view: PortalView, locale: PortalAuthLocale) {
       description: uiText(locale, "查看账户共享流量额度和使用情况。", "Review shared account traffic quota and usage.")
     },
     marketplace: {
-      label: uiText(locale, "商城", "Marketplace"),
+      label: uiText(locale, "套餐商城", "Marketplace"),
       description: uiText(locale, "浏览套餐和流量包，使用 Coins 完成购买。", "Browse plans and data packs, then purchase with Coins.")
     },
     orders: {
-      label: uiText(locale, "订单", "Orders"),
+      label: uiText(locale, "我的订单", "Orders"),
       description: uiText(locale, "统一查看商城消费、套餐付款和服务记录。", "Review Marketplace purchases, plan payments, and service records in one place.")
     },
     wallet: {
-      label: uiText(locale, "Coins 钱包", "Coins wallet"),
+      label: uiText(locale, "钱包余额", "Wallet balance"),
       description: uiText(locale, "查看可用余额、分类余额和钱包流水。", "Review spendable balance, balance categories, and Wallet activity.")
     },
     referrals: {
@@ -485,11 +452,11 @@ function localizedPortalViewCopy(view: PortalView, locale: PortalAuthLocale) {
       description: uiText(locale, "查看推荐链接、邀请进度和奖励。", "Review your referral link, invitation progress, and rewards.")
     },
     start: {
-      label: uiText(locale, "开始使用", "Start using"),
+      label: uiText(locale, "使用指南", "User guide"),
       description: uiText(locale, "选择设备、下载客户端并完成连接。", "Choose a device, download a client, and connect step by step.")
     },
     profile: {
-      label: uiText(locale, "个人中心", "Personal center"),
+      label: uiText(locale, "个人资料", "Profile"),
       description: uiText(locale, "管理账户信息、身份验证器和通行密钥。", "Manage account information, authenticators, and passkeys.")
     },
     settings: {
@@ -506,8 +473,7 @@ function localizedPortalViewCopy(view: PortalView, locale: PortalAuthLocale) {
 function localizedNavItems(locale: PortalAuthLocale) {
   return navItems.map((item) => ({
     ...item,
-    ...localizedPortalViewCopy(item.id, locale),
-    ...(item.id === "orders" ? { label: uiText(locale, "订单管理", "Order management") } : {})
+    ...localizedPortalViewCopy(item.id, locale)
   }));
 }
 
@@ -1550,7 +1516,6 @@ export function UserPortalPage({
 }) {
   const { locale, setLocale } = usePublicLocalePreference();
   const { theme, setTheme } = usePublicThemePreference();
-  const desktopOrderNavigation = useDesktopScrollRegion();
   const authCopy = portalAuthEntryCopy[locale];
   const [portalSession, setPortalSession] = useState<PortalSession | null>(null);
   const [sessionPhase, setSessionPhase] = useState<"restoring" | "anonymous" | "authenticated" | "unavailable" | "logging_out" | "logout_failed">(
@@ -1669,8 +1634,7 @@ export function UserPortalPage({
     setOrderCenterFilter,
     personalCenterSubview,
     setPersonalCenterSubview,
-    navigatePortalView: updatePortalView,
-    navigatePortalOrderFilter: updatePortalOrderFilter
+    navigatePortalView: updatePortalView
   } = usePortalNavigation(portalSession);
 
   useEffect(() => {
@@ -2379,11 +2343,6 @@ export function UserPortalPage({
     updatePortalView(view);
   }
 
-  function navigatePortalOrderFilter(filter: PortalOrdersFilter) {
-    setActivePaymentOrderRef(null);
-    updatePortalOrderFilter(filter);
-  }
-
   async function refreshPaymentOrders(targetOrderRef?: string) {
     if (!portalSession) return;
     setActionError("");
@@ -2880,19 +2839,8 @@ export function UserPortalPage({
           <PortalSidebar
             locale={locale}
             groups={shellNavGroups}
-            activeView={activeView}
-            orderCenterFilter={orderCenterFilter}
-            orderCategories={portalOrderNavigationItems.map((category) => ({
-              id: category.id,
-              label: uiText(locale, category.zh, category.en)
-            }))}
-            showOrderCategories={commerceModel !== "wallet_first_unique_v1"}
-            desktopOrderNavigation={desktopOrderNavigation}
-            userDisplayName={userDisplayName}
-            walletBalance={authoritativeWalletBalance}
+            activeView={activeView === "usage" ? "dashboard" : activeView}
             onNavigate={navigatePortalView}
-            onNavigateOrderFilter={navigatePortalOrderFilter}
-            onLogout={logout}
           />
         }
       >
@@ -2917,6 +2865,9 @@ export function UserPortalPage({
                 onSearchSubmit={() => navigatePortalView("orders")}
                 onOpenOrders={() => navigatePortalView("orders")}
                 onOpenSupport={() => navigatePortalView("support")}
+                onOpenProfile={() => navigatePortalView("profile")}
+                onOpenReferrals={() => navigatePortalView("referrals")}
+                onOpenSettings={() => navigatePortalView("settings")}
                 userDisplayName={userDisplayName}
                 userMenuOpen={topbarUserMenuOpen}
                 onUserMenuOpenChange={setTopbarUserMenuOpen}
