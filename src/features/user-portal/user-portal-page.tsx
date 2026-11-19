@@ -77,7 +77,8 @@ import { DashboardRecentOrders } from "./dashboard/dashboard-recent-orders";
 import { DashboardWalletCard } from "./dashboard/dashboard-wallet-card";
 import { DashboardStartCard } from "./dashboard/dashboard-start-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
-import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange, writePortalLocation } from "./portal-browser-session";
+import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange } from "./portal-browser-session";
+import { usePortalNavigation, type PortalView } from "./use-portal-navigation";
 import { portalAssetPath, portalRoutePath } from "./portal-entry";
 import {
   PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY,
@@ -106,17 +107,6 @@ import type {
 } from "./user-portal-client";
 
 type DisplayAuthMode = PortalSession["authMode"];
-type PortalView =
-  | "start"
-  | "dashboard"
-  | "usage"
-  | "marketplace"
-  | "orders"
-  | "wallet"
-  | "referrals"
-  | "profile"
-  | "settings"
-  | "support";
 
 type PortalPlan = {
   id: PortalPlanId;
@@ -1581,10 +1571,6 @@ export function UserPortalPage({
   const [humanChallenge, setHumanChallenge] = useState(createPendingHumanVerificationChallenge);
   const [humanChallengeReady, setHumanChallengeReady] = useState(false);
   const [humanChallengeLoading, setHumanChallengeLoading] = useState(true);
-  const [activeView, setActiveView] = useState<PortalView>(() => readPortalLocation().view);
-  const [topbarUserMenuOpen, setTopbarUserMenuOpen] = useState(false);
-  const [orderCenterFilter, setOrderCenterFilter] = useState<PortalOrdersFilter>(() => readPortalLocation().orderFilter);
-  const [personalCenterSubview, setPersonalCenterSubview] = useState<"profile" | "security">(() => readPortalLocation().profileSubview);
   const [selectedPlanId, setSelectedPlanId] = useState<PortalPlanId>("monthly_basic");
   const [clientTarget, setClientTarget] = useState<PortalClientId>("clash");
   const [paymentChannel, setPaymentChannel] = useState<PortalPaymentChannel>(() => defaultPaymentChannelForCurrentBrowser());
@@ -1671,9 +1657,18 @@ export function UserPortalPage({
     return () => { mountedRef.current = false; sessionGenerationRef.current += 1; };
   }, []);
 
-  useEffect(() => {
-    if (portalSession) writePortalLocation({ view: activeView, orderFilter: orderCenterFilter, profileSubview: personalCenterSubview });
-  }, [activeView, orderCenterFilter, personalCenterSubview, portalSession]);
+  const {
+    activeView,
+    setActiveView,
+    topbarUserMenuOpen,
+    setTopbarUserMenuOpen,
+    orderCenterFilter,
+    setOrderCenterFilter,
+    personalCenterSubview,
+    setPersonalCenterSubview,
+    navigatePortalView: updatePortalView,
+    navigatePortalOrderFilter: updatePortalOrderFilter
+  } = usePortalNavigation(portalSession);
 
   useEffect(() => {
     document.title = portalSession ? authCopy.shellDocumentTitle : authCopy.documentTitle;
@@ -1911,7 +1906,9 @@ export function UserPortalPage({
   }, [
     advanceSessionGeneration,
     clearWalletFirstSetupIdempotencyKey,
-    portalClient
+    portalClient,
+    setActiveView,
+    setOrderCenterFilter
   ]);
 
   useEffect(() => {
@@ -2254,7 +2251,7 @@ export function UserPortalPage({
     } finally {
       endLinkOp(linkOpGeneration);
     }
-  }, [beginLinkOp, commerceModel, currentEntitlement, endLinkOp, historySummary, locale, portalClient, portalSession, selectedOrder, selectedPlanId]);
+  }, [beginLinkOp, commerceModel, currentEntitlement, endLinkOp, historySummary, locale, portalClient, portalSession, selectedOrder, selectedPlanId, setActiveView]);
 
   async function resetSubscriptionLink(idempotencyKey: string, requestRef: string): Promise<string> {
     const order = selectedOrder;
@@ -2354,7 +2351,7 @@ export function UserPortalPage({
   const requestRenewal = useCallback(() => {
     setRenewRevision((revision) => revision + 1);
     setActiveView("marketplace");
-  }, []);
+  }, [setActiveView]);
 
   function closeOrderForm() {
     if (pending) return;
@@ -2376,17 +2373,12 @@ export function UserPortalPage({
 
   function navigatePortalView(view: PortalView) {
     setActivePaymentOrderRef(null);
-    setOrderCenterFilter("all");
-    if (view === "profile") {
-      setPersonalCenterSubview("profile");
-    }
-    setActiveView(view);
+    updatePortalView(view);
   }
 
   function navigatePortalOrderFilter(filter: PortalOrdersFilter) {
     setActivePaymentOrderRef(null);
-    setOrderCenterFilter(filter);
-    setActiveView("orders");
+    updatePortalOrderFilter(filter);
   }
 
   async function refreshPaymentOrders(targetOrderRef?: string) {
