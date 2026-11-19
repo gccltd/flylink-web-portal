@@ -40,6 +40,26 @@ describe("Portal Dashboard components", () => {
     expect(onOpenOrders).toHaveBeenCalledTimes(2);
   });
 
+
+  test("shows at most three recent activity rows and keeps full Orders navigation", () => {
+    const openOrders = vi.fn();
+    const orders = Array.from({ length: 5 }, (_, i) => ({
+      key: `order-${i}`, orderNumber: `FL-TEST-${i}`,
+      productLabel: `套餐 ${i}`, kindLabel: "订单", createdAtLabel: "11/20 12:00",
+      amountLabel: null, amountDetail: null, status: "active" as const, statusLabel: "已完成"
+    }));
+    render(
+      <DashboardRecentOrders locale="zh" orders={orders} phase="ready"
+        retryable={false} onRetry={vi.fn()} onOpenOrders={openOrders} />
+    );
+    expect(screen.getByText("套餐 0")).toBeTruthy();
+    expect(screen.getByText("套餐 2")).toBeTruthy();
+    expect(screen.queryByText("套餐 3")).toBeNull();
+    expect(screen.queryByText("套餐 4")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "查看全部" }));
+    expect(openOrders).toHaveBeenCalledTimes(1);
+  });
+
   test("uses the compact wallet and start cards with working actions", () => {
     const onOpenWallet = vi.fn();
     const onStartUsing = vi.fn();

@@ -5,6 +5,9 @@ import { describe, expect, test } from "vitest";
 const desktopConfig = readFileSync(resolve("vite.portal-web.config.ts"), "utf8");
 const desktopIndex = readFileSync(resolve("portal-web/index.html"), "utf8");
 const mobileIndex = readFileSync(resolve("portal/index.html"), "utf8");
+const webCss = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-desktop.css"), "utf8");
+const robotLogo = readFileSync(resolve("public/portal-brand-robot.webp"));
+const cityScene = readFileSync(resolve("public/portal-dashboard-scene.webp"));
 const packageJson = JSON.parse(readFileSync(resolve("package.json"), "utf8")) as {
   scripts?: Record<string, string>;
 };
@@ -18,6 +21,14 @@ describe("portal desktop build boundary", () => {
     expect(desktopConfig).toContain('path.resolve(adminDir, "dist-portal-web")');
     expect(packageJson.scripts?.["build:portal:web"]).toContain("vite build --config vite.portal-web.config.ts");
     expect(packageJson.scripts?.["verify:portal:web"]).toContain("dist-portal-web");
+  });
+
+  test("keeps tiny Web-only brand assets and responsive scene gating", () => {
+    expect(robotLogo.byteLength).toBeLessThan(12 * 1024);
+    expect(cityScene.byteLength).toBeLessThan(24 * 1024);
+    expect(webCss).toContain("portal-v2-shell--web");
+    expect(webCss).toContain("@media (min-width: 1200px)");
+    expect(webCss).toContain("prefers-reduced-data");
   });
 
   test("keeps desktop public URLs separate from the legacy mobile entry", () => {

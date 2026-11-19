@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { LayoutGrid, ReceiptText, ShoppingBag, WalletCards, Wifi } from "lucide-react";
+import { Gift, LayoutGrid, ReceiptText, ShoppingBag, WalletCards, Wifi } from "lucide-react";
 import { PortalAppShell } from "../features/user-portal/layout/portal-app-shell";
 import { PortalSidebar } from "../features/user-portal/layout/portal-sidebar";
 import { PortalTopbar } from "../features/user-portal/layout/portal-topbar";
 
-afterEach(() => cleanup());
+afterEach(() => { cleanup(); window.history.replaceState(null, "", "/"); });
 
 describe("Portal desktop shell components", () => {
   test("composes the sidebar and main content without changing the theme contract", () => {
@@ -21,12 +21,51 @@ describe("Portal desktop shell components", () => {
 
     expect(document.querySelector(".portal-v2-shell")?.getAttribute("data-portal-theme")).toBe("dark");
     expect(document.querySelector(".portal-v2-shell")?.classList.contains("portal-v2-shell-payment")).toBe(true);
+    expect(document.querySelector(".portal-v2-shell")?.classList.contains("portal-v2-shell--web")).toBe(false);
     expect(screen.getByLabelText("sidebar")).toBeTruthy();
     expect(screen.getByRole("main").className).toContain("portal-v2-main-payment");
     expect(screen.getByRole("heading", { name: "Account overview" })).toBeTruthy();
   });
 
-  test("renders exactly five primary navigation entries without account actions", () => {
+
+  test("identifies only /web as the redesigned desktop shell", () => {
+    window.history.replaceState(null, "", "/web/");
+    render(
+      <PortalAppShell theme="dark" sidebar={<aside>Navigation</aside>}>
+        <h1>Dashboard</h1>
+      </PortalAppShell>
+    );
+    expect(document.querySelector(".portal-v2-shell--web")).not.toBeNull();
+  });
+
+  test("renders the supplied brand robot on the left, not the user-avatar button", () => {
+    const topbar = () => <PortalTopbar
+      locale="zh" pageTitle="账户概览" mobileTitle="概览"
+      ordersActive={false} supportActive={false} orderSearch=""
+      onOrderSearchChange={vi.fn()} onSearchSubmit={vi.fn()}
+      onOpenOrders={vi.fn()} onOpenSupport={vi.fn()} onOpenProfile={vi.fn()}
+      onOpenReferrals={vi.fn()} onOpenSettings={vi.fn()}
+      userDisplayName="portal_9087" userMenuOpen={false}
+      onUserMenuOpenChange={vi.fn()} onLogout={vi.fn()}
+      theme="dark" onLocaleChange={vi.fn()} onThemeChange={vi.fn()}
+      preferencesLabel="偏好" languageLabel="语言" themeLabel="主题"
+    />;
+
+    window.history.replaceState(null, "", "/web/");
+    const web = render(topbar());
+    expect(web.container.querySelector(".portal-v2-topbar-brand img")?.getAttribute("src"))
+      .toBe("/web/portal-brand-robot.webp");
+    expect(web.container.querySelector(".portal-v2-topbar-user-button .portal-v2-user-avatar svg")).not.toBeNull();
+    expect(web.container.querySelector(".portal-v2-topbar-user-button img")).toBeNull();
+    web.unmount();
+
+    window.history.replaceState(null, "", "/portal/");
+    const legacy = render(topbar());
+    expect(legacy.container.querySelector(".portal-v2-topbar-brand img")).toBeNull();
+    expect(legacy.container.querySelector(".portal-v2-topbar-user-button .portal-avatar")?.textContent).toBe("P");
+  });
+
+  test("renders six primary navigation entries including referrals without account actions", () => {
     const onNavigate = vi.fn();
     render(
       <PortalSidebar
@@ -39,6 +78,7 @@ describe("Portal desktop shell components", () => {
             { id: "marketplace", label: "套餐商城", description: "浏览套餐", icon: ShoppingBag },
             { id: "orders", label: "我的订单", description: "查看订单", icon: ReceiptText },
             { id: "wallet", label: "钱包余额", description: "Coins 余额", icon: WalletCards },
+            { id: "referrals", label: "推荐", description: "邀请好友", icon: Gift },
             { id: "start", label: "使用指南", description: "客户端连接步骤", icon: Wifi }
           ]
         }]}
@@ -49,7 +89,7 @@ describe("Portal desktop shell components", () => {
     );
 
     const navigation = screen.getByRole("navigation", { name: "用户中心导航" });
-    expect(within(navigation).getAllByRole("button")).toHaveLength(5);
+    expect(within(navigation).getAllByRole("button")).toHaveLength(6);
     expect(screen.getByRole("button", { name: "我的订单" }).getAttribute("aria-current")).toBe("page");
     expect(screen.getByText("Coins · 1200")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "个人资料" })).toBeNull();
@@ -57,6 +97,8 @@ describe("Portal desktop shell components", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "概览" }));
     expect(onNavigate).toHaveBeenCalledWith("dashboard");
+    fireEvent.click(screen.getByRole("button", { name: "推荐" }));
+    expect(onNavigate).toHaveBeenCalledWith("referrals");
   });
 
   test("renders a browser-first global header with working notifications, help, account menu, and no window controls", () => {

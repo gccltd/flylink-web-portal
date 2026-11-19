@@ -382,7 +382,8 @@ test.each([390, 1280])("Dashboard keeps the same concept hierarchy at %i px", as
     const c = entitledClient();
     render(<UserPortalPage portalClient={c} />);
     const navigation = await screen.findByRole("navigation", { name: "用户中心导航" });
-    expect(within(navigation).getAllByRole("button")).toHaveLength(5);
+    expect(within(navigation).getAllByRole("button")).toHaveLength(6);
+    expect(within(navigation).getByRole("button", { name: "推荐" })).toBeInTheDocument();
 
     expect(await screen.findByRole("region", { name: "账户总览" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "近期订单" })).toBeInTheDocument();
