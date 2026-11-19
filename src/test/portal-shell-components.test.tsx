@@ -98,7 +98,7 @@ describe("Portal desktop shell components", () => {
 
     expect(screen.getByText("飞连VPN")).toBeTruthy();
     expect(screen.getByText("用户中心")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "订单通知" }));
+    fireEvent.click(screen.getByRole("button", { name: "订单管理" }));
     expect(onOpenOrders).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: "帮助" }));
     expect(onOpenSupport).toHaveBeenCalledTimes(1);
