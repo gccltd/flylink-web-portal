@@ -56,9 +56,10 @@ This supersedes the previous heavy midnight-blue city veil; it does not change
 the grid, underlying order/catalog values, routes, or payment flows.
 
 - **Backdrop:** reuse the existing compressed 1600×900 static WebP with lighter
-  lilac/blue washes, not a new asset. No video, animation, parallax or fixed
-  backdrop. Below 1200px use CSS gradients. A last-in-cascade
-  prefers-reduced-data rule avoids loading the WebP.
+  lilac/blue washes, not a new asset. No video, animation or parallax.
+  The v3.2 follow-up permits fixed attachment on wide desktop with a
+  fine pointer only; narrow screens and device preferences retain scrolling
+  CSS gradients. A last-in-cascade prefers-reduced-data rule avoids the WebP.
 - **Frosted surfaces:** translucent sapphire/lilac gradients, restrained inner
   highlights and 8px blur only on the account overview and four Dashboard
   panels, at desktop widths with browser support. Unsupported browsers
@@ -84,3 +85,52 @@ the grid, underlying order/catalog values, routes, or payment flows.
 Lint, tests and preview readiness do **not** constitute browser pixel-level
 approval. PR remains Draft until authorized light/dark and viewport visual
 review and independent code review.
+
+
+## Visual revision v3.2 — 2026-11-20
+
+Approved next iteration: bring the **sidebar → topbar → content cards**
+transparency into one coherent hierarchy; tighten the greeting; keep the
+city background stable during wide-screen scrolling; and organize plan and
+order content in compact, readable rows.
+
+| Layer / component | Contract |
+| --- | --- |
+| Sidebar | Most solid glass layer, blue-indigo alpha ~0.74–0.79 in dark theme; restrained edge separator |
+| Topbar | Slightly lighter blue-violet glass, alpha ~0.68–0.72; no second hero layer |
+| Overview and four cards | Translucent blue-purple glass alpha ~0.66–0.70, thin highlights and selective 8px blur |
+| Light theme | Parallel high-contrast pale-glass palette with darker text |
+| Greeting | 21–26px heading, 12px subtitle, 3px inside gap and 7px to overview |
+| Overview | Minimum 204px, smaller action rail and tighter cell spacing |
+| Plan preview | Three authoritative server offers maximum; 76px minimum rows with title/summary left and price/action aligned right; current-plan border only when the real current-renew action is supplied |
+| Orders | Maximum three actual records; 66px minimum integrated rows, product and order metadata left; actual status, amount and currency details right. No fabricated amount, state or date |
+
+### Fixed background scope and load guard
+
+At 1200px+ **and** only where hover/fine pointer support is present,
+the existing **single 1600×900 WebP** is pinned via CSS background
+attachment. This is a fixed visual treatment, not a fixed scrolling pane,
+second image, parallax effect or JavaScript scroll listener. The layout and
+all content continue to scroll normally.
+
+At 1199px or below, touch/coarse-pointer layouts, or when the user requests
+reduced motion, reduced transparency or reduced data, the background
+attachment is not fixed. Reduced-data must also remove the image URL;
+the previous data-saver cascade guard remains authoritative.
+
+The fixed attachment may increase redraw work on some browsers,
+especially combined with frosted panels. An authorized browser visual
+and performance pass is therefore mandatory; turn off fixed attachment if
+it causes scroll jank or paint bottlenecks. No claim is made that green CI
+proves acceptable frame rate.
+
+### Interactions and compatibility
+
+- Hover/pressed state effects remain keyboard and reduced-motion compatible.
+- Group order category/reference and timestamp into distinct text spans for
+  visual alignment, preserving the button's accessible name and action.
+- Retain real commerce, wallet, session and referral data contracts.
+- Only the desktop Web Shell uses this cascade; the legacy /portal UI,
+  API and Android app remain unchanged.
+- Review 768, 1024, 1280, 1440 and 1920 CSS-pixel widths in both themes.
+  All PRs stay Draft until authorized visual verification and independent review.
