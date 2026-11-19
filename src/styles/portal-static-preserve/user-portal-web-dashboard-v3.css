@@ -911,3 +911,64 @@
     transform: none;
   }
 }
+
+/* Explicit light-theme priority over the earlier Shell styles. */
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-start {
+    border-color: var(--web-jelly-stroke);
+    background: var(--web-jelly-panel);
+    color: var(--web-jelly-ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.92), var(--web-jelly-glow);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  }
+}
+
+/* Last in the cascade so the pale-skyline override cannot undo
+   the original reduced-data guard in user-portal-desktop.css. */
+@media (prefers-reduced-data: reduce) {
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"]:has(.portal-v2-dashboard-column),
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"]:has(.portal-v2-dashboard-column) {
+    background-image:
+      radial-gradient(650px 380px at 88% 7%, rgba(222, 203, 255, 0.40), transparent 74%),
+      linear-gradient(155deg, #e4f2ff, #e7ddfa 50%, #ccdef8);
+  }
+}
+
+/* Responsive Web browser windows retain the atmosphere but do not
+   load the 1600px scene or enable nested card scrolling. */
+@media (max-width: 720px) {
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) {
+    background: linear-gradient(160deg, #e5f0ff, #e7dff7 54%, #cfdcf4);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) .portal-v2-greeting h2 {
+    color: #1c3057;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web:has(.portal-v2-dashboard-column) .portal-v2-greeting p {
+    color: #455c83;
+  }
+}
+
+@media (max-width: 1100px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid {
+    max-height: none;
+    overflow-y: visible;
+    scrollbar-gutter: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    transition: none;
+    transform: none;
+  }
+}
