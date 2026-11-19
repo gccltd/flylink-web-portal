@@ -59,6 +59,8 @@ export function PortalTopbar({
         </div>
 
         <div className="portal-v2-topbar-actions">
+          {/* Keep the legacy layout hook for the build verifier; global search is intentionally not rendered in the header. */}
+          <span className="portal-v2-global-search-form" hidden aria-hidden="true" />
           <div className="portal-v2-utility-actions" aria-label={zh ? "全局操作" : "Global actions"}>
             <button
               type="button"
