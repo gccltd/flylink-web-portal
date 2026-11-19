@@ -1190,7 +1190,7 @@
   }
 
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta .portal-order-status {
-    order: 0;
+    order: -1;
     justify-self: end;
     white-space: nowrap;
   }
