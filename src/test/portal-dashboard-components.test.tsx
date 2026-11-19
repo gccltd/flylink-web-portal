@@ -34,9 +34,8 @@ describe("Portal Dashboard components", () => {
 
     expect(screen.getByRole("button", { name: /FL-1001/ })).toBeTruthy();
     expect(screen.getByText("年度套餐")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /FL-1001/ })).toBeTruthy();
     expect(screen.queryByText(/Coins/)).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "查看订单" }));
+    fireEvent.click(screen.getByRole("button", { name: "查看全部" }));
     fireEvent.click(screen.getByRole("button", { name: /FL-1001/ }));
     expect(onOpenOrders).toHaveBeenCalledTimes(2);
   });
