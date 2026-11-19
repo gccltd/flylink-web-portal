@@ -553,7 +553,7 @@ function paymentStatusLabel(status: PortalPaymentOrder["status"], locale: Portal
   }
 }
 
-created: CreatedSubscription | null, lifecycle: SubscriptionLifecycle, locale: PortalAuthLocale = "zh") {
+function expiryDisplay(created: CreatedSubscription | null, lifecycle: SubscriptionLifecycle, locale: PortalAuthLocale = "zh") {
   if (!created) return uiText(locale, "无", "None");
   if (lifecycle === "pending") return uiText(locale, "开通中", "Activation pending");
   if (lifecycle === "expired") return locale === "en"
@@ -963,11 +963,7 @@ function aggregateTrafficPercent(summary: ReturnType<typeof aggregateTrafficUsag
   return Math.max(0, Math.min(100, (summary.usedBytes / summary.totalBytes) * 100));
 }
 
-function orderUsageSortValue(order: PortalOrderRow) {
-  return order.request.usage?.usedBytes ?? -1;
-}
-
-orderRows: PortalOrderRow[]) {
+function pendingOrderCount(orderRows: PortalOrderRow[]) {
   return orderRows.filter((order) => order.status === "pending").length;
 }
 
@@ -3268,29 +3264,29 @@ function DashboardPanel({
   return (
     <div className="portal-v2-stack">
       <DashboardOverviewCard
-          locale={locale}
-          greeting={portalGreeting(locale)}
-          description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
-          currentPlanLabel={currentPlanLabel}
-          // Wallet-first current resources are authoritative even without legacy entitlement rows.
-          hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
-          renewActionLabel={resourceAvailable
-            ? uiText(locale, "选择续费套餐", "Choose a renewal plan")
-            : undefined}
-          resourceState={resourceState}
-          resourceReconciliation={resourceReconciliation}
-          resourceExpiry={resourceExpiry}
-          hasTrafficAccess={hasTrafficAccess}
-          planTrafficBytes={planTrafficBytes}
-          remainingTrafficBytes={remainingTrafficBytes}
-          remainingTrafficPercent={remainingTrafficPercent}
-          trafficHeroLabel={trafficHeroLabel}
-          walletBalance={walletBalance}
-          onRenewCurrentPlan={resourceAvailable
-            ? onOpenMarketplace ?? (() => setActiveView("marketplace"))
-            : onRenewCurrentPlan}
-          onNavigate={setActiveView}
-        />
+        locale={locale}
+        greeting={portalGreeting(locale)}
+        description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
+        currentPlanLabel={currentPlanLabel}
+        // Wallet-first current resources are authoritative even without legacy entitlement rows.
+        hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
+        renewActionLabel={resourceAvailable
+          ? uiText(locale, "选择续费套餐", "Choose a renewal plan")
+          : undefined}
+        resourceState={resourceState}
+        resourceReconciliation={resourceReconciliation}
+        resourceExpiry={resourceExpiry}
+        hasTrafficAccess={hasTrafficAccess}
+        planTrafficBytes={planTrafficBytes}
+        remainingTrafficBytes={remainingTrafficBytes}
+        remainingTrafficPercent={remainingTrafficPercent}
+        trafficHeroLabel={trafficHeroLabel}
+        walletBalance={walletBalance}
+        onRenewCurrentPlan={resourceAvailable
+          ? onOpenMarketplace ?? (() => setActiveView("marketplace"))
+          : onRenewCurrentPlan}
+        onNavigate={setActiveView}
+      />
 
 
 
