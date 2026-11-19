@@ -25,6 +25,7 @@ type DashboardOverviewCardProps = {
   remainingTrafficPercent: number;
   trafficHeroLabel: string;
   walletBalance: number | null;
+  renewActionLabel?: string;
   onRenewCurrentPlan?: () => void;
   onNavigate: (view: DashboardOverviewDestination) => void;
 };
@@ -48,6 +49,7 @@ export function DashboardOverviewCard({
   remainingTrafficPercent,
   trafficHeroLabel,
   walletBalance,
+  renewActionLabel,
   onRenewCurrentPlan,
   onNavigate
 }: DashboardOverviewCardProps) {
@@ -115,7 +117,7 @@ export function DashboardOverviewCard({
           >
             <Zap aria-hidden="true" />
             {resourceState === "active" && hasCurrentPlan
-              ? uiText(locale, "一键续费", "Renew in one tap")
+              ? renewActionLabel ?? uiText(locale, "一键续费", "Renew in one tap")
               : uiText(locale, "去商城选套餐", "Browse plans")}
           </button>
           <button

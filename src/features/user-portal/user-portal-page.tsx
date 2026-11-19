@@ -3300,7 +3300,10 @@ function DashboardPanel({
           description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
           currentPlanLabel={currentPlanLabel}
           // Wallet-first current resources are authoritative even without legacy entitlement rows.
-        hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
+          hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
+          renewActionLabel={resourceAvailable
+            ? uiText(locale, "选择续费套餐", "Choose a renewal plan")
+            : undefined}
           resourceState={resourceState}
           resourceReconciliation={resourceReconciliation}
           resourceExpiry={resourceExpiry}
@@ -3310,7 +3313,9 @@ function DashboardPanel({
           remainingTrafficPercent={remainingTrafficPercent}
           trafficHeroLabel={trafficHeroLabel}
           walletBalance={walletBalance}
-          onRenewCurrentPlan={onRenewCurrentPlan}
+          onRenewCurrentPlan={resourceAvailable
+            ? onOpenMarketplace ?? (() => setActiveView("marketplace"))
+            : onRenewCurrentPlan}
           onNavigate={setActiveView}
         />
       ) : null}

@@ -285,8 +285,11 @@ test("wallet-first Dashboard treats an available current resource as an active p
     sessionRef: session.sessionRef
   }));
 
-  expect(await screen.findByRole("button", { name: "一键续费" })).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "去商城选套餐" })).not.toBeInTheDocument();
+  const renewButton = await screen.findByRole("button", { name: "选择续费套餐" });
+  expect(renewButton).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "一键续费" })).not.toBeInTheDocument();
+  fireEvent.click(renewButton);
+  await waitFor(() => expect(window.location.hash).toBe("#portal=marketplace"));
 });
 
 test("restore with an active entitlement lands on the dashboard when no view was requested", async () => {
