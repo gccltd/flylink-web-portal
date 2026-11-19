@@ -45,7 +45,7 @@ export function DashboardRecentOrders({
                   <strong>{order.productLabel}</strong>
                   <span className="portal-v2-dashboard-order-detail">
                     <small>{order.kindLabel} · {order.orderNumber}</small>
-                    <small>{order.createdAtLabel}</small>
+                    <small>· {order.createdAtLabel}</small>
                   </span>
                 </span>
                 <span className="portal-v2-dashboard-order-meta">
