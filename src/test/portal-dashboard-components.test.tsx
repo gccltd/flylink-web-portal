@@ -219,6 +219,7 @@ test("Web concept rail owns the brand and keeps the navigation functional", () =
       <PortalSidebar locale="zh" groups={groups} activeView="dashboard" walletBalance={null} onNavigate={navigate} />
     );
     expect(container.querySelector(".portal-sidebar-brand")).not.toBeNull();
+    expect(container.querySelector(".portal-sidebar-brand img")?.getAttribute("src")).toBe("/web/portal-sidebar-mascot.webp");
     expect(container.querySelector(".portal-sidebar-scene__robot")).not.toBeNull();
     expect(container.querySelector(".portal-sidebar-scene__robot")?.getAttribute("src")).toBe("/web/portal-sidebar-mascot.webp");
     expect(screen.getByRole("button", { name: "概览" }).getAttribute("aria-current")).toBe("page");

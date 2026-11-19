@@ -304,3 +304,41 @@ navigation, brand placement, and commerce behavior.
   followed by protected-preview browser review at
   768,1024,1280,1440,1920 CSS pixels in both themes and long-label states.
   Keep both stacked PRs Draft until pixel review and independent review.
+
+## v4.1 Regression correction — 2026-11-20 (user-reported disappearance)
+
+User reviewed the v4 Vercel Preview and reported that multiple Dashboard
+components had disappeared. Earlier CI green / Vercel READY did not establish
+a browser pixel sign-off. Source inspection identified an objective grid
+auto-placement defect:
+
+- `PortalAppShell` renders exactly two Grid children in order:
+  `{sidebar}`, then `<main className="portal-v2-main">`.
+- v4 set the **sidebar to `position: fixed`**. Fixed positioning takes it
+  out of Grid placement, leaving `main` as the first in-flow child.
+- v4 reserved a narrow first column for the rail but did **not** explicitly
+  place `main` in column 2, so the entire Dashboard could be auto-placed
+  into the approximately 220px-wide first track and appear collapsed or
+  missing. Desktop Build and static tests did not catch this CSS bug.
+
+**Repair:** the standalone Web sidebar is now `position: sticky`,
+`grid-column:1; grid-row:1` (keeping it in-flow), with explicit
+`> .portal-v2-main { grid-column:2; grid-row:1; min-width:0 }`.
+The topbar still starts to the right of the rail, never obscuring the logo.
+The wallet below the marketplace remains *intentionally absent* in /web
+as previously requested; the other overview components must be visible.
+
+**Brand asset correction:** previous v4 mascot was an unverified
+crop of a concept image. It is replaced with a WebP re-encoding of the
+actual user GPT Library file `image-gen-5(2).png` (1254×1254,
+transparent official blue/violet robot-face badge). It is resized to
+480×480, retaining alpha, quality 82, only 21,780 bytes; reused for
+both top-left brand and sidebar illustration. This preserves the
+brand character instead of making a new one from UI imagery. A
+separate verified *full-body* original has not yet been identified,
+so do not claim a full-body asset was reproduced.
+
+**Acceptance:** exact-head CI must pass. Since Vercel Preview is
+SSO-protected and Chat browser access is unavailable in this
+session, real screenshot validation still requires an authenticated
+browser. Do not re-label the UI visually approved based on CI alone.

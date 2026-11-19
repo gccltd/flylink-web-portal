@@ -38,7 +38,7 @@ export function PortalSidebar<TView extends string>({
     <aside className="portal-use-sidebar portal-v2-sidebar">
       {webBrand ? (
         <div className="portal-sidebar-brand" aria-label={zh ? "飞连VPN品牌" : "FlyLink VPN brand"}>
-          <img src={portalAssetPath("portal-brand-robot.webp")} width="44" height="44" alt="" decoding="async" />
+          <img src={portalAssetPath("portal-sidebar-mascot.webp")} width="44" height="44" alt="" decoding="async" />
           <span>
             <strong>飞连VPN</strong>
             <small>{zh ? "用户中心" : "User center"}</small>
@@ -98,8 +98,8 @@ export function PortalSidebar<TView extends string>({
           <img
             className="portal-sidebar-scene__robot"
             src={portalAssetPath("portal-sidebar-mascot.webp")}
-            width="510"
-            height="363"
+            width="480"
+            height="480"
             loading="lazy"
             decoding="async"
             alt=""

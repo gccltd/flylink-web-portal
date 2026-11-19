@@ -257,7 +257,7 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(concept).toContain("left: calc(var(--web-rail-width) + 24px)");
     expect(concept).toContain(".portal-v2-topbar-brand");
     expect(concept).toContain(".portal-sidebar-scene__robot");
-    expect(sidebar).toContain('portalAssetPath("portal-brand-robot.webp")');
+    expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
     expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
     expect(sidebar).toContain("isPortalWebPath()");
     expect(offer).toContain("dashboardVariant?: 0 | 1 | 2");
@@ -287,6 +287,23 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(concept).toContain("(prefers-reduced-motion:reduce)");
     expect(concept).not.toContain("animation: infinite");
     expect(concept).not.toContain("background-attachment: fixed;");
+  });
+
+
+  test("keeps the complete Web Dashboard in the second grid track", () => {
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const shell = readFileSync(resolve("src/features/user-portal/layout/portal-app-shell.tsx"), "utf8");
+    const sidebar = readFileSync(resolve("src/features/user-portal/layout/portal-sidebar.tsx"), "utf8");
+    expect(concept).toContain(".portal-v2-shell.portal-v2-shell--web > .portal-v2-main");
+    expect(concept).toContain("grid-column: 2;");
+    expect(concept).toContain("grid-row: 1;");
+    expect(concept).toContain("position: sticky;");
+    expect(concept).toContain("grid-column: 1;");
+    expect(concept).toContain("left: calc(var(--web-rail-width) + 24px)");
+    expect(shell.indexOf("{sidebar}")).toBeLessThan(shell.indexOf("<main"));
+    expect(shell).toContain("portal-v2-main");
+    expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
+    expect(concept).toContain("grid-template-columns: calc(var(--web-rail-width) + 24px) minmax(0, 1fr)");
   });
 
 });
