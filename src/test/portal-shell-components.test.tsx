@@ -58,9 +58,8 @@ describe("Portal desktop shell components", () => {
     expect(onNavigate).toHaveBeenCalledWith("dashboard");
   });
 
-  test("keeps search, help, account destinations, and logout connected to their owners", () => {
-    const onSearchSubmit = vi.fn();
-    const onOrderSearchChange = vi.fn();
+  test("renders a browser-first global header with working notifications, help, account menu, and no window controls", () => {
+    const onOpenOrders = vi.fn();
     const onOpenSupport = vi.fn();
     const onOpenProfile = vi.fn();
     const onOpenReferrals = vi.fn();
@@ -76,14 +75,14 @@ describe("Portal desktop shell components", () => {
         ordersActive={false}
         supportActive={false}
         orderSearch=""
-        onOrderSearchChange={onOrderSearchChange}
-        onSearchSubmit={onSearchSubmit}
-        onOpenOrders={vi.fn()}
+        onOrderSearchChange={vi.fn()}
+        onSearchSubmit={vi.fn()}
+        onOpenOrders={onOpenOrders}
         onOpenSupport={onOpenSupport}
         onOpenProfile={onOpenProfile}
         onOpenReferrals={onOpenReferrals}
         onOpenSettings={onOpenSettings}
-        userDisplayName="Yi"
+        userDisplayName="portal_9087"
         userMenuOpen
         onUserMenuOpenChange={onUserMenuOpenChange}
         onLogout={onLogout}
@@ -96,11 +95,10 @@ describe("Portal desktop shell components", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "账户概览" })).toBeTruthy();
-    fireEvent.change(screen.getByRole("searchbox", { name: "订单搜索" }), { target: { value: "FL-1001" } });
-    expect(onOrderSearchChange).toHaveBeenCalledWith("FL-1001");
-    fireEvent.submit(screen.getByRole("searchbox", { name: "订单搜索" }).closest("form")!);
-    expect(onSearchSubmit).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("飞连VPN")).toBeTruthy();
+    expect(screen.getByText("用户中心")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "订单通知" }));
+    expect(onOpenOrders).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole("button", { name: "帮助" }));
     expect(onOpenSupport).toHaveBeenCalledTimes(1);
 
@@ -114,5 +112,8 @@ describe("Portal desktop shell components", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "退出登录" }));
     expect(onUserMenuOpenChange).toHaveBeenLastCalledWith(false);
     expect(onLogout).toHaveBeenCalledTimes(1);
+
+    expect(screen.queryByRole("button", { name: /minimize|maximize|close window/i })).toBeNull();
+    expect(screen.queryByRole("searchbox", { name: "订单搜索" })).toBeNull();
   });
 });
