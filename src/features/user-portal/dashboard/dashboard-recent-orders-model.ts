@@ -9,7 +9,7 @@ export type DashboardRecentOrder = {
   createdAtLabel: string;
   amountLabel: string | null;
   amountDetail: string | null;
-  status: "active" | "pending" | "expired" | "disabled";
+  status: "active" | "pending" | "attention" | "closed";
   statusLabel: string;
 };
 
@@ -56,7 +56,7 @@ function formatDateTime(value: string, locale: DashboardLocale) {
 }
 
 function formatCurrencyMinor(amountMinor: number, currency: string, exponent: number) {
-  if (!Number.isFinite(amountMinor) || !Number.isInteger(exponent) || exponent < 0 || exponent > 4) {
+  if (!Number.isFinite(amountMinor) || !Number.isInteger(exponent) || exponent < 0 || exponent > 9) {
     return null;
   }
   return currency + " " + (amountMinor / (10 ** exponent)).toFixed(exponent);
@@ -69,9 +69,9 @@ function statusPresentation(status: PortalOrderCenterStatus, locale: DashboardLo
     case "in_progress":
       return { status: "pending" as const, statusLabel: text(locale, "处理中", "In progress") };
     case "attention":
-      return { status: "expired" as const, statusLabel: text(locale, "需要处理", "Needs attention") };
+      return { status: "attention" as const, statusLabel: text(locale, "需要处理", "Needs attention") };
     case "closed":
-      return { status: "disabled" as const, statusLabel: text(locale, "已关闭", "Closed") };
+      return { status: "closed" as const, statusLabel: text(locale, "已关闭", "Closed") };
   }
 }
 
