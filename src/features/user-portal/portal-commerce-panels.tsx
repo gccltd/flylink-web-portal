@@ -21,6 +21,7 @@ import {
 import { formatPortalDateTime } from "./portal-commerce-presentation";
 import type { PortalWalletFirstCommerceClient } from "./commerce";
 import { MarketplaceOfferCard, type MarketplacePlanAction } from "./marketplace-offer-card";
+import { isPortalWebPath } from "./portal-entry";
 import { WalletFirstMarketplacePanel } from "./wallet-first-marketplace-panel";
 import { portalCoinCommerceErrorText as safeCommerceErrorText } from "./commerce/commerce-error-presentation";
 import { PortalOwnedDataPacks } from "./commerce/components/portal-owned-data-packs";
@@ -844,6 +845,7 @@ export function DashboardMarketplaceCard({
   }, [commerceClient, model, refreshRevision, sessionGeneration, sessionRef, walletFirstCommerceClient]);
 
   const planOffers = catalog.offers.filter((offer) => offer.category === "plan");
+  const visiblePlanOffers = isPortalWebPath() ? planOffers.slice(0, 3) : planOffers;
 
   return (
     <article className="portal-v2-panel portal-v2-dashboard-marketplace">
@@ -877,7 +879,7 @@ export function DashboardMarketplaceCard({
       ) : null}
       {catalog.status === "ready" && planOffers.length > 0 ? (
         <ul className="portal-marketplace-grid">
-          {planOffers.map((offer) => (
+          {visiblePlanOffers.map((offer) => (
             <MarketplaceOfferCard
               busy={false}
               key={offer.offerRef}

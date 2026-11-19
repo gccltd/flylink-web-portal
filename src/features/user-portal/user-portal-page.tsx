@@ -3315,40 +3315,37 @@ function DashboardPanel({
 
 
 
-      <section className="portal-v2-dashboard-grid">
-
-
-        <DashboardMarketplaceCard
-          commerceClient={commerceClient ?? null}
-          commerceModelClient={commerceModelClient ?? null}
-          walletFirstCommerceClient={walletFirstCommerceClient ?? null}
-          locale={locale}
-          onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
-          sessionGeneration={sessionGeneration ?? 0}
-          sessionRef={sessionRef ?? null}
-        />
-
-        <DashboardRecentOrders
-          locale={locale}
-          orders={recentOrders}
-          phase={recentActivity.phase}
-          retryable={recentActivity.retryable}
-          onRetry={recentActivity.retry}
-          onOpenOrders={() => setActiveView("orders")}
-        />
-
-
-
-        <DashboardWalletCard
-          locale={locale}
-          walletBalance={walletBalance}
-          onOpenWallet={() => setActiveView("wallet")}
-        />
-
-        <DashboardStartCard
-          locale={locale}
-          onStartUsing={() => setActiveView("start")}
-        />
+      <section className="portal-v2-dashboard-grid" aria-label={uiText(locale, "首页快捷服务", "Dashboard shortcuts")}>
+        <div className="portal-v2-dashboard-column portal-v2-dashboard-column--primary">
+          <DashboardMarketplaceCard
+            commerceClient={commerceClient ?? null}
+            commerceModelClient={commerceModelClient ?? null}
+            walletFirstCommerceClient={walletFirstCommerceClient ?? null}
+            locale={locale}
+            onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
+            sessionGeneration={sessionGeneration ?? 0}
+            sessionRef={sessionRef ?? null}
+          />
+          <DashboardWalletCard
+            locale={locale}
+            walletBalance={walletBalance}
+            onOpenWallet={() => setActiveView("wallet")}
+          />
+        </div>
+        <div className="portal-v2-dashboard-column portal-v2-dashboard-column--secondary">
+          <DashboardRecentOrders
+            locale={locale}
+            orders={recentOrders}
+            phase={recentActivity.phase}
+            retryable={recentActivity.retryable}
+            onRetry={recentActivity.retry}
+            onOpenOrders={() => setActiveView("orders")}
+          />
+          <DashboardStartCard
+            locale={locale}
+            onStartUsing={() => setActiveView("start")}
+          />
+        </div>
       </section>
     </div>
   );

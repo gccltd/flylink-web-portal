@@ -1,0 +1,572 @@
+/*
+ * FlyLink Web Dashboard v3 — component sizing based on the 2026-11-17
+ * desktop concept. Scoped to /web; /portal uses the original grid.
+ * The skyline is owned by the Shell and is not repeated on cards.
+ */
+.portal-v2-shell:not(.portal-v2-shell--web) .portal-v2-dashboard-column {
+  display: contents;
+}
+
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-block,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
+    width: 100%;
+    max-width: 1380px;
+    margin-inline: auto;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-block {
+    gap: 16px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-greeting h2 {
+    font-size: clamp(23px, 2vw, 30px);
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-greeting p {
+    max-width: 800px;
+    margin-top: 7px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card {
+    min-height: 216px;
+    gap: 18px 20px;
+    padding: 24px 26px 18px;
+    border-radius: 22px;
+    border-color: rgba(122, 168, 252, 0.38);
+    background: linear-gradient(120deg, rgba(26, 53, 115, 0.92), rgba(18, 30, 71, 0.88) 62%, rgba(31, 31, 91, 0.86));
+    box-shadow: 0 14px 36px rgba(3, 9, 28, 0.17);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell {
+    gap: 8px;
+    align-content: start;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell .portal-card-label {
+    color: #c5d7ff;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell strong {
+    color: #f9fbff;
+    font-size: clamp(20px, 1.9vw, 28px);
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell small {
+    color: #c1cdeb;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__actions {
+    align-self: end;
+    gap: 8px;
+    border: 1px solid rgba(176, 204, 255, 0.16);
+    border-radius: 15px;
+    background: rgba(57, 83, 145, 0.20);
+    padding: 7px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action {
+    min-height: 44px;
+    border-radius: 11px;
+    border-color: transparent;
+    background: rgba(255, 255, 255, 0.045);
+    padding: 8px 10px;
+    color: #eff5ff;
+    font-size: 13px;
+    font-weight: 680;
+    transition: background-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover {
+    background: rgba(138, 165, 255, 0.16);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action--primary,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action--primary:hover {
+    color: #fff;
+    background: linear-gradient(112deg, #00b9e6, #2563eb 48%, #7638e9);
+    box-shadow: 0 5px 14px rgba(47, 79, 219, 0.18);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
+    gap: 16px;
+    align-items: start;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    padding: 20px 22px;
+    border: 1px solid rgba(130, 167, 242, 0.28);
+    border-radius: 19px;
+    background: rgba(17, 32, 75, 0.86);
+    box-shadow: 0 9px 26px rgba(2, 9, 28, 0.12);
+    color: #edf4ff;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace { min-height: 348px; }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders { min-height: 278px; }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet { min-height: 166px; }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start { min-height: 216px; }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) .portal-v2-panel-header {
+    gap: 10px;
+    margin-bottom: 13px;
+    align-items: center;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) .portal-v2-panel-header h3 {
+    font-size: 17px;
+    font-weight: 730;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+
+  /* The Dashboard previews at most three authoritative catalog offers. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card {
+    min-width: 0;
+    height: auto;
+    list-style: none;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title price" "description action";
+    align-items: center;
+    gap: 5px 12px;
+    min-height: 85px;
+    height: auto;
+    border: 1px solid rgba(140, 176, 246, 0.22);
+    border-radius: 13px;
+    background: rgba(37, 59, 114, 0.36);
+    padding: 12px 13px;
+    text-align: left;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card h3 {
+    grid-area: title;
+    min-width: 0;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: left;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__price {
+    grid-area: price;
+    display: block;
+    text-align: right;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__price dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__amount {
+    font-size: 18px;
+    font-weight: 750;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__unit {
+    font-size: 11px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card > article > p:first-of-type {
+    grid-area: description;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: left;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card > article > p:not(:first-of-type) {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 11px;
+    text-align: left;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions {
+    grid-area: action;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button {
+    width: auto;
+    min-width: 102px;
+    min-height: 36px;
+    padding: 6px 9px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(130px, auto);
+    align-items: center;
+    gap: 12px;
+    min-height: 66px;
+    border-bottom: 1px solid rgba(150, 177, 231, 0.15);
+    padding: 10px 2px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main {
+    gap: 5px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main strong {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-main small {
+    color: #b7c7e9;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 5px 9px;
+    text-align: right;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta .portal-order-status {
+    order: -1;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-amount {
+    color: #eef5ff;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-amount-detail {
+    flex-basis: 100%;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "header header" "balance action" "note note";
+    align-content: center;
+    align-items: center;
+    gap: 7px 14px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet .portal-v2-panel-header {
+    grid-area: header;
+    margin-bottom: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet-balance {
+    grid-area: balance;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet-balance strong {
+    font-size: 27px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > p {
+    grid-area: note;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button {
+    grid-area: action;
+    align-self: center;
+    min-width: 96px;
+    min-height: 40px;
+    margin: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 11px;
+    isolation: isolate;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    right: -38px;
+    bottom: -98px;
+    width: 245px;
+    height: 245px;
+    border-radius: 50%;
+    border: 1px solid rgba(88, 177, 255, 0.38);
+    background: radial-gradient(circle at 35% 30%, rgba(19, 192, 244, 0.24), rgba(93, 72, 214, 0.21) 48%, transparent 72%);
+    pointer-events: none;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start .portal-v2-panel-header {
+    margin-bottom: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > p {
+    max-width: 460px;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button {
+    width: min(100%, 340px);
+    min-height: 46px;
+    border: 1px solid rgba(126, 180, 255, 0.35);
+    border-radius: 12px;
+    background: linear-gradient(105deg, #03b9e7, #2d62f4 48%, #7433e8);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(39, 79, 194, 0.13);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start .portal-v2-start-points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start .portal-v2-start-points li {
+    color: #c1d0f4;
+    font-size: 11px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card {
+    background: linear-gradient(120deg, rgba(246, 250, 255, 0.96), rgba(242, 246, 255, 0.91));
+    border-color: rgba(115, 148, 214, 0.35);
+    box-shadow: 0 12px 30px rgba(32, 57, 103, 0.08);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__cell .portal-card-label,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__cell small {
+    color: #51617e;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__cell strong {
+    color: #14213d;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__actions {
+    border-color: rgba(124, 150, 207, 0.20);
+    background: rgba(215, 226, 250, 0.30);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-action:not(.portal-v2-hero-action--primary) {
+    color: #213454;
+    background: rgba(255, 255, 255, 0.66);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-start {
+    color: #152441;
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(120, 144, 196, 0.30);
+    box-shadow: 0 10px 26px rgba(28, 48, 102, 0.065);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    background: rgba(240, 245, 255, 0.72);
+    border-color: rgba(119, 149, 211, 0.32);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders .portal-v2-list button {
+    border-bottom-color: rgba(137, 155, 189, 0.24);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders .portal-v2-dashboard-order-main small,
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-start .portal-v2-start-points li {
+    color: #52627d;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-dashboard-orders .portal-v2-dashboard-order-amount {
+    color: #182744;
+  }
+}
+
+@media (min-width: 1200px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card {
+    grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr) minmax(0, 0.94fr);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell + .portal-v2-hero-card__cell {
+    border-left: 1px solid rgba(160, 190, 245, 0.24);
+    padding-left: 22px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__cell + .portal-v2-hero-card__cell {
+    border-left-color: rgba(106, 130, 189, 0.24);
+  }
+}
+
+/* Independent columns keep Start Using directly below Recent Orders,
+   regardless of the height of the live catalog. */
+@media (min-width: 1101px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-areas: none;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column {
+    display: grid;
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column > .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column > .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column > .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column > .portal-v2-dashboard-start {
+    grid-area: auto;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid.usage {
+    grid-template-areas: none;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+  }
+}
+
+/* Compact browser widths get one logical flow; no truncated sidebar cards. */
+@media (max-width: 1100px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-column {
+    display: contents;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "marketplace" "orders" "wallet" "start";
+    gap: 14px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid.usage {
+    grid-template-areas: none;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 721px) and (max-width: 900px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}
+
+/* Tablet-sized narrow cards must not force horizontal overflow. */
+@media (min-width: 721px) and (max-width: 1260px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "title" "price" "description" "action";
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__price {
+    text-align: left;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-dashboard-order-meta {
+    justify-content: flex-start;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "balance" "note" "action";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action {
+    transition: none;
+  }
+}
