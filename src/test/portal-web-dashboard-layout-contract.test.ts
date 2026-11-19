@@ -139,6 +139,8 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(orderComponent).toContain('className="portal-v2-dashboard-order-detail"');
     expect(orderComponent).toContain('{order.orderNumber}');
     expect(orderComponent).toContain('{order.createdAtLabel}');
+    expect(orderComponent).toContain('· {order.createdAtLabel}');
+    expect(webLayout).toContain('order: -1;');
     expect(orderComponent).toContain('orders.slice(0, 3)');
   });
 
