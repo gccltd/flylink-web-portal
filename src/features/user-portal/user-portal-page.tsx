@@ -2950,7 +2950,7 @@ export function UserPortalPage({
               commerceModelClient={portalClient.commerceModel ?? null}
               walletFirstCommerceClient={portalClient.walletFirstCommerce ?? null}
               rechargeClient={portalClient.recharge ?? null}
-              enableCoinOrders={commerceModel !== "wallet_first_unique_v1"}
+              enableCoinOrders={commerceModel === "legacy"}
               sessionRef={portalSession.sessionRef ?? null}
               sessionGeneration={sessionGeneration}
               onSessionInvalid={invalidateSession}
