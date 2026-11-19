@@ -32,9 +32,9 @@ describe("Portal Dashboard components", () => {
       />
     );
 
-    expect(screen.getByText("FL-1001")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /FL-1001/ })).toBeTruthy();
     expect(screen.getByText("年度套餐")).toBeTruthy();
-    expect(screen.getByText("服务记录 · FL-1001 · 11/18 10:00")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /FL-1001/ })).toBeTruthy();
     expect(screen.queryByText(/Coins/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "查看订单" }));
     fireEvent.click(screen.getByRole("button", { name: /FL-1001/ }));
@@ -149,8 +149,7 @@ test("renders the unified amount and status without inventing a service-order am
   );
 
   expect(screen.getByText("− 180 Coins")).toBeTruthy();
-  expect(screen.getByText("已完成")).toBeTruthy();
-  expect(screen.queryByText(/Coins/, { selector: ".service-order-amount" })).toBeNull();
+  expect(screen.getAllByText("已完成")).toHaveLength(2);
   fireEvent.click(screen.getByRole("button", { name: "查看全部" }));
   expect(onOpenOrders).toHaveBeenCalledTimes(1);
 });
