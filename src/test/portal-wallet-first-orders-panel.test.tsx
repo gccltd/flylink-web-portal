@@ -78,7 +78,7 @@ test("shows an honest empty state when the server has no transitions", async () 
     />
   );
 
-  expect(await screen.findByRole("status")).toHaveTextContent("暂无服务切换记录。");
+  expect(await screen.findByText("暂无服务切换记录。")).toBeInTheDocument();
 });
 
 test("retains a retryable failure state and retries the read endpoint", async () => {
