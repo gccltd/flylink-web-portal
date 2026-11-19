@@ -66,6 +66,7 @@ import {
   usePortalRecharge,
   type PortalRechargeClient
 } from "./recharge";
+import { useDesktopScrollRegion } from "./use-desktop-scroll-region";
 import { PortalAppShell } from "./layout/portal-app-shell";
 import { PortalSidebar } from "./layout/portal-sidebar";
 import { PortalTopbar } from "./layout/portal-topbar";
