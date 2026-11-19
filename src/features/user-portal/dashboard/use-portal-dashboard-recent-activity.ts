@@ -147,10 +147,9 @@ export function usePortalDashboardRecentActivity(input: {
         return;
       }
 
-      const hasLocalOrders = legacyPaymentOrders.length > 0 || serviceOrders.length > 0;
       const phase: PortalDashboardActivityPhase = failures.length === 0
         ? "ready"
-        : successfulSources > 0 || hasLocalOrders
+        : successfulSources > 0
           ? "partial"
           : "error";
 
@@ -171,10 +170,8 @@ export function usePortalDashboardRecentActivity(input: {
   }, [
     commerceClient,
     enableCoinOrders,
-    legacyPaymentOrders,
     rechargeClient,
     revision,
-    serviceOrders,
     sessionGeneration,
     sessionRef
   ]);
@@ -184,8 +181,9 @@ export function usePortalDashboardRecentActivity(input: {
   const hasRemoteSource = Boolean(
     sessionRef && ((enableCoinOrders && commerceClient) || rechargeClient)
   );
+  const hasLocalOrders = legacyPaymentOrders.length > 0 || serviceOrders.length > 0;
   const phase = ownsRemoteState
-    ? remoteState.phase
+    ? remoteState.phase === "error" && hasLocalOrders ? "partial" : remoteState.phase
     : hasRemoteSource ? "loading" : "ready";
   const items = useMemo(() => buildPortalOrderCenterItems({
     coinOrders: ownsRemoteState ? remoteState.coinOrders : [],
