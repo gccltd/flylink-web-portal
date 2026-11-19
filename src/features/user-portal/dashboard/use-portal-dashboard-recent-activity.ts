@@ -181,8 +181,6 @@ export function usePortalDashboardRecentActivity(input: {
 
   const ownsRemoteState = remoteState.sessionRef === sessionRef
     && remoteState.sessionGeneration === sessionGeneration;
-  const coinOrders = ownsRemoteState ? remoteState.coinOrders : [];
-  const rechargeOrders = ownsRemoteState ? remoteState.rechargeOrders : [];
   const hasRemoteSource = Boolean(
     sessionRef && ((enableCoinOrders && commerceClient) || rechargeClient)
   );
@@ -190,11 +188,17 @@ export function usePortalDashboardRecentActivity(input: {
     ? remoteState.phase
     : hasRemoteSource ? "loading" : "ready";
   const items = useMemo(() => buildPortalOrderCenterItems({
-    coinOrders,
-    rechargeOrders,
+    coinOrders: ownsRemoteState ? remoteState.coinOrders : [],
+    rechargeOrders: ownsRemoteState ? remoteState.rechargeOrders : [],
     legacyPaymentOrders,
     serviceOrders
-  }), [coinOrders, legacyPaymentOrders, rechargeOrders, serviceOrders]);
+  }), [
+    legacyPaymentOrders,
+    ownsRemoteState,
+    remoteState.coinOrders,
+    remoteState.rechargeOrders,
+    serviceOrders
+  ]);
   const retry = useCallback(() => {
     setRevision((value) => value + 1);
   }, []);
