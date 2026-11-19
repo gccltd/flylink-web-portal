@@ -3299,7 +3299,8 @@ function DashboardPanel({
           greeting={portalGreeting(locale)}
           description={uiText(locale, "管理你的套餐、流量与订单，随时续费畅享安全稳定的全球连接服务。", "Manage your plan, traffic, and orders, and renew anytime for a secure, stable global connection.")}
           currentPlanLabel={currentPlanLabel}
-          hasCurrentPlan={Boolean(currentPlan)}
+          // Wallet-first current resources are authoritative even without legacy entitlement rows.
+        hasCurrentPlan={Boolean(currentPlan || resourceAvailable)}
           resourceState={resourceState}
           resourceReconciliation={resourceReconciliation}
           resourceExpiry={resourceExpiry}
