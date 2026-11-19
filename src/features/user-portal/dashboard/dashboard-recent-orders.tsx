@@ -57,9 +57,11 @@ export function DashboardRecentOrders({
               </button>
             ))}
           </div>
-          {phase === "partial" ? (
+          {phase === "partial" || phase === "loading" ? (
             <p className="portal-v2-dashboard-activity-note" role="status">
-              {text(locale, "部分交易记录暂时无法读取。", "Some activity is temporarily unavailable.")}
+              {phase === "loading"
+                ? text(locale, "正在同步其他交易记录。", "Syncing additional activity.")
+                : text(locale, "部分交易记录暂时无法读取。", "Some activity is temporarily unavailable.")}
               {retryable ? (
                 <button type="button" onClick={onRetry}>{text(locale, "重试", "Retry")}</button>
               ) : null}
@@ -71,6 +73,17 @@ export function DashboardRecentOrders({
           <RefreshCw aria-hidden="true" />
           <strong>{text(locale, "正在读取近期订单", "Loading recent activity")}</strong>
           <span>{text(locale, "正在同步套餐订单与钱包交易。", "Syncing plan orders and wallet activity.")}</span>
+        </div>
+      ) : phase === "partial" ? (
+        <div className="portal-v2-empty" role="status">
+          <ReceiptText aria-hidden="true" />
+          <strong>{text(locale, "部分交易记录暂不可用", "Some activity is unavailable")}</strong>
+          <span>{text(locale, "当前没有可显示的记录，稍后可以重新加载。", "No records are available yet. You can retry shortly.")}</span>
+          {retryable ? (
+            <button className="portal-link-button" type="button" onClick={onRetry}>
+              {text(locale, "重新加载", "Reload")}
+            </button>
+          ) : null}
         </div>
       ) : phase === "error" ? (
         <div className="portal-v2-empty" role="alert">
