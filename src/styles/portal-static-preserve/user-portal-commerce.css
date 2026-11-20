@@ -891,7 +891,6 @@
   transition: border-color 160ms ease, background 160ms ease;
 }
 
-.portal-v2-shell .portal-recharge-offers li:hover,
 .portal-v2-shell .portal-recharge-offers li:focus-within {
   border-color: color-mix(in srgb, var(--portal-wallet-accent) 62%, var(--portal-wallet-border));
   background: var(--portal-wallet-surface);
@@ -1029,11 +1028,6 @@
   border: 1px solid #0969da;
   background: #0969da;
   color: #ffffff;
-}
-
-.portal-v2-shell[data-portal-theme] button.portal-recharge-pay-button--alipay:hover:not(:disabled) {
-  border-color: #0758b8;
-  background: #0758b8;
 }
 
 .portal-v2-shell .portal-recharge-pay-button img {
@@ -1464,10 +1458,6 @@
   cursor: pointer;
 }
 
-.portal-v2-shell .portal-wallet-first-transition-queue .portal-deferred-transition__actions button:hover:not(:disabled) {
-  background: var(--portal-commerce-subtle);
-}
-
 .portal-v2-shell .portal-wallet-first-transition-queue .portal-deferred-transition__actions button:disabled {
   border-color: var(--portal-commerce-disabled-surface);
   background: var(--portal-commerce-disabled-surface);
@@ -1601,10 +1591,6 @@
   border-color: var(--portal-commerce-primary-border);
   background: var(--portal-commerce-primary);
   color: var(--portal-commerce-on-primary);
-}
-
-.portal-v2-shell .portal-marketplace-card__actions button.portal-marketplace-card__purchase:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 2px var(--portal-commerce-primary-border);
 }
 
 .portal-v2-shell .portal-marketplace-card__actions button:disabled {
@@ -2114,19 +2100,6 @@
     button.portal-coins-payment-status__action--secondary {
     border-color: var(--portal-coins-dialog-border);
     background: var(--portal-coins-action-secondary-bg);
-  }
-
-  .portal-coins-dialog-theme
-    .portal-coins-dialog
-    button.portal-coins-payment-status__action--quiet:hover:not(:disabled) {
-    border-color: var(--portal-coins-action-secondary-bg);
-    background: var(--portal-coins-action-secondary-bg);
-  }
-
-  .portal-coins-dialog-theme
-    .portal-coins-dialog
-    button.portal-coins-payment-status__action--secondary:hover:not(:disabled) {
-    background: var(--portal-coins-action-subtle-bg);
   }
 
   .portal-coins-dialog-theme

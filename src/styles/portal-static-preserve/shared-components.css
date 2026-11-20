@@ -287,7 +287,6 @@
   color: var(--admin-text);
 }
 
-.case-filter-button:hover,
 .case-filter-button:focus-visible,
 .case-filter-active {
   border-color: var(--admin-accent);
@@ -328,7 +327,6 @@
     transform 160ms ease;
 }
 
-.case-row:hover,
 .case-row:focus-visible {
   border-color: var(--admin-accent);
   background: var(--admin-hover-surface);
@@ -755,12 +753,6 @@ th {
     box-shadow var(--admin-ease),
     color var(--admin-ease),
     transform var(--admin-ease);
-}
-
-.primary-button:hover {
-  background: var(--admin-accent-strong);
-  border-color: var(--admin-accent-strong);
-  box-shadow: var(--admin-shadow-hover);
 }
 
 .icon-button {

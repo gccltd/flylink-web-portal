@@ -110,11 +110,6 @@
   display: none;
 }
 
-.portal-v2-shell .portal-use-nav-item:hover {
-  background: #161b22;
-  color: #f0f6fc;
-}
-
 .portal-v2-shell .portal-use-nav-item.active {
   background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: #ffffff;
@@ -168,11 +163,6 @@
 .portal-v2-shell .portal-logout-button svg {
   width: 16px;
   height: 16px;
-}
-
-.portal-v2-shell .portal-logout-button:hover {
-  background: rgba(148, 163, 184, 0.12);
-  color: #f0f6fc;
 }
 
 .portal-v2-main {
@@ -259,7 +249,6 @@
   height: 17px;
 }
 
-.portal-v2-topbar-icon-button:hover,
 .portal-v2-topbar-icon-button:focus-visible,
 .portal-v2-topbar-icon-button.active {
   border-color: #30363d;
@@ -287,7 +276,6 @@
   padding: 2px 10px 2px 2px;
 }
 
-.portal-v2-topbar-user-button:hover,
 .portal-v2-topbar-user-button:focus-visible {
   border-color: #30363d;
   background: rgba(148, 163, 184, 0.12);
@@ -360,9 +348,7 @@
   text-align: left;
 }
 
-.portal-v2-topbar-user-menu-item:hover,
 .portal-v2-topbar-user-menu-item:focus-visible,
-.portal-v2-topbar-user-menu-logout:hover,
 .portal-v2-topbar-user-menu-logout:focus-visible {
   background: rgba(148, 163, 184, 0.12);
   outline: 0;
@@ -523,9 +509,7 @@
   min-width: 34px;
 }
 
-.portal-v2-preference-switch .portal-locale-switch button:hover,
 .portal-v2-preference-switch .portal-locale-switch button:focus-visible,
-.portal-v2-preference-switch .portal-theme-switch button:hover,
 .portal-v2-preference-switch .portal-theme-switch button:focus-visible {
   color: #f0f6fc;
 }
@@ -799,10 +783,6 @@
 
 .portal-v2-list button {
   cursor: pointer;
-}
-
-.portal-v2-list button:hover {
-  border-color: #20d5e8;
 }
 
 .portal-v2-list strong,
@@ -1190,7 +1170,6 @@
   height: 18px;
 }
 
-.portal-start-config-button:hover,
 .portal-start-config-button:focus-visible {
   background: #000000;
   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
@@ -1300,7 +1279,6 @@
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.portal-start-platform-option:hover,
 .portal-start-platform-option:focus-visible {
   border-color: #c8c8c8;
   box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
@@ -1472,14 +1450,12 @@
   margin-top: 0;
 }
 
-.portal-start-choice-card:hover,
 .portal-start-choice-card:focus-visible {
   border-color: rgba(32, 213, 232, 0.72);
   box-shadow: 0 0 0 3px rgba(32, 213, 232, 0.14);
   outline: none;
 }
 
-.portal-start-device-option:hover,
 .portal-start-device-option:focus-visible {
   border-color: #cfd5dd;
   box-shadow: 0 10px 36px rgba(15, 23, 42, 0.08);
@@ -2899,13 +2875,6 @@
   color: currentColor;
   width: 15px;
   height: 15px;
-}
-
-.portal-v2-shell .portal-v2-download-link:hover {
-  border-color: #7cf4ff;
-  background: linear-gradient(180deg, #7cf4ff 0%, #28d8ea 100%);
-  box-shadow: 0 12px 28px rgba(32, 213, 232, 0.24);
-  text-decoration: none;
 }
 
 .portal-v2-shell .portal-v2-download-link:focus-visible {
@@ -4368,7 +4337,6 @@
   line-height: 1;
 }
 
-.portal-v2-shell .portal-purchase-modal .modal-header .ghost-button:hover,
 .portal-v2-shell .portal-purchase-modal .modal-header .ghost-button:focus-visible {
   background: rgba(148, 163, 184, 0.12);
   color: #f8fafc;
@@ -4596,7 +4564,6 @@
   text-align: left;
 }
 
-.portal-v2-shell .portal-cashier-method:hover,
 .portal-v2-shell .portal-cashier-method:focus-visible {
   border-color: rgba(32, 213, 232, 0.58);
   outline: 0;
@@ -4796,7 +4763,6 @@
   height: 40px;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-use-nav-item:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-use-nav-item:focus-visible {
   background: #f4f4f5;
   color: #111827;
@@ -4840,7 +4806,6 @@
   color: #6b7280;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-purchase-modal .modal-header .ghost-button:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-purchase-modal .modal-header .ghost-button:focus-visible {
   background: #e9e9eb;
   color: #111827;
@@ -4859,7 +4824,6 @@
   color: #64748b;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button:focus-visible,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-icon-button.active {
   border-color: #d8e2ef;
@@ -4871,7 +4835,6 @@
   color: #0f172a;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-button:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-button:focus-visible {
   border-color: #d8e2ef;
   background: #f1f5f9;
@@ -4889,9 +4852,7 @@
   color: #0f172a;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-item:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-item:focus-visible,
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-topbar-user-menu-logout:focus-visible {
   background: #f1f5f9;
 }
@@ -4950,22 +4911,12 @@
   text-decoration: none;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-download-link:hover {
-  border-color: rgba(8, 145, 178, 0.66);
-  background: linear-gradient(180deg, #e0fbff 0%, #7dd3fc 100%);
-  box-shadow: 0 12px 26px rgba(8, 145, 178, 0.18);
-  color: #062b39;
-  text-decoration: none;
-}
-
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-preference-switch .portal-locale-switch button,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-preference-switch .portal-theme-switch button {
   color: #64748b;
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-preference-switch .portal-locale-switch button:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-preference-switch .portal-locale-switch button:focus-visible,
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-preference-switch .portal-theme-switch button:hover,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-preference-switch .portal-theme-switch button:focus-visible {
   color: #0f172a;
 }
@@ -5166,11 +5117,6 @@
   box-shadow: 0 0 0 3px rgba(32, 213, 232, 0.14);
 }
 
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-list button:hover {
-  border-color: #12b8cb;
-  background: #f0fdff;
-}
-
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-usage-list em,
 .portal-v2-shell[data-portal-theme="light"] .portal-purchase-card li,
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-app-grid small,
@@ -5191,11 +5137,6 @@
 .portal-v2-shell[data-portal-theme="light"] ~ .modal-backdrop .modal-panel .portal-order-form > label > span,
 .portal-v2-shell[data-portal-theme="light"] ~ .modal-backdrop .modal-panel .portal-passkey-form label {
   color: #334155;
-}
-
-.portal-v2-shell[data-portal-theme="light"] .portal-logout-button:hover {
-  background: rgba(100, 116, 139, 0.12);
-  color: #0f172a;
 }
 
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-chart-bars {
@@ -5749,9 +5690,8 @@
     height: 17px;
   }
 
-  .portal-v2-mobile-icon-button:hover,
   .portal-v2-mobile-icon-button:focus-visible,
-  .portal-v2-mobile-icon-button.active {
+.portal-v2-mobile-icon-button.active {
     border-color: #30363d;
     background: #161b22;
     color: #20d5e8;
@@ -5797,8 +5737,7 @@
   }
 
   .portal-v2-shell .portal-use-nav-item,
-  .portal-v2-shell .portal-use-nav-item:hover,
-  .portal-v2-shell .portal-use-nav-item.active {
+.portal-v2-shell .portal-use-nav-item.active {
     display: grid;
     grid-template-columns: 1fr;
     justify-items: center;
@@ -6557,9 +6496,8 @@
     color: #64748b;
   }
 
-  .portal-v2-shell[data-portal-theme="light"] .portal-v2-mobile-icon-button:hover,
   .portal-v2-shell[data-portal-theme="light"] .portal-v2-mobile-icon-button:focus-visible,
-  .portal-v2-shell[data-portal-theme="light"] .portal-v2-mobile-icon-button.active {
+.portal-v2-shell[data-portal-theme="light"] .portal-v2-mobile-icon-button.active {
     border-color: #cbd5e1;
     background: #ffffff;
     color: #0891b2;
@@ -7064,19 +7002,11 @@
   height: 16px;
 }
 
-.portal-v2-hero-action:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
 .portal-v2-hero-action--primary {
   border-color: transparent;
   background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: #ffffff;
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
-}
-
-.portal-v2-hero-action--primary:hover {
-  background: linear-gradient(135deg, #1d4ed8, #6d28d9);
 }
 
 .portal-v2-hero-action:focus-visible {
@@ -7138,10 +7068,6 @@
   border-color: rgba(15, 23, 42, 0.14);
   background: rgba(15, 23, 42, 0.04);
   color: #0f172a;
-}
-
-.portal-v2-shell[data-portal-theme="light"] .portal-v2-hero-action:hover {
-  background: rgba(15, 23, 42, 0.08);
 }
 
 .portal-v2-shell[data-portal-theme="light"] .portal-v2-hero-action--primary {
@@ -7473,17 +7399,12 @@
     letter-spacing: 0.01em;
   }
 
-  .portal-v2-shell .portal-use-nav-item:hover,
   .portal-v2-shell .portal-use-nav-item:focus-visible {
     border-color: rgba(99, 102, 241, 0.12);
     background: rgba(99, 102, 241, 0.075);
     color: #3346a5;
     outline: 0;
     transform: translateX(2px);
-  }
-
-  .portal-v2-shell .portal-use-nav-item:hover svg {
-    transform: scale(1.06);
   }
 
   .portal-v2-shell .portal-use-nav-item.active,
@@ -7537,10 +7458,8 @@
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
   }
 
-  .portal-v2-shell .portal-v2-topbar-icon-button:hover,
   .portal-v2-shell .portal-v2-topbar-icon-button:focus-visible,
-  .portal-v2-shell .portal-v2-topbar-user-button:hover,
-  .portal-v2-shell .portal-v2-topbar-user-button:focus-visible {
+.portal-v2-shell .portal-v2-topbar-user-button:focus-visible {
     border-color: rgba(99, 102, 241, 0.18);
     background: rgba(99, 102, 241, 0.09);
     color: #4f46e5;
@@ -7570,7 +7489,6 @@
     color: #a8b4ca;
   }
 
-  .portal-v2-shell[data-portal-theme="dark"] .portal-use-nav-item:hover,
   .portal-v2-shell[data-portal-theme="dark"] .portal-use-nav-item:focus-visible {
     border-color: rgba(165, 180, 252, 0.14);
     background: rgba(129, 140, 248, 0.13);
@@ -7621,10 +7539,6 @@
   .portal-v2-shell .portal-v2-topbar-icon-button,
   .portal-v2-shell .portal-v2-topbar-user-button {
     transition: none;
-  }
-
-  .portal-v2-shell .portal-use-nav-item:hover {
-    transform: none;
   }
 }
 

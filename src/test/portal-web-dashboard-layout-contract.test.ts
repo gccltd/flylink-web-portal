@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
@@ -358,7 +358,7 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
   });
 
 
-  test("applies the v4.4 shape system, integrated glass topbar and immediate touch feedback", () => {
+  test("applies the v4.4 shape system and integrated glass topbar, with hover and press feedback removed", () => {
     const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
     const marker = "Concept v4.4 — unified shape, glass finish and immediate feedback";
     const v44 = concept.slice(concept.indexOf(marker));
@@ -372,10 +372,11 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(v44).toContain("radial-gradient(340px 180px at 14% 0%");
     expect(v44).toContain("pointer-events: none;");
     expect(v44).toContain("touch-action: manipulation;");
-    expect(v44).toContain("transition-duration: 60ms;");
-    expect(v44).toContain("portal-v2-dashboard-orders .portal-v2-list button:active");
     expect(v44).toContain("portal-use-nav-item.active::before");
-    expect(v44).toContain("portal-use-nav-item:hover::after");
+    // Yi 2026-11-20: all hover and press feedback is removed from the repo.
+    // No :hover / :active selector may remain anywhere in the v4.4 section.
+    expect(v44).not.toContain(":hover");
+    expect(v44).not.toContain(":active");
     expect(v44).toContain("@media (prefers-reduced-transparency: reduce)");
     expect(v44).toContain("@media (prefers-reduced-motion: reduce)");
     const reducedTransparency = v44.slice(v44.indexOf("@media (prefers-reduced-transparency: reduce)"));
@@ -396,33 +397,48 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
       ".portal-v2-dashboard-wallet > .portal-primary-button",
       ".portal-v2-dashboard-start > .portal-primary-button",
       ".portal-v2-topbar-icon-button",
-      ".portal-v2-topbar-user-button"
+      ".portal-v2-topbar-user-button",
+      ".portal-use-nav-item:focus-visible"
     ]) {
       expect(reducedMotion).toContain(selector);
     }
     expect(reducedMotion).toContain("transition: none;");
     expect(reducedMotion).toContain("transform: none;");
-    for (const stateSelector of [
-      ".portal-use-nav-item:hover::after",
-      ".portal-use-nav-item:active",
-      ".portal-v2-dashboard-orders .portal-v2-list button:hover",
-      ".portal-v2-dashboard-orders .portal-v2-list button:active",
-      ".portal-v2-dashboard-marketplace:hover",
-      ".portal-v2-dashboard-orders:hover",
-      ".portal-v2-hero-action:hover",
-      ".portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled)",
-      ".portal-v2-dashboard-marketplace .portal-marketplace-card article:hover",
-      ".portal-use-nav-item:is(:hover, :focus-visible)",
-      ".portal-use-nav-item:hover svg",
-      ".portal-v2-topbar-icon-button:active"
-    ]) {
-      expect(reducedMotion).toContain(stateSelector);
-    }
+    expect(reducedMotion).not.toContain(":hover");
+    expect(reducedMotion).not.toContain(":active");
     expect(v44).not.toContain("transition: all");
-    const activeRule = v44.indexOf(".portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active");
-    const finePointerRule = v44.lastIndexOf("@media (hover: hover) and (pointer: fine)", activeRule);
-    expect(activeRule).toBeGreaterThan(-1);
-    expect(finePointerRule).toBe(-1);
+  });
+
+  test("has no hover or press feedback selectors anywhere in the portal stylesheets", () => {
+    // Yi 2026-11-20: all hover and press feedback is removed from this repo
+    // (dashboard, public site, admin chrome, legacy entry points). Only the
+    // keyboard focus indicators (:focus-visible / :focus-within) remain.
+    const styleDirs = [
+      resolve("src/styles/portal-static-preserve"),
+      resolve("src/styles"),
+      resolve("src")
+    ];
+    const files = styleDirs.flatMap((dir) =>
+      readdirSync(dir)
+        .filter((name) => name.endsWith(".css"))
+        .map((name) => resolve(dir, name))
+    );
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const css = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+      expect(css).not.toContain(":hover");
+      expect(css).not.toContain(":active");
+    }
+    // Keyboard focus indicators are the one interactive state that stays.
+    for (const file of [
+      "src/styles/portal-static-preserve/user-portal-concept-v4.css",
+      "src/styles/portal-static-preserve/user-portal-web-dashboard-v3.css",
+      "src/styles/portal-static-preserve/user-portal-subscription-dashboard.css",
+      "src/styles/portal-static-preserve/user-portal-desktop.css",
+      "src/styles/portal-static-preserve/user-portal-commerce.css"
+    ]) {
+      expect(readFileSync(resolve(file), "utf8")).toContain(":focus-visible");
+    }
   });
 
 });

@@ -170,10 +170,6 @@
   padding: 8px 10px;
 }
 
-.company-site-nav a:hover {
-  color: #ffffff;
-}
-
 .company-site-hero {
   min-height: calc(100vh - 76px);
   padding: clamp(44px, 7vw, 96px) clamp(20px, 5vw, 72px) 56px;
@@ -243,21 +239,11 @@
     transform 160ms ease;
 }
 
-.company-site-primary:hover {
-  background: #0f766e;
-  box-shadow: 0 12px 30px rgba(20, 184, 166, 0.22);
-  transform: translateY(-1px);
-}
-
 .company-site-primary:disabled {
   background: #94a3b8;
   box-shadow: none;
   cursor: wait;
   transform: none;
-}
-
-.company-site-primary:hover svg {
-  transform: translateX(2px);
 }
 
 .company-site-primary svg,
@@ -355,12 +341,6 @@
     transform 180ms ease;
 }
 
-.site-signal-card:hover {
-  background: rgba(15, 23, 42, 0.88);
-  border-color: rgba(96, 165, 250, 0.42);
-  transform: translate3d(0, -4px, 18px);
-}
-
 .site-signal-card svg {
   width: 26px;
   height: 26px;
@@ -412,11 +392,6 @@
   transition:
     border-color 180ms ease,
     transform 180ms ease;
-}
-
-.site-terminal-card:hover {
-  border-color: rgba(45, 212, 191, 0.38);
-  transform: translate3d(0, -4px, 20px);
 }
 
 .site-api-console {
@@ -513,13 +488,6 @@
     transform 160ms ease;
 }
 
-.company-site-card:hover,
-.company-site-scenario-card:hover {
-  border-color: rgba(20, 184, 166, 0.32);
-  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.16);
-  transform: translate3d(0, -4px, 18px);
-}
-
 .company-site-card svg {
   width: 26px;
   height: 26px;
@@ -605,12 +573,6 @@
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
-}
-
-.company-site-direction:hover {
-  border-color: rgba(20, 184, 166, 0.34);
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
-  transform: translate3d(0, -3px, 14px);
 }
 
 .company-site-direction strong {
@@ -869,10 +831,6 @@
   font-weight: 800;
   text-decoration: none;
   overflow-wrap: anywhere;
-}
-
-.company-site-email:hover {
-  text-decoration: underline;
 }
 
 .company-site-contact-form {
@@ -1165,7 +1123,6 @@
   font-size: 14px;
 }
 
-.company-site-nav a:hover,
 .company-site-nav a:focus-visible {
   color: #ffffff;
 }
@@ -1200,7 +1157,6 @@
   cursor: pointer;
 }
 
-.company-site-language-switch button:hover,
 .company-site-language-switch button:focus-visible {
   color: #ffffff;
 }
@@ -1255,7 +1211,6 @@
   color: #0b1120;
 }
 
-.company-site-primary:hover,
 .company-site-primary:focus-visible {
   background: #2ee8f5;
 }
@@ -2211,7 +2166,6 @@
   text-decoration: none;
 }
 
-.company-site-back-link:hover,
 .company-site-back-link:focus-visible {
   color: #ffffff;
 }
@@ -2495,7 +2449,6 @@
   text-decoration: none;
 }
 
-.company-site-footer-column a:hover,
 .company-site-footer-column a:focus-visible {
   color: #ffffff;
 }
