@@ -78,10 +78,11 @@ import { presentDashboardRecentOrders } from "./dashboard/dashboard-recent-order
 import { usePortalDashboardRecentActivity } from "./dashboard/use-portal-dashboard-recent-activity";
 import { DashboardWalletCard } from "./dashboard/dashboard-wallet-card";
 import { DashboardStartCard } from "./dashboard/dashboard-start-card";
+import { DashboardSubscriptionCard } from "./dashboard/dashboard-subscription-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
 import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange } from "./portal-browser-session";
 import { usePortalNavigation, type PortalView } from "./use-portal-navigation";
-import { portalAssetPath, portalRoutePath } from "./portal-entry";
+import { isPortalWebPath, portalAssetPath, portalRoutePath } from "./portal-entry";
 import {
   PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY,
   PORTAL_REGISTRATION_SESSION_STORAGE_KEY
@@ -2907,6 +2908,9 @@ export function UserPortalPage({
               sessionGeneration={sessionGeneration}
               onSessionInvalid={invalidateSession}
               onOpenMarketplace={openMarketplace}
+              walletFirstAccount={commerceModel === "wallet_first_unique_v1"}
+              onRevealSubscriptionLink={rereadSubscriptionLink}
+              onResetSubscriptionLink={resetSubscriptionLink}
             />
           ) : null}
           {activeView === "usage" ? (
@@ -3176,7 +3180,10 @@ function DashboardPanel({
   sessionRef,
   sessionGeneration,
   onSessionInvalid,
-  onOpenMarketplace
+  onOpenMarketplace,
+  walletFirstAccount,
+  onRevealSubscriptionLink,
+  onResetSubscriptionLink
 }: {
   created: CreatedSubscription | null;
   lifecycle: SubscriptionLifecycle;
@@ -3199,6 +3206,9 @@ function DashboardPanel({
   sessionGeneration?: number;
   onSessionInvalid: () => void;
   onOpenMarketplace?: () => void;
+  walletFirstAccount: boolean;
+  onRevealSubscriptionLink: () => Promise<string | null>;
+  onResetSubscriptionLink: (idempotencyKey: string, requestRef: string) => Promise<string>;
 }) {
   const recentActivity = usePortalDashboardRecentActivity({
     commerceClient: commerceClient ?? null,
@@ -3315,40 +3325,58 @@ function DashboardPanel({
 
 
 
-      <section className="portal-v2-dashboard-grid">
-
-
-        <DashboardMarketplaceCard
-          commerceClient={commerceClient ?? null}
-          commerceModelClient={commerceModelClient ?? null}
-          walletFirstCommerceClient={walletFirstCommerceClient ?? null}
-          locale={locale}
-          onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
-          sessionGeneration={sessionGeneration ?? 0}
-          sessionRef={sessionRef ?? null}
-        />
-
-        <DashboardRecentOrders
-          locale={locale}
-          orders={recentOrders}
-          phase={recentActivity.phase}
-          retryable={recentActivity.retryable}
-          onRetry={recentActivity.retry}
-          onOpenOrders={() => setActiveView("orders")}
-        />
-
-
-
-        <DashboardWalletCard
-          locale={locale}
-          walletBalance={walletBalance}
-          onOpenWallet={() => setActiveView("wallet")}
-        />
-
-        <DashboardStartCard
-          locale={locale}
-          onStartUsing={() => setActiveView("start")}
-        />
+      <section className="portal-v2-dashboard-grid" aria-label={uiText(locale, "首页快捷服务", "Dashboard shortcuts")}>
+        <div className="portal-v2-dashboard-column portal-v2-dashboard-column--primary">
+          {isPortalWebPath() ? (
+            <DashboardSubscriptionCard
+              key={String(sessionGeneration ?? 0) + ":" + (sessionRef ?? "") + ":" + (selectedOrder?.requestRef ?? "")}
+              locale={locale}
+              userRef={selectedOrder?.request.userRef ?? null}
+              requestRef={selectedOrder?.requestRef ?? null}
+              initialUrl={!walletFirstAccount && selectedOrder?.status === "active"
+                ? selectedOrder.subscriptionUrl ?? "" : ""}
+              canReveal={!walletFirstAccount && selectedOrder?.status === "active"}
+              canReset={!walletFirstAccount && selectedOrder?.status === "active"}
+              walletFirstAccount={walletFirstAccount}
+              onReveal={onRevealSubscriptionLink}
+              onReset={onResetSubscriptionLink}
+              onOpenGuide={() => setActiveView("start")}
+              onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
+            />
+          ) : (
+            <DashboardMarketplaceCard
+              commerceClient={commerceClient ?? null}
+              commerceModelClient={commerceModelClient ?? null}
+              walletFirstCommerceClient={walletFirstCommerceClient ?? null}
+              locale={locale}
+              onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
+              sessionGeneration={sessionGeneration ?? 0}
+              sessionRef={sessionRef ?? null}
+            />
+          )}
+          {!isPortalWebPath() ? (
+            <DashboardWalletCard
+              locale={locale}
+              walletBalance={walletBalance}
+              onOpenWallet={() => setActiveView("wallet")}
+            />
+          ) : null}
+        </div>
+        <div className="portal-v2-dashboard-column portal-v2-dashboard-column--secondary">
+          <DashboardRecentOrders
+            locale={locale}
+            orders={recentOrders}
+            phase={recentActivity.phase}
+            retryable={recentActivity.retryable}
+            onRetry={recentActivity.retry}
+            onOpenOrders={() => setActiveView("orders")}
+          />
+          <DashboardStartCard
+            locale={locale}
+            onStartUsing={() => setActiveView("start")}
+            recommended={isPortalWebPath()}
+          />
+        </div>
       </section>
     </div>
   );

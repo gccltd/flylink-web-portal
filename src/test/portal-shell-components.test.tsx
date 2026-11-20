@@ -159,4 +159,29 @@ describe("Portal desktop shell components", () => {
     expect(screen.queryByRole("button", { name: /minimize|maximize|close window/i })).toBeNull();
     expect(screen.queryByRole("searchbox", { name: "订单搜索" })).toBeNull();
   });
+
+  test("keeps the compact Web brand mark and removes the lower sidebar mascot scene", () => {
+    window.history.replaceState(null, "", "/web/");
+    const view = render(
+      <PortalSidebar
+        locale="zh"
+        groups={[{
+          id: "primary",
+          label: "主导航",
+          items: [
+            { id: "dashboard", label: "概览", description: "账户总览", icon: LayoutGrid }
+          ]
+        }]}
+        activeView="dashboard"
+        walletBalance={null}
+        onNavigate={vi.fn()}
+      />
+    );
+
+    expect(view.container.querySelector(".portal-sidebar-brand img")?.getAttribute("src"))
+      .toBe("/web/portal-sidebar-mascot.webp");
+    expect(view.container.querySelector(".portal-sidebar-scene")).toBeNull();
+    expect(view.container.querySelectorAll(".portal-sidebar-brand img")).toHaveLength(1);
+  });
+
 });

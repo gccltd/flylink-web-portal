@@ -109,6 +109,7 @@ export function DashboardOverviewCard({
           <strong>{walletBalance === null ? "—" : walletBalance + " Coins"}</strong>
           <small>{uiText(locale, "可用于套餐续费与抵扣", "Usable for plan renewal and credit")}</small>
         </div>
+        <span className="portal-v2-overview-crest" aria-hidden="true"><ShieldCheck /></span>
         <div className="portal-v2-hero-card__actions">
           <button
             className="portal-v2-hero-action portal-v2-hero-action--primary"

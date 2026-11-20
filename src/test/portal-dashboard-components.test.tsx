@@ -3,6 +3,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { DashboardRecentOrders } from "../features/user-portal/dashboard/dashboard-recent-orders";
 import { DashboardWalletCard } from "../features/user-portal/dashboard/dashboard-wallet-card";
 import { DashboardStartCard } from "../features/user-portal/dashboard/dashboard-start-card";
+import { PortalSidebar } from "../features/user-portal/layout/portal-sidebar";
+import { Gift, LayoutDashboard } from "lucide-react";
+import { MarketplaceOfferCard } from "../features/user-portal/marketplace-offer-card";
 import { presentDashboardRecentOrders } from "../features/user-portal/dashboard/dashboard-recent-orders-model";
 
 afterEach(() => cleanup());
@@ -63,17 +66,24 @@ describe("Portal Dashboard components", () => {
   test("uses the compact wallet and start cards with working actions", () => {
     const onOpenWallet = vi.fn();
     const onStartUsing = vi.fn();
-    const { rerender } = render(
+    const { rerender, container } = render(
       <DashboardWalletCard locale="zh" walletBalance={70} onOpenWallet={onOpenWallet} />
     );
 
     expect(screen.getByText("70")).toBeTruthy();
+    expect(container.querySelector(".portal-dashboard-wallet-icon")).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "去充值" }));
     expect(onOpenWallet).toHaveBeenCalledTimes(1);
 
     rerender(<DashboardStartCard locale="zh" onStartUsing={onStartUsing} />);
+    expect(container.querySelector(".portal-dashboard-header-icon")).not.toBeNull();
+    expect(container.querySelectorAll(".portal-v2-start-points svg")).toHaveLength(3);
     fireEvent.click(screen.getByRole("button", { name: "启动飞连VPN" }));
     expect(onStartUsing).toHaveBeenCalledTimes(1);
+    rerender(<DashboardStartCard locale="zh" recommended onStartUsing={onStartUsing} />);
+    expect(screen.getByText("推荐使用")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "查看使用教程" }));
+    expect(onStartUsing).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -171,4 +181,95 @@ test("renders the unified amount and status without inventing a service-order am
   expect(screen.getAllByText("已完成")).toHaveLength(2);
   fireEvent.click(screen.getByRole("button", { name: "查看全部" }));
   expect(onOpenOrders).toHaveBeenCalledTimes(1);
+});
+
+test("Web offer icon identity aligns with text while /portal markup remains intact", () => {
+  const onPrimary = vi.fn();
+  const offer = {
+    offerRef: "test-plan",
+    category: "plan",
+    title: { zh: "月卡（30 天）", en: "30-day plan" },
+    summary: { zh: "稳定连接", en: "Stable connection" },
+    baseCoinUnits: 20
+  } as never;
+  const { container, rerender } = render(<MarketplaceOfferCard
+    busy={false} dashboardAccent locale="zh" mode="purchase"
+    offer={offer} onPrimary={onPrimary} />);
+  expect(container.querySelector(".portal-marketplace-card__identity")).not.toBeNull();
+  expect(screen.getByText("稳定连接")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: /使用 Coins 购买：月卡/ }));
+  expect(onPrimary).toHaveBeenCalledTimes(1);
+  rerender(<MarketplaceOfferCard busy={false} locale="zh" mode="purchase"
+    offer={offer} onPrimary={onPrimary} />);
+  expect(container.querySelector(".portal-marketplace-card__identity")).toBeNull();
+  expect(screen.getByText("稳定连接")).toBeTruthy();
+});
+
+
+test("Web concept rail keeps the compact brand and functional navigation without the lower robot scene", () => {
+  const locationBefore = window.location.pathname;
+  const navigate = vi.fn();
+  const groups = [{
+    id: "main",
+    label: "Navigation",
+    items: [
+      { id: "dashboard", label: "概览", description: "概览说明", icon: LayoutDashboard },
+      { id: "referrals", label: "推荐", description: "邀请奖励", icon: Gift }
+    ]
+  }];
+  try {
+    window.history.replaceState({}, "", "/web/");
+    const { container, rerender } = render(
+      <PortalSidebar locale="zh" groups={groups} activeView="dashboard" walletBalance={null} onNavigate={navigate} />
+    );
+    expect(container.querySelector(".portal-sidebar-brand")).not.toBeNull();
+    expect(container.querySelector(".portal-sidebar-brand img")?.getAttribute("src")).toBe("/web/portal-sidebar-mascot.webp");
+    expect(container.querySelector(".portal-sidebar-scene")).toBeNull();
+    expect(container.querySelectorAll(".portal-sidebar-brand img")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "概览" }).getAttribute("aria-current")).toBe("page");
+    fireEvent.click(screen.getByRole("button", { name: "推荐" }));
+    expect(navigate).toHaveBeenCalledWith("referrals");
+
+    window.history.replaceState({}, "", "/portal/");
+    rerender(<PortalSidebar locale="zh" groups={groups} activeView="dashboard" walletBalance={null} onNavigate={navigate} />);
+    expect(container.querySelector(".portal-sidebar-brand")).toBeNull();
+    expect(container.querySelector(".portal-sidebar-scene")).toBeNull();
+    expect(screen.getByRole("button", { name: "推荐" })).toBeTruthy();
+  } finally {
+    window.history.replaceState({}, "", locationBefore);
+  }
+});
+
+test("concept plan treatments keep real price and action on all three Web visual variants", () => {
+  const onPrimary = vi.fn();
+  const offer = {
+    offerRef: "test-plan",
+    category: "plan",
+    title: { zh: "真实服务套餐", en: "Real service plan" },
+    summary: { zh: "服务端真实说明", en: "Actual catalog description" },
+    baseCoinUnits: 63
+  } as never;
+  const { container, rerender } = render(
+    <MarketplaceOfferCard
+      busy={false} dashboardAccent dashboardVariant={0} locale="zh"
+      mode="purchase" offer={offer} onPrimary={onPrimary}
+    />
+  );
+  for (const variant of [0,1,2] as const) {
+    rerender(<MarketplaceOfferCard
+      busy={false} dashboardAccent dashboardVariant={variant} locale="zh"
+      mode="purchase" offer={offer} onPrimary={onPrimary}
+    />);
+    expect(container.querySelector(`.portal-marketplace-card__concept-${variant}`)).not.toBeNull();
+    expect(container.querySelector(".portal-marketplace-card__illustration")).not.toBeNull();
+    expect(screen.getByText("真实服务套餐")).toBeTruthy();
+    expect(screen.getByText("63")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /使用 Coins 购买：真实服务套餐/ }).textContent).toContain("立即购买");
+  }
+  fireEvent.click(screen.getByRole("button", { name: /使用 Coins 购买：真实服务套餐/ }));
+  expect(onPrimary).toHaveBeenCalledTimes(1);
+  rerender(<MarketplaceOfferCard busy={false} locale="zh" mode="purchase"
+    offer={offer} onPrimary={onPrimary} />);
+  expect(container.querySelector(".portal-marketplace-card__illustration")).toBeNull();
+  expect(screen.getByText("使用 Coins 购买")).toBeTruthy();
 });
