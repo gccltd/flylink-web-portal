@@ -275,7 +275,7 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(overview).toContain('portal-v2-overview-crest');
   });
 
-  test("keeps the mascot and plan art static, scoped and low-cost", () => {
+  test("keeps the compact brand mark and plan art static, scoped and low-cost", () => {
     const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
     const sidebar = readFileSync(resolve("src/features/user-portal/layout/portal-sidebar.tsx"), "utf8");
     const image = readFileSync(resolve("public/portal-sidebar-mascot.webp"));
@@ -284,7 +284,6 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
     expect(sidebar).not.toContain('loading="lazy"');
     expect(sidebar).not.toContain("portal-sidebar-scene");
-    expect(concept).toContain("(prefers-reduced-data:reduce)");
     expect(concept).toContain("(max-width: 1023px)");
     expect(concept).toContain("(prefers-reduced-motion:reduce)");
     expect(concept).not.toContain("animation: infinite");

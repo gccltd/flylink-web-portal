@@ -202,7 +202,7 @@ test("Web offer icon identity aligns with text while /portal markup remains inta
 });
 
 
-test("Web concept rail owns the brand and keeps the navigation functional", () => {
+test("Web concept rail keeps the compact brand and functional navigation without the lower robot scene", () => {
   const locationBefore = window.location.pathname;
   const navigate = vi.fn();
   const groups = [{
@@ -220,8 +220,8 @@ test("Web concept rail owns the brand and keeps the navigation functional", () =
     );
     expect(container.querySelector(".portal-sidebar-brand")).not.toBeNull();
     expect(container.querySelector(".portal-sidebar-brand img")?.getAttribute("src")).toBe("/web/portal-sidebar-mascot.webp");
-    expect(container.querySelector(".portal-sidebar-scene__robot")).not.toBeNull();
-    expect(container.querySelector(".portal-sidebar-scene__robot")?.getAttribute("src")).toBe("/web/portal-sidebar-mascot.webp");
+    expect(container.querySelector(".portal-sidebar-scene")).toBeNull();
+    expect(container.querySelectorAll(".portal-sidebar-brand img")).toHaveLength(1);
     expect(screen.getByRole("button", { name: "概览" }).getAttribute("aria-current")).toBe("page");
     fireEvent.click(screen.getByRole("button", { name: "推荐" }));
     expect(navigate).toHaveBeenCalledWith("referrals");
