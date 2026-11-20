@@ -1265,6 +1265,18 @@
     filter: brightness(1.12);
     box-shadow: 0 0 0 1px rgba(255, 255, 255, .55), 0 8px 22px rgba(62, 97, 221, .30);
   }
+
+  /* Press must beat hover: :hover is declared after the shared :active
+     rule at equal specificity, so a mouse press (hover + active together)
+     kept the hover brightness and ring. The compound selector outranks
+     plain :hover, and keeps the ring while adding the press dim + inset. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:active:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:active:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:active:not(:disabled) {
+    filter: brightness(.90);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .55), inset 0 2px 8px rgba(8, 18, 54, .28);
+  }
 }
 
 @supports (backdrop-filter: blur(1px)) {

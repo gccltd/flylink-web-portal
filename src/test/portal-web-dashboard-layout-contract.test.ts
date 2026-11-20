@@ -443,6 +443,12 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(v44).toContain("scale(.97)");
     expect(v44).toContain("filter: brightness(.90);");
     expect(v44).toContain("box-shadow: inset 0 2px 8px rgba(8, 18, 54, .28)");
+    expect(v44).toContain(".portal-v2-hero-action:hover:active");
+    expect(v44).toContain(".portal-v2-dashboard-start > .portal-primary-button:hover:active:not(:disabled)");
+    const hoverRule = v44.indexOf(".portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover,");
+    const hoverActiveRule = v44.indexOf(".portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover:active,");
+    expect(hoverRule).toBeGreaterThan(-1);
+    expect(hoverActiveRule).toBeGreaterThan(hoverRule);
   });
 
 });
