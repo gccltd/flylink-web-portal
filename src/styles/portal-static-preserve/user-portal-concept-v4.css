@@ -1215,8 +1215,8 @@
 .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:active:not(:disabled),
 .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button:active,
 .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button:active {
-  transform: translateY(1px) scale(.985);
-  filter: none;
+  transform: translateY(1px) scale(.97);
+  filter: brightness(.96);
   transition-duration: 60ms;
 }
 
@@ -1261,7 +1261,7 @@
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled),
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:not(:disabled),
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:not(:disabled) {
-    filter: none;
+    filter: brightness(1.07);
   }
 }
 

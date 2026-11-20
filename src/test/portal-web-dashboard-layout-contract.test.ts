@@ -425,4 +425,22 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(finePointerRule).toBe(-1);
   });
 
+  test("gives subscription buttons visible hover and stronger press feedback", () => {
+    const subscription = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-subscription-dashboard.css"), "utf8");
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const marker = "Concept v4.4 — unified shape, glass finish and immediate feedback";
+    const v44 = concept.slice(concept.indexOf(marker));
+    expect(subscription).toContain(".portal-subscription-action:hover:not(:disabled)");
+    expect(subscription).toContain(".portal-subscription-client:hover:not(:disabled)");
+    expect(subscription).toContain(".portal-subscription-qr-download:hover:not(:disabled)");
+    expect(subscription).toContain("@media (hover:hover) and (pointer:fine)");
+    expect(subscription).toContain("filter:brightness(1.07)");
+    expect(subscription).toContain("scale(.97)");
+    expect(subscription).toContain("filter:brightness(.96)");
+    expect(subscription).toContain(".portal-subscription-qr-download:active:not(:disabled)");
+    expect(v44).toContain("filter: brightness(1.07);");
+    expect(v44).toContain("scale(.97)");
+    expect(v44).toContain("filter: brightness(.96);");
+  });
+
 });

@@ -481,6 +481,13 @@ independent reviews are complete.
 - Final selector audit found additional pre-existing Web Dashboard hover/focus transforms in the v3 layout and shared desktop stylesheet: whole-panel lift, CTA lift, nav focus shift, and nav-icon scale. The reduced-motion override now explicitly matches these higher-specificity states as well as active/hover states added in v4.4.
 - Added contract assertions for panel hover, CTA hover, nav focus and nav-icon hover.
 
+## v4.5 — visible hover and stronger press feedback (2026-11-20)
+
+- Production smoke test (1920×1025, light theme, mouse) found zero visible hover feedback on seven Dashboard buttons: the subscription Copy/Reset/QR/More actions, client buttons, Renew and View Guide. The subscription buttons had no `:hover` rule at all; the hero/primary hover brightness from v3 was cancelled by a later `filter: none` in v4, leaving only a 1px lift that reads as nothing.
+- Subscription buttons now get fine-pointer hover: brightness 1.07 plus a brighter border; lift (-1px) and shadow apply only when motion is allowed, so reduced-motion users still see the brightness change with no movement. Press is stronger: `translateY(1px) scale(.97)` plus brightness .96; the brightness dip survives reduced motion as an instant, movement-free press cue (the transform is still suppressed there). The QR download button joins the same hover/press rules, and More-menu buttons gain a press background.
+- Hero and primary actions (Renew, View Guide, wallet/start buttons) get their hover brightness back: the v4 fine-pointer hover rule now sets `filter: brightness(1.07)` instead of `none`, and the shared `:active` rule presses to scale .97 with brightness .96 instead of scale .985 with no filter change. Transition stays 60ms.
+- No callbacks, routes, data contracts or disabled states changed; hover stays fine-pointer-only, and reduced-motion still disables all movement.
+
 ## v5.1 — Web Dashboard link manager (2026-11-20)
 
 The approved concept removes the three product preview cards from the Web Dashboard primary column and replaces them with a session-scoped subscription link workspace: a read-only URL text field, copy/reset/QR/More controls, a QR scan/save panel, a client import guide grid and a usage warning. The separate Marketplace navigation retains all live plan purchases and renewals. The legacy /portal Dashboard still renders its old catalog component.
