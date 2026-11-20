@@ -159,10 +159,6 @@
     outline: 3px solid #65dafe;
     outline-offset: 2px;
   }
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:hover:not(.active) {
-    background: rgba(221,232,255,0.17);
-    box-shadow: inset 1px 0 0 rgba(209,232,255,0.22);
-  }
 
   /* Keep the overview a separate, high-contrast status region while
      allowing the lightweight ornamental shield only on roomy screens. */
@@ -546,18 +542,6 @@
   .portal-v2-shell.portal-v2-shell--web .portal-sidebar-brand {display:none;}
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-grid:not(.usage) {
     grid-template-areas:"marketplace" "orders" "start";
-  }
-}
-@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace
-    .portal-marketplace-card article.portal-marketplace-card__dashboard-layout:hover {
-    transform:translateY(-2px);
-    border-color:rgba(100,169,254,.73);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 24px rgba(97,98,219,.15);
-  }
-  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__dashboard-layout .portal-marketplace-card__purchase:hover:not(:disabled) {
-    filter:brightness(1.08);
-    box-shadow:0 7px 19px rgba(93,98,219,.31);
   }
 }
 @media (prefers-reduced-motion:reduce) {
@@ -1135,15 +1119,8 @@
     border-color: rgba(218,230,255,.32);
     transition: border-color 90ms ease, background-color 90ms ease, transform 70ms ease-out;
   }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:hover {
-    border-radius: var(--web-radius-row);
-  }
 }
 
-/* Touch and mouse share the same immediate pressed state. In the previous
-   stylesheet, :active lived inside a fine-pointer-only media query, so touch
-   pointers did not receive the pressed visual state. */
 .portal-v2-shell.portal-v2-shell--web button {
   touch-action: manipulation;
 }
@@ -1206,20 +1183,6 @@
   transform: translateX(0);
 }
 
-.portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:active,
-.portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active,
-.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:active:not(:disabled),
-.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:active,
-.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-link-button:active,
-.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:active:not(:disabled),
-.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:active:not(:disabled),
-.portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button:active,
-.portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button:active {
-  transform: translateY(1px) scale(.985);
-  filter: none;
-  transition-duration: 60ms;
-}
-
 .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action,
 .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button,
 .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button,
@@ -1235,33 +1198,12 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:hover::after {
-    opacity: 1;
-    transform: translateX(12%);
-  }
 
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
     transition: border-color 100ms ease, transform 90ms ease;
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article:hover {
-    border-color: rgba(170,220,255,.66);
-    transform: translateY(-1px);
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:hover {
-    border-radius: var(--web-radius-row);
-    transform: translateX(1px);
-  }
-
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled),
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:not(:disabled),
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:not(:disabled) {
-    filter: none;
   }
 }
 
@@ -1308,43 +1250,21 @@
 
 @media (prefers-reduced-motion: reduce) {
   .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item,
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item::before,
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item::after,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-link-button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button,
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:hover::after,
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:active::after,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-link-button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button:active,
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:is(:hover, :focus-visible),
-  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:hover svg,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled),
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:not(:disabled),
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:not(:disabled),
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article:hover {
+.portal-v2-shell.portal-v2-shell--web .portal-use-nav-item::before,
+.portal-v2-shell.portal-v2-shell--web .portal-use-nav-item::after,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-link-button,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button,
+.portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button,
+.portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:focus-visible {
     transition: none;
     transform: none;
   }

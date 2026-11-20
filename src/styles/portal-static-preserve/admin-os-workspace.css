@@ -39,28 +39,11 @@
     transform 160ms ease;
 }
 
-.page-subnav-link:hover {
-  border-color: var(--admin-info-border);
-  background: var(--admin-hover-surface);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-  transform: translateY(-1px);
-}
-
 .page-subnav-link[data-state="active"] {
   border-color: var(--admin-info-border);
   background: #ffffff;
   box-shadow: inset 3px 0 0 var(--admin-accent);
   color: var(--admin-accent-strong);
-}
-
-.page-subnav-link[data-mode="owner"]:hover,
-.page-subnav-link-owner:hover {
-  box-shadow: inset 3px 0 0 var(--admin-accent), 0 8px 18px rgba(15, 23, 42, 0.06);
-}
-
-.page-subnav-link[data-mode="preview"]:hover,
-.page-subnav-link-preview:hover {
-  box-shadow: inset 3px 0 0 var(--admin-muted), 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 .page-subnav-card-head {
@@ -369,7 +352,6 @@
     box-shadow var(--admin-ease);
 }
 
-.admin-compact-data-row[data-clickable="true"]:hover,
 .admin-compact-data-row[data-clickable="true"]:focus-visible {
   border-color: var(--admin-info-border);
   background: var(--admin-hover-surface);
@@ -943,11 +925,6 @@
   outline-offset: 2px;
 }
 
-.admin-search-result-card[data-clickable="true"]:hover .admin-search-result-action {
-  border-color: var(--admin-accent);
-  color: var(--admin-accent);
-}
-
 .admin-search-result-main {
   display: grid;
   min-width: 0;
@@ -1000,11 +977,6 @@
   font-size: 12px;
   font-weight: 800;
   padding: 0 12px;
-}
-
-.admin-search-result-action:not(.admin-search-result-action-disabled):hover {
-  border-color: var(--admin-accent);
-  color: var(--admin-accent);
 }
 
 .admin-search-result-action-disabled {
@@ -1169,11 +1141,6 @@
   opacity: 0;
 }
 
-.admin-blueprint-module-panel:hover {
-  border-color: rgba(255, 255, 255, 0.48);
-  background: var(--admin-scene-glass-strong, rgba(255, 255, 255, 0.17));
-}
-
 .admin-blueprint-module-panel[data-chrome="operator"] {
   overflow: hidden;
   overflow-y: hidden;
@@ -1190,11 +1157,6 @@
 
 .admin-blueprint-module-panel[data-chrome="operator"]::before {
   display: none;
-}
-
-.admin-blueprint-module-panel[data-chrome="operator"]:hover {
-  border-color: rgba(255, 255, 255, 0.48);
-  background: var(--admin-scene-glass-strong, rgba(255, 255, 255, 0.17));
 }
 
 .admin-blueprint-module-panel > .case-workbench-card {
@@ -1747,13 +1709,6 @@
     transform var(--admin-ease);
 }
 
-.overview-next-action:hover {
-  border-color: var(--admin-info-border);
-  background: var(--admin-hover-surface);
-  box-shadow: inset 3px 0 0 var(--admin-accent), 0 10px 24px rgba(15, 23, 42, 0.08);
-  transform: translateY(-1px);
-}
-
 .overview-next-action span {
   color: var(--admin-muted);
   font-size: 12px;
@@ -1960,7 +1915,6 @@
   cursor: pointer;
 }
 
-.new-console-row-selectable:hover,
 .new-console-row-selectable:focus-visible,
 .new-console-row-selected {
   border-color: var(--admin-accent);
@@ -2063,7 +2017,6 @@
   padding: 0 10px;
 }
 
-.data-card-pagination-button:hover:not(:disabled),
 .data-card-pagination-button:focus-visible {
   border-color: var(--admin-info-border);
   box-shadow: var(--admin-focus-ring);

@@ -343,7 +343,6 @@
   word-break: normal;
 }
 
-.nav-item:hover,
 .nav-item-active {
   background: #2563eb;
   border-color: transparent;
@@ -356,7 +355,6 @@
   box-shadow: none;
 }
 
-.nav-item:hover .nav-item-icon,
 .nav-item-active .nav-item-icon {
   color: #ffffff;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.36);
@@ -701,7 +699,6 @@
   color: var(--admin-muted);
 }
 
-.operator-account-summary:hover,
 .operator-account-menu[open] > .operator-account-summary {
   border-color: var(--admin-info-border);
   background: rgba(239, 246, 255, 0.72);
@@ -839,18 +836,6 @@
   cursor: pointer;
 }
 
-.environment-summary:hover,
-.operator-summary:hover,
-.console-tools-summary:hover,
-.connection-widget-summary:hover,
-.top-menu-action:hover,
-.icon-button:hover,
-.ghost-button:hover {
-  background: var(--admin-hover-surface);
-  border-color: var(--admin-info-border);
-  color: var(--admin-accent-strong);
-}
-
 .top-menu-popover {
   position: absolute;
   z-index: 35;
@@ -916,7 +901,6 @@
   line-height: 1;
 }
 
-.operator-language-button:hover,
 .operator-language-button-active {
   border-color: var(--admin-info-border);
   background: rgba(219, 234, 254, 0.82);

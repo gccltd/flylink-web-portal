@@ -241,7 +241,6 @@
   text-align: left;
 }
 
-.nav-item:hover,
 .nav-item-active {
   background: var(--admin-selected-surface);
   color: #ffffff;
@@ -544,7 +543,6 @@
   color: #ffffff;
 }
 
-.operator-language-button:hover,
 .operator-language-button-active {
   border-color: rgba(34, 211, 238, 0.75);
   background: rgba(34, 211, 238, 0.22);
@@ -822,11 +820,6 @@
   padding: 0 0 0 24px;
 }
 
-.admin-blueprint-page[data-page="dashboard"] [data-module-nav-id="health-summary"]:hover {
-  border-color: transparent;
-  background: transparent;
-}
-
 .admin-blueprint-page[data-page="dashboard"] .admin-overview-compact-stack,
 .admin-panel-compact-card {
   display: grid;
@@ -965,12 +958,6 @@
   backdrop-filter: blur(20px);
   padding: 22px;
   gap: 14px;
-}
-
-.admin-blueprint-module-panel:hover,
-.admin-blueprint-module-panel[data-chrome="operator"]:hover {
-  border-color: rgba(255, 255, 255, 0.48);
-  background: var(--admin-scene-glass-strong);
 }
 
 .admin-blueprint-module-panel-head {

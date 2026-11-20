@@ -481,6 +481,14 @@ independent reviews are complete.
 - Final selector audit found additional pre-existing Web Dashboard hover/focus transforms in the v3 layout and shared desktop stylesheet: whole-panel lift, CTA lift, nav focus shift, and nav-icon scale. The reduced-motion override now explicitly matches these higher-specificity states as well as active/hover states added in v4.4.
 - Added contract assertions for panel hover, CTA hover, nav focus and nav-icon hover.
 
+## v4.5 — hover and press feedback removed from the whole repo (2026-11-20)
+
+- Yi decided to cancel all hover and tactile feedback: not just the PR #18 layer, but every `:hover` and `:active` rule in this repo, including the public site, admin chrome and legacy entry points. PR #18 was closed unmerged; the removal is a separate change from main.
+- Removed from code: 104 rules across 12 CSS files (56 whole rules deleted, 85 selectors trimmed from mixed lists, 2 emptied `@media (hover: …)` blocks dropped). No `:hover` / `:active` selector remains in any stylesheet. One `:is(:hover, :focus-visible)` selector was rewritten to plain `:focus-visible` so the reduced-motion guard for focused nav items survives.
+- What stays: keyboard focus indicators (`:focus-visible` / `:focus-within`, 94 occurrences, verified unchanged), the v4.4 radius/glass shape system, `touch-action: manipulation`, and the reduced-motion / reduced-transparency guards (now covering base elements only). Base `transition` declarations are inert without hover/active states and were left in place.
+- Guard: the layout contract now asserts no `:hover` / `:active` in any portal stylesheet (comments stripped) and that the five dashboard files still contain `:focus-visible`. Any future hover/press addition fails the suite.
+- The v4.4 / v4.4.1 / v4.4.2 / v4.4.3 notes above are history: the feedback layer they describe no longer exists.
+
 ## v5.1 — Web Dashboard link manager (2026-11-20)
 
 The approved concept removes the three product preview cards from the Web Dashboard primary column and replaces them with a session-scoped subscription link workspace: a read-only URL text field, copy/reset/QR/More controls, a QR scan/save panel, a client import guide grid and a usage warning. The separate Marketplace navigation retains all live plan purchases and renewals. The legacy /portal Dashboard still renders its old catalog component.

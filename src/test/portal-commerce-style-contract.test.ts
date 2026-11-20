@@ -385,16 +385,6 @@ describe("Portal commerce desktop style contract", () => {
     )).toBe("var(--portal-coins-action-secondary-bg)");
     expect(desktopDeclaration(
       commerceStyles,
-      ".portal-coins-dialog-theme .portal-coins-dialog button.portal-coins-payment-status__action--quiet:hover:not(:disabled)",
-      "background"
-    )).toBe("var(--portal-coins-action-secondary-bg)");
-    expect(desktopDeclaration(
-      commerceStyles,
-      ".portal-coins-dialog-theme .portal-coins-dialog button.portal-coins-payment-status__action--secondary:hover:not(:disabled)",
-      "background"
-    )).toBe("var(--portal-coins-action-subtle-bg)");
-    expect(desktopDeclaration(
-      commerceStyles,
       ".portal-coins-dialog-theme .portal-coins-dialog button.portal-coins-dialog__primary:disabled",
       "background"
     )).toBe("var(--portal-coins-action-disabled-bg)");
