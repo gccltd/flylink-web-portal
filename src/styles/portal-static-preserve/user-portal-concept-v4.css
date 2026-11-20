@@ -1334,6 +1334,16 @@
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:active,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button:active,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:is(:hover, :focus-visible),
+  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:hover svg,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:not(:disabled),
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:not(:disabled),
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article:hover {
     transition: none;
     transform: none;

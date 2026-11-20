@@ -475,3 +475,8 @@ independent reviews are complete.
 
 - Extended the reduced-motion override to explicitly cover higher-specificity hover and active states for navigation sweep, order rows, Marketplace offer surfaces, and action controls. This prevents their transform from surviving merely because the interactive pseudo-class selector outranks the generic reduced-motion selector.
 - Added regression assertions for representative hover/active selectors.
+
+## v4.4.3 — reduced-motion hover and focus precedence (2026-11-20)
+
+- Final selector audit found additional pre-existing Web Dashboard hover/focus transforms in the v3 layout and shared desktop stylesheet: whole-panel lift, CTA lift, nav focus shift, and nav-icon scale. The reduced-motion override now explicitly matches these higher-specificity states as well as active/hover states added in v4.4.
+- Added contract assertions for panel hover, CTA hover, nav focus and nav-icon hover.

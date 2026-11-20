@@ -395,7 +395,13 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
       ".portal-use-nav-item:active",
       ".portal-v2-dashboard-orders .portal-v2-list button:hover",
       ".portal-v2-dashboard-orders .portal-v2-list button:active",
+      ".portal-v2-dashboard-marketplace:hover",
+      ".portal-v2-dashboard-orders:hover",
+      ".portal-v2-hero-action:hover",
+      ".portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled)",
       ".portal-v2-dashboard-marketplace .portal-marketplace-card article:hover",
+      ".portal-use-nav-item:is(:hover, :focus-visible)",
+      ".portal-use-nav-item:hover svg",
       ".portal-v2-topbar-icon-button:active"
     ]) {
       expect(reducedMotion).toContain(stateSelector);
