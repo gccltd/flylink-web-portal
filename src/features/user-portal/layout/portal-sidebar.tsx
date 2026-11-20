@@ -92,23 +92,6 @@ export function PortalSidebar<TView extends string>({
           </div>
         ))}
       </nav>
-      {webBrand ? (
-        <div className="portal-sidebar-scene" aria-hidden="true">
-          <span className="portal-sidebar-scene__halo" />
-          <img
-            className="portal-sidebar-scene__robot"
-            src={portalAssetPath("portal-sidebar-mascot.webp")}
-            width="480"
-            height="480"
-            loading="lazy"
-            decoding="async"
-            alt=""
-          />
-          <span className="portal-sidebar-scene__orbit" />
-          <span className="portal-sidebar-scene__platform" />
-          <span className="portal-sidebar-scene__caption">FlyLink · VPN</span>
-        </div>
-      ) : null}
     </aside>
   );
 }

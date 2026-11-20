@@ -256,9 +256,9 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(concept).toContain("--web-rail-width:206px;");
     expect(concept).toContain("left: calc(var(--web-rail-width) + 24px)");
     expect(concept).toContain(".portal-v2-topbar-brand");
-    expect(concept).toContain(".portal-sidebar-scene__robot");
-    expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
-    expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
+    expect(concept).not.toContain("portal-sidebar-scene");
+    expect(sidebar).not.toContain("portal-sidebar-scene");
+    expect(sidebar.match(/portalAssetPath\("portal-sidebar-mascot\.webp"\)/g)).toHaveLength(1);
     expect(sidebar).toContain("isPortalWebPath()");
     expect(offer).toContain("dashboardVariant?: 0 | 1 | 2");
     expect(concept).toContain("portal-marketplace-card__concept-0");
@@ -281,7 +281,9 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     const image = readFileSync(resolve("public/portal-sidebar-mascot.webp"));
     expect(image.byteLength).toBeLessThan(32 * 1024);
     expect(image.toString("ascii", 8, 12)).toBe("WEBP");
-    expect(sidebar).toContain('loading="lazy"');
+    expect(sidebar).toContain('portalAssetPath("portal-sidebar-mascot.webp")');
+    expect(sidebar).not.toContain('loading="lazy"');
+    expect(sidebar).not.toContain("portal-sidebar-scene");
     expect(concept).toContain("(prefers-reduced-data:reduce)");
     expect(concept).toContain("(max-width: 1023px)");
     expect(concept).toContain("(prefers-reduced-motion:reduce)");
@@ -342,6 +344,34 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(v43).toContain("border-bottom: 1px solid rgba(145, 165, 215, .30);");
     expect(v43).not.toContain("position: fixed;");
     expect(v43).toContain("prefers-reduced-transparency: reduce");
+  });
+
+
+  test("applies the v4.4 shape system, integrated glass topbar and immediate touch feedback", () => {
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const marker = "Concept v4.4 — unified shape, glass finish and immediate feedback";
+    const v44 = concept.slice(concept.indexOf(marker));
+    expect(v44).toContain("--web-radius-shell: 24px;");
+    expect(v44).toContain("--web-radius-panel: 18px;");
+    expect(v44).toContain("--web-radius-row: 12px;");
+    expect(v44).toContain("--web-radius-control: 10px;");
+    expect(v44).toContain("border-top-right-radius: var(--web-radius-shell);");
+    expect(v44).toContain("backdrop-filter: blur(12px) saturate(140%);");
+    expect(v44).toContain("var(--web-card-aura),");
+    expect(v44).toContain("radial-gradient(340px 180px at 14% 0%");
+    expect(v44).toContain("pointer-events: none;");
+    expect(v44).toContain("touch-action: manipulation;");
+    expect(v44).toContain("transition-duration: 60ms;");
+    expect(v44).toContain("portal-v2-dashboard-orders .portal-v2-list button:active");
+    expect(v44).toContain("portal-use-nav-item.active::before");
+    expect(v44).toContain("portal-use-nav-item:hover::after");
+    expect(v44).toContain("@media (prefers-reduced-transparency: reduce)");
+    expect(v44).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(v44).not.toContain("transition: all");
+    const activeRule = v44.indexOf(".portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active");
+    const finePointerRule = v44.lastIndexOf("@media (hover: hover) and (pointer: fine)", activeRule);
+    expect(activeRule).toBeGreaterThan(-1);
+    expect(finePointerRule).toBe(-1);
   });
 
 });

@@ -441,3 +441,26 @@ both themes. Verify the outer rounded boundary, sidebar integration,
 topbar transparency/in-flow placement, user-menu visibility, greeting
 spacing and all dashboard cards. Keep PR #17 Draft until visual and
 independent reviews are complete.
+
+## v4.4 — unified radius, smoother glass, nav highlight and immediate feedback (2026-11-20)
+
+### Shape and overview corner
+- Web shell radius is 24px on desktop and 20px on compact tablet. The sidebar joins the left edge of the shell with matching inner radii.
+- Dashboard top-level cards (account overview, Marketplace, Recent Orders, Wallet where rendered, Start Using) share 18px radius. Inner offer/order rows share 12px. Action buttons and icon bases use 10px; status pills remain fully rounded as semantic labels.
+- The third user-marked screenshot's top-right overview/header corner is rendered by a translucent header surface with a 24px top-right radius. The topbar remains in document flow and does not become a separate floating card.
+
+### Glass and navigation
+- Topbar glass is a continuous blue-lilac gradient with a soft opacity falloff, 12px backdrop blur and a subtle lower separator. The pseudo-surface is pointer-transparent and rounds only the outer top-right corner.
+- Major Dashboard cards retain the existing theme-specific jelly surface and 8px desktop backdrop blur. Local radial highlights and restrained inset edge-light unify the cards. Inner offer/order rows use translucent highlights without adding another nested backdrop blur, avoiding extra compositing work.
+- The lower robot stage is removed from the Web sidebar. The compact brand robot mark at the top remains. Six navigation entries and their destinations are unchanged.
+- Navigation active state gains a narrow local cyan glow; fine-pointer hover gets a restrained light sweep. No continuous or infinite animation is added.
+
+### Click/press feedback diagnosis and repair
+- Source inspection found the existing Dashboard active rules inside a hover/fine-pointer media query at a 1024px minimum width. Touch/coarse pointers therefore did not receive the same pressed visual state.
+- Existing Dashboard card transitions used 180ms for border/shadow/transform; offer rows and action buttons used 150ms. The backdrop blur itself was static, not animated. The main correction is to provide pressed feedback for touch and mouse outside the fine-pointer query, shorten transform feedback to 60–70ms, and remove shadow/filter from the transition path. touch-action manipulation is applied to Web buttons.
+- The interaction fix is CSS-only: no delayed timers, debounce, async work, or callback changes. This is a code-level diagnosis; actual device/browser latency still requires the visual smoke test on the protected Preview.
+
+### Scope and validation
+- All changes are scoped to the Web shell; /portal, Mobile, business data, pricing, purchase callbacks, navigation routes, authentication, API and production settings remain unchanged.
+- Regression tests cover removal of the lower mascot, preservation of the top brand mark, radius tokens, integrated topbar corner, pointer-transparent highlight layers, touch pressed states, and reduced-motion/transparency fallbacks.
+- Keep PR #17 OPEN / Draft until exact-head CI, preview screenshot checks and independent Review are complete.
