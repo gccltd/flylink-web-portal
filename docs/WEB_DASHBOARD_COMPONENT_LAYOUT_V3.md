@@ -470,3 +470,8 @@ independent reviews are complete.
 - Second-pass source review found that the v4.4 reduced-motion block omitted several controls that had just received transform transitions: Marketplace CTA, Orders "view all", Wallet/Start primary actions, and topbar icon/user buttons. These controls now explicitly disable transitions and transforms when the OS requests reduced motion.
 - The reduced-transparency preference previously removed blur from the topbar only. It now also disables backdrop-filter on the Overview, Marketplace, Orders, Wallet and Start panels, overriding the desktop blur rule.
 - Added source-contract assertions for all affected controls and major glass panels. No transaction callbacks, business logic, routes, or data contracts changed.
+
+## v4.4.2 — reduced-motion state specificity (2026-11-20)
+
+- Extended the reduced-motion override to explicitly cover higher-specificity hover and active states for navigation sweep, order rows, Marketplace offer surfaces, and action controls. This prevents their transform from surviving merely because the interactive pseudo-class selector outranks the generic reduced-motion selector.
+- Added regression assertions for representative hover/active selectors.

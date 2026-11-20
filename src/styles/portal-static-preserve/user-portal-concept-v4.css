@@ -1322,7 +1322,19 @@
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button,
-  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
+  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:hover::after,
+  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-use-nav-item:active::after,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:hover,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-link-button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button:active,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article:hover {
     transition: none;
     transform: none;
   }
