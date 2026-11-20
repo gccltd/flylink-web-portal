@@ -480,3 +480,13 @@ independent reviews are complete.
 
 - Final selector audit found additional pre-existing Web Dashboard hover/focus transforms in the v3 layout and shared desktop stylesheet: whole-panel lift, CTA lift, nav focus shift, and nav-icon scale. The reduced-motion override now explicitly matches these higher-specificity states as well as active/hover states added in v4.4.
 - Added contract assertions for panel hover, CTA hover, nav focus and nav-icon hover.
+
+## v5.1 — Web Dashboard link manager (2026-11-20)
+
+The approved concept removes the three product preview cards from the Web Dashboard primary column and replaces them with a session-scoped subscription link workspace: a read-only URL text field, copy/reset/QR/More controls, a QR scan/save panel, a client import guide grid and a usage warning. The separate Marketplace navigation retains all live plan purchases and renewals. The legacy /portal Dashboard still renders its old catalog component.
+
+The right-hand Dashboard Start card is restyled as a client recommendation card whose actual action remains navigation to the existing Use Guide; Orders, account overview and wallet balance remain unchanged.
+
+**Credential safety:** rendering the Dashboard never invokes subscription delivery or reveal. An already session-owned active legacy link can be displayed immediately; otherwise the user expressly requests viewing through More. Legacy reset is a confirmed action with scoped recovery key and reuse of owner/state validation. Wallet-first account credentials remain in the original explicit Start delivery/acknowledgement flow, and reset is unavailable from this new panel. QR generation happens locally from the currently visible link; no URL/QR is persisted. Client cards copy the link and open the actual guide instead of inventing incompatible automatic deep links. UI does not claim one-click configuration completed.
+
+QA gates: exact-head Lint, Vitest, Build, Verify, then protected Preview pixel checks and independent review; Draft PR #17 only.

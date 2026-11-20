@@ -80,6 +80,10 @@ describe("Portal Dashboard components", () => {
     expect(container.querySelectorAll(".portal-v2-start-points svg")).toHaveLength(3);
     fireEvent.click(screen.getByRole("button", { name: "启动飞连VPN" }));
     expect(onStartUsing).toHaveBeenCalledTimes(1);
+    rerender(<DashboardStartCard locale="zh" recommended onStartUsing={onStartUsing} />);
+    expect(screen.getByText("推荐使用")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "查看使用教程" }));
+    expect(onStartUsing).toHaveBeenCalledTimes(2);
   });
 });
 

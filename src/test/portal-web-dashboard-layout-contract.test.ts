@@ -30,6 +30,18 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(webLayout).toContain('grid-template-areas: none;');
   });
 
+  test("Dashboard replaces only the Web offer preview with the subscription manager", () => {
+    const start = page.indexOf('function DashboardPanel(');
+    const end = page.indexOf('function UsagePanel(', start);
+    const panel = page.slice(start, end);
+    expect(panel).toContain('isPortalWebPath() ? (');
+    expect(panel).toContain('<DashboardSubscriptionCard');
+    expect(panel).toContain('<DashboardMarketplaceCard');
+    expect(panel).toContain('walletFirstAccount={walletFirstAccount}');
+    expect(panel).toContain('onReveal={onRevealSubscriptionLink}');
+    expect(panel).toContain('onReset={onResetSubscriptionLink}');
+  });
+
   test("limits only the Web Dashboard catalog preview but retains Portal and full Marketplace offers", () => {
     const idx = commerce.indexOf('export function DashboardMarketplaceCard(');
     const end = commerce.indexOf('type MarketplaceModelState =', idx);
