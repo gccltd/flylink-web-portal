@@ -312,7 +312,8 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     const offer = readFileSync(resolve("src/features/user-portal/marketplace-offer-card.tsx"), "utf8");
     expect(concept).toContain("Concept v4.2 — user-marked overview glass and resilient plan rows");
     expect(concept).toContain(".portal-v2-hero-card::before");
-    expect(concept).toContain("border-left-color: rgba(104,125,185,.34);");
+    expect(concept).toContain("@media (min-width: 901px)");
+    expect(concept).toContain("border-left: 1px solid rgba(104,125,185,.34);");
     expect(concept).toContain('grid-template-areas: "identity price" "identity action" "reason reason" "context context";');
     expect(concept).toContain("max-width: 184px;");
     expect(concept).toContain("flex-direction: column;");

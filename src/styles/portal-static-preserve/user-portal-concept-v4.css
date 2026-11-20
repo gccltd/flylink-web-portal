@@ -824,9 +824,9 @@
   }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 901px) {
   .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell + .portal-v2-hero-card__cell {
-    border-left-color: rgba(104,125,185,.34);
+    border-left: 1px solid rgba(104,125,185,.34);
     box-shadow: inset 1px 0 0 rgba(255,255,255,.55);
   }
 }
@@ -925,9 +925,9 @@
   }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 901px) {
   .portal-v2-shell.portal-v2-shell--web[data-portal-theme="light"] .portal-v2-hero-card__cell + .portal-v2-hero-card__cell {
-    border-left-color: rgba(104,125,185,.34);
+    border-left: 1px solid rgba(104,125,185,.34);
     box-shadow: inset 1px 0 0 rgba(255,255,255,.55);
   }
 }
