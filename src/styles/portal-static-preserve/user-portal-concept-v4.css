@@ -1295,6 +1295,15 @@
     backdrop-filter: none;
     background: linear-gradient(108deg, #d8e5ff, #c7d5ff 52%, #e3d7ff);
   }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1306,7 +1315,13 @@
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-v2-list button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-orders .portal-link-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button,
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card article {
     transition: none;
     transform: none;

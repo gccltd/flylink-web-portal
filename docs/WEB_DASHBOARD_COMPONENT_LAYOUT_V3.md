@@ -464,3 +464,9 @@ independent reviews are complete.
 - All changes are scoped to the Web shell; /portal, Mobile, business data, pricing, purchase callbacks, navigation routes, authentication, API and production settings remain unchanged.
 - Regression tests cover removal of the lower mascot, preservation of the top brand mark, radius tokens, integrated topbar corner, pointer-transparent highlight layers, touch pressed states, and reduced-motion/transparency fallbacks.
 - Keep PR #17 OPEN / Draft until exact-head CI, preview screenshot checks and independent Review are complete.
+
+## v4.4.1 — complete reduced-motion and reduced-transparency coverage (2026-11-20)
+
+- Second-pass source review found that the v4.4 reduced-motion block omitted several controls that had just received transform transitions: Marketplace CTA, Orders "view all", Wallet/Start primary actions, and topbar icon/user buttons. These controls now explicitly disable transitions and transforms when the OS requests reduced motion.
+- The reduced-transparency preference previously removed blur from the topbar only. It now also disables backdrop-filter on the Overview, Marketplace, Orders, Wallet and Start panels, overriding the desktop blur rule.
+- Added source-contract assertions for all affected controls and major glass panels. No transaction callbacks, business logic, routes, or data contracts changed.

@@ -366,6 +366,30 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(v44).toContain("portal-use-nav-item:hover::after");
     expect(v44).toContain("@media (prefers-reduced-transparency: reduce)");
     expect(v44).toContain("@media (prefers-reduced-motion: reduce)");
+    const reducedTransparency = v44.slice(v44.indexOf("@media (prefers-reduced-transparency: reduce)"));
+    for (const selector of [
+      ".portal-v2-hero-card",
+      ".portal-v2-dashboard-marketplace",
+      ".portal-v2-dashboard-orders",
+      ".portal-v2-dashboard-wallet",
+      ".portal-v2-dashboard-start"
+    ]) {
+      expect(reducedTransparency).toContain(selector);
+    }
+    expect(reducedTransparency).toContain("backdrop-filter: none;");
+    const reducedMotion = v44.slice(v44.indexOf("@media (prefers-reduced-motion: reduce)"));
+    for (const selector of [
+      ".portal-v2-dashboard-marketplace .portal-marketplace-card__actions button",
+      ".portal-v2-dashboard-orders .portal-link-button",
+      ".portal-v2-dashboard-wallet > .portal-primary-button",
+      ".portal-v2-dashboard-start > .portal-primary-button",
+      ".portal-v2-topbar-icon-button",
+      ".portal-v2-topbar-user-button"
+    ]) {
+      expect(reducedMotion).toContain(selector);
+    }
+    expect(reducedMotion).toContain("transition: none;");
+    expect(reducedMotion).toContain("transform: none;");
     expect(v44).not.toContain("transition: all");
     const activeRule = v44.indexOf(".portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:active");
     const finePointerRule = v44.lastIndexOf("@media (hover: hover) and (pointer: fine)", activeRule);
