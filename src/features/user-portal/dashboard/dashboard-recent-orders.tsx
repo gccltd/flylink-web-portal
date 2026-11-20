@@ -28,9 +28,12 @@ export function DashboardRecentOrders({
   return (
     <article className="portal-v2-panel portal-v2-dashboard-orders">
       <div className="portal-v2-panel-header">
-        <div>
-          <span className="portal-card-label">{text(locale, "交易与订单", "Transactions")}</span>
-          <h3>{text(locale, "近期订单", "Recent activity")}</h3>
+        <div className="portal-dashboard-heading">
+          <span className="portal-dashboard-header-icon" aria-hidden="true"><ReceiptText /></span>
+          <div>
+            <span className="portal-card-label">{text(locale, "交易与订单", "Transactions")}</span>
+            <h3>{text(locale, "近期订单", "Recent activity")}</h3>
+          </div>
         </div>
         <button className="portal-link-button" type="button" onClick={onOpenOrders}>
           {text(locale, "查看全部", "View all")}
@@ -39,11 +42,15 @@ export function DashboardRecentOrders({
       {orders.length > 0 ? (
         <>
           <div className="portal-v2-list">
-            {orders.map((order) => (
+            {orders.slice(0, 3).map((order) => (
               <button key={order.key} type="button" onClick={onOpenOrders}>
+                <span className="portal-v2-dashboard-order-icon" aria-hidden="true"><ReceiptText /></span>
                 <span className="portal-v2-dashboard-order-main">
                   <strong>{order.productLabel}</strong>
-                  <small>{order.kindLabel} · {order.orderNumber} · {order.createdAtLabel}</small>
+                  <span className="portal-v2-dashboard-order-detail">
+                    <small>{order.kindLabel} · {order.orderNumber}</small>
+                    <small>· {order.createdAtLabel}</small>
+                  </span>
                 </span>
                 <span className="portal-v2-dashboard-order-meta">
                   {order.amountLabel ? (

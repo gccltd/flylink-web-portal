@@ -5,7 +5,7 @@ import {
   useRef,
   useState
 } from "react";
-import { Circle, LoaderCircle } from "lucide-react";
+import { Circle, Layers, LoaderCircle } from "lucide-react";
 import {
   CoinsPurchaseDialog,
   isPortalCoinOrderTerminal,
@@ -21,6 +21,7 @@ import {
 import { formatPortalDateTime } from "./portal-commerce-presentation";
 import type { PortalWalletFirstCommerceClient } from "./commerce";
 import { MarketplaceOfferCard, type MarketplacePlanAction } from "./marketplace-offer-card";
+import { isPortalWebPath } from "./portal-entry";
 import { WalletFirstMarketplacePanel } from "./wallet-first-marketplace-panel";
 import { portalCoinCommerceErrorText as safeCommerceErrorText } from "./commerce/commerce-error-presentation";
 import { PortalOwnedDataPacks } from "./commerce/components/portal-owned-data-packs";
@@ -844,13 +845,17 @@ export function DashboardMarketplaceCard({
   }, [commerceClient, model, refreshRevision, sessionGeneration, sessionRef, walletFirstCommerceClient]);
 
   const planOffers = catalog.offers.filter((offer) => offer.category === "plan");
+  const visiblePlanOffers = isPortalWebPath() ? planOffers.slice(0, 3) : planOffers;
 
   return (
     <article className="portal-v2-panel portal-v2-dashboard-marketplace">
       <div className="portal-v2-panel-header">
-        <div>
-          <span className="portal-card-label">{zh ? "套餐商城" : "Plan marketplace"}</span>
-          <h3>{zh ? "套餐商城" : "Plan marketplace"}</h3>
+        <div className="portal-dashboard-heading">
+          <span className="portal-dashboard-header-icon" aria-hidden="true"><Layers /></span>
+          <div>
+            <span className="portal-card-label">{zh ? "服务套餐" : "Plans & services"}</span>
+            <h3>{zh ? "套餐商城" : "Plan marketplace"}</h3>
+          </div>
         </div>
         <button className="portal-link-button" type="button" onClick={onOpenMarketplace}>
           {zh ? "去商城" : "Go to Marketplace"}
@@ -877,9 +882,11 @@ export function DashboardMarketplaceCard({
       ) : null}
       {catalog.status === "ready" && planOffers.length > 0 ? (
         <ul className="portal-marketplace-grid">
-          {planOffers.map((offer) => (
+          {visiblePlanOffers.map((offer, index) => (
             <MarketplaceOfferCard
+              dashboardVariant={(index % 3) as 0 | 1 | 2}
               busy={false}
+              dashboardAccent={isPortalWebPath()}
               key={offer.offerRef}
               locale={locale}
               mode={model === "wallet_first_unique_v1" ? "reserve" : "purchase"}

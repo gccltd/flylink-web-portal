@@ -11,6 +11,7 @@ import {
   Download,
   Eye,
   ExternalLink,
+  Gift,
   History,
   LayoutGrid,
   LineChart,
@@ -77,10 +78,11 @@ import { presentDashboardRecentOrders } from "./dashboard/dashboard-recent-order
 import { usePortalDashboardRecentActivity } from "./dashboard/use-portal-dashboard-recent-activity";
 import { DashboardWalletCard } from "./dashboard/dashboard-wallet-card";
 import { DashboardStartCard } from "./dashboard/dashboard-start-card";
+import { DashboardSubscriptionCard } from "./dashboard/dashboard-subscription-card";
 import { createSubscriptionResetRecovery, type SubscriptionResetScope } from "./subscription-reset-recovery";
 import { broadcastPortalSessionChange, clearPendingPortalLogout, hasExplicitPortalView, readPendingPortalLogout, readPortalLocation, stagePendingPortalLogout, subscribePortalSessionChange } from "./portal-browser-session";
 import { usePortalNavigation, type PortalView } from "./use-portal-navigation";
-import { portalAssetPath, portalRoutePath } from "./portal-entry";
+import { isPortalWebPath, portalAssetPath, portalRoutePath } from "./portal-entry";
 import {
   PORTAL_PAYMENT_RETURN_SESSION_STORAGE_KEY,
   PORTAL_REGISTRATION_SESSION_STORAGE_KEY
@@ -202,6 +204,7 @@ const navItems: Array<{ id: PortalView; label: string; description: string; icon
   { id: "marketplace", label: "套餐商城", description: "浏览套餐、流量包和增值服务。", icon: ShoppingBag },
   { id: "orders", label: "我的订单", description: "统一查看商城消费、充值和服务记录。", icon: ReceiptText },
   { id: "wallet", label: "钱包余额", description: "查看 Coins 可用余额和钱包流水。", icon: WalletCards },
+  { id: "referrals", label: "推荐", description: "邀请好友并查看推荐奖励。", icon: Gift },
   { id: "start", label: "使用指南", description: "选择设备、下载客户端并完成连接。", icon: Wifi }
 ];
 
@@ -217,7 +220,7 @@ const portalNavigationGroups: PortalNavigationGroup[] = [
     id: "primary",
     zh: "主导航",
     en: "Main navigation",
-    itemIds: ["dashboard", "marketplace", "orders", "wallet", "start"]
+    itemIds: ["dashboard", "marketplace", "orders", "wallet", "referrals", "start"]
   }
 ];
 
@@ -477,6 +480,7 @@ const primaryNavigationLabels: Record<string, { zh: string; en: string }> = {
   marketplace: { zh: "套餐商城", en: "Marketplace" },
   orders: { zh: "我的订单", en: "Orders" },
   wallet: { zh: "钱包余额", en: "Coins wallet" },
+  referrals: { zh: "推荐", en: "Referral" },
   start: { zh: "使用指南", en: "User guide" }
 };
 
@@ -2904,6 +2908,9 @@ export function UserPortalPage({
               sessionGeneration={sessionGeneration}
               onSessionInvalid={invalidateSession}
               onOpenMarketplace={openMarketplace}
+              walletFirstAccount={commerceModel === "wallet_first_unique_v1"}
+              onRevealSubscriptionLink={rereadSubscriptionLink}
+              onResetSubscriptionLink={resetSubscriptionLink}
             />
           ) : null}
           {activeView === "usage" ? (
@@ -3173,7 +3180,10 @@ function DashboardPanel({
   sessionRef,
   sessionGeneration,
   onSessionInvalid,
-  onOpenMarketplace
+  onOpenMarketplace,
+  walletFirstAccount,
+  onRevealSubscriptionLink,
+  onResetSubscriptionLink
 }: {
   created: CreatedSubscription | null;
   lifecycle: SubscriptionLifecycle;
@@ -3196,6 +3206,9 @@ function DashboardPanel({
   sessionGeneration?: number;
   onSessionInvalid: () => void;
   onOpenMarketplace?: () => void;
+  walletFirstAccount: boolean;
+  onRevealSubscriptionLink: () => Promise<string | null>;
+  onResetSubscriptionLink: (idempotencyKey: string, requestRef: string) => Promise<string>;
 }) {
   const recentActivity = usePortalDashboardRecentActivity({
     commerceClient: commerceClient ?? null,
@@ -3312,40 +3325,58 @@ function DashboardPanel({
 
 
 
-      <section className="portal-v2-dashboard-grid">
-
-
-        <DashboardMarketplaceCard
-          commerceClient={commerceClient ?? null}
-          commerceModelClient={commerceModelClient ?? null}
-          walletFirstCommerceClient={walletFirstCommerceClient ?? null}
-          locale={locale}
-          onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
-          sessionGeneration={sessionGeneration ?? 0}
-          sessionRef={sessionRef ?? null}
-        />
-
-        <DashboardRecentOrders
-          locale={locale}
-          orders={recentOrders}
-          phase={recentActivity.phase}
-          retryable={recentActivity.retryable}
-          onRetry={recentActivity.retry}
-          onOpenOrders={() => setActiveView("orders")}
-        />
-
-
-
-        <DashboardWalletCard
-          locale={locale}
-          walletBalance={walletBalance}
-          onOpenWallet={() => setActiveView("wallet")}
-        />
-
-        <DashboardStartCard
-          locale={locale}
-          onStartUsing={() => setActiveView("start")}
-        />
+      <section className="portal-v2-dashboard-grid" aria-label={uiText(locale, "首页快捷服务", "Dashboard shortcuts")}>
+        <div className="portal-v2-dashboard-column portal-v2-dashboard-column--primary">
+          {isPortalWebPath() ? (
+            <DashboardSubscriptionCard
+              key={String(sessionGeneration ?? 0) + ":" + (sessionRef ?? "") + ":" + (selectedOrder?.requestRef ?? "")}
+              locale={locale}
+              userRef={selectedOrder?.request.userRef ?? null}
+              requestRef={selectedOrder?.requestRef ?? null}
+              initialUrl={!walletFirstAccount && selectedOrder?.status === "active"
+                ? selectedOrder.subscriptionUrl ?? "" : ""}
+              canReveal={!walletFirstAccount && selectedOrder?.status === "active"}
+              canReset={!walletFirstAccount && selectedOrder?.status === "active"}
+              walletFirstAccount={walletFirstAccount}
+              onReveal={onRevealSubscriptionLink}
+              onReset={onResetSubscriptionLink}
+              onOpenGuide={() => setActiveView("start")}
+              onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
+            />
+          ) : (
+            <DashboardMarketplaceCard
+              commerceClient={commerceClient ?? null}
+              commerceModelClient={commerceModelClient ?? null}
+              walletFirstCommerceClient={walletFirstCommerceClient ?? null}
+              locale={locale}
+              onOpenMarketplace={onOpenMarketplace ?? (() => setActiveView("marketplace"))}
+              sessionGeneration={sessionGeneration ?? 0}
+              sessionRef={sessionRef ?? null}
+            />
+          )}
+          {!isPortalWebPath() ? (
+            <DashboardWalletCard
+              locale={locale}
+              walletBalance={walletBalance}
+              onOpenWallet={() => setActiveView("wallet")}
+            />
+          ) : null}
+        </div>
+        <div className="portal-v2-dashboard-column portal-v2-dashboard-column--secondary">
+          <DashboardRecentOrders
+            locale={locale}
+            orders={recentOrders}
+            phase={recentActivity.phase}
+            retryable={recentActivity.retryable}
+            onRetry={recentActivity.retry}
+            onOpenOrders={() => setActiveView("orders")}
+          />
+          <DashboardStartCard
+            locale={locale}
+            onStartUsing={() => setActiveView("start")}
+            recommended={isPortalWebPath()}
+          />
+        </div>
       </section>
     </div>
   );

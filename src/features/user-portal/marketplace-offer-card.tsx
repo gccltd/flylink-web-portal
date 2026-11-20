@@ -1,3 +1,4 @@
+import { ArrowUpRight, CalendarDays, Crown, Gem } from "lucide-react";
 import type { MouseEvent } from "react";
 import type {
   PortalCoinCommerceClientErrorCode,
@@ -21,6 +22,8 @@ export type MarketplacePlanAction = {
 
 export type MarketplaceOfferCardProps = {
   busy: boolean;
+  dashboardAccent?: boolean;
+  dashboardVariant?: 0 | 1 | 2;
   locale: PortalCommercePresentationLocale;
   mode: "purchase" | "reserve";
   offer: PortalCoinOffer;
@@ -69,6 +72,8 @@ function unavailableReason(
 
 export function MarketplaceOfferCard({
   busy,
+  dashboardAccent = false,
+  dashboardVariant = 0,
   locale,
   mode,
   offer,
@@ -87,6 +92,9 @@ export function MarketplaceOfferCard({
       ? `当前套餐：${planAction.currentTitle}，有效期至 ${formatPortalDateTime(planAction.currentValidUntil, locale)}`
       : `Current plan: ${planAction.currentTitle}, expires ${formatPortalDateTime(planAction.currentValidUntil, locale)}`)
     : null;
+  const unavailableReasonText = planAction?.action === "unavailable"
+    ? unavailableReason(planAction, locale)
+    : null;
 
   return (
     <li
@@ -96,8 +104,29 @@ export function MarketplaceOfferCard({
           : "portal-marketplace-card"
       }
     >
-      <article>
-        <h3>{title}</h3>
+      <article className={dashboardAccent
+        ? `portal-marketplace-card__dashboard-layout portal-marketplace-card__concept-${dashboardVariant}`
+        : undefined}>
+        {dashboardAccent ? (
+          <div className="portal-marketplace-card__identity">
+            <span className="portal-marketplace-card__decor portal-marketplace-card__illustration" aria-hidden="true">
+              <span className="portal-marketplace-card__illustration-orbit" />
+              {planAction?.action === "current_renew"
+                ? <Crown />
+                : dashboardVariant === 0
+                  ? <CalendarDays />
+                  : dashboardVariant === 1
+                    ? <Gem />
+                    : <Crown />}
+            </span>
+            <div className="portal-marketplace-card__copy">
+              <h3>{title}</h3>
+              <p>{offer.summary[locale]}</p>
+            </div>
+          </div>
+        ) : (
+          <h3>{title}</h3>
+        )}
         <dl className="portal-marketplace-card__price">
           <dt>{zh ? "价格" : "Price"}</dt>
           <dd>
@@ -105,8 +134,10 @@ export function MarketplaceOfferCard({
             <span className="portal-marketplace-card__unit">Coins</span>
           </dd>
         </dl>
-        <p>{offer.summary[locale]}</p>
-        {currentText ? <p>{currentText}</p> : null}
+        {!dashboardAccent ? <p>{offer.summary[locale]}</p> : null}
+        {currentText ? (
+          <p className={dashboardAccent ? "portal-marketplace-card__context" : undefined}>{currentText}</p>
+        ) : null}
         <div className="portal-marketplace-card__actions">
           <button
             aria-label={`${primaryLabel}${zh ? "：" : ": "}${title}`}
@@ -115,12 +146,18 @@ export function MarketplaceOfferCard({
             disabled={busy || planAction?.action === "unavailable"}
             onClick={onPrimary}
           >
-            {primaryLabel}
+            {dashboardAccent && !planAction
+              ? mode === "purchase"
+                ? (zh ? "立即购买" : "Buy now")
+                : (zh ? "立即预约" : "Reserve now")
+              : primaryLabel}
+            {dashboardAccent ? <ArrowUpRight aria-hidden="true" /> : null}
           </button>
-          {planAction?.action === "unavailable" ? (
-            <p>{unavailableReason(planAction, locale)}</p>
-          ) : null}
+          {!dashboardAccent && unavailableReasonText ? <p>{unavailableReasonText}</p> : null}
         </div>
+        {dashboardAccent && unavailableReasonText ? (
+          <p className="portal-marketplace-card__reason">{unavailableReasonText}</p>
+        ) : null}
       </article>
     </li>
   );

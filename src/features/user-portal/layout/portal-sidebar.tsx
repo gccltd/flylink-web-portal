@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../../../shared/public/utils";
+import { isPortalWebPath, portalAssetPath } from "../portal-entry";
 
 type PortalSidebarItem<TView extends string> = {
   id: TView;
@@ -31,9 +32,19 @@ export function PortalSidebar<TView extends string>({
   onNavigate
 }: PortalSidebarProps<TView>) {
   const zh = locale === "zh";
+  const webBrand = isPortalWebPath();
 
   return (
     <aside className="portal-use-sidebar portal-v2-sidebar">
+      {webBrand ? (
+        <div className="portal-sidebar-brand" aria-label={zh ? "飞连VPN品牌" : "FlyLink VPN brand"}>
+          <img src={portalAssetPath("portal-sidebar-mascot.webp")} width="44" height="44" alt="" decoding="async" />
+          <span>
+            <strong>飞连VPN</strong>
+            <small>{zh ? "用户中心" : "User center"}</small>
+          </span>
+        </div>
+      ) : null}
       <nav
         className="portal-use-nav"
         aria-label={zh ? "用户中心导航" : "User center navigation"}

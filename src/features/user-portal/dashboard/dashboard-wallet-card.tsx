@@ -16,11 +16,14 @@ export function DashboardWalletCard({
   return (
     <article className="portal-v2-panel portal-v2-dashboard-wallet">
       <div className="portal-v2-panel-header">
-        <div>
-          <span className="portal-card-label">{zh ? "钱包余额" : "Wallet balance"}</span>
-          <h3>{zh ? "账户 Coins" : "Account Coins"}</h3>
+        <div className="portal-dashboard-heading">
+          <span className="portal-dashboard-header-icon" aria-hidden="true"><WalletCards /></span>
+          <div>
+            <span className="portal-card-label">{zh ? "钱包余额" : "Wallet balance"}</span>
+            <h3>{zh ? "账户 Coins" : "Account Coins"}</h3>
+          </div>
         </div>
-        <WalletCards aria-hidden="true" />
+        <WalletCards className="portal-dashboard-wallet-icon" aria-hidden="true" />
       </div>
       <div className="portal-v2-dashboard-wallet-balance">
         <strong>{walletBalance === null ? "—" : walletBalance}</strong>
