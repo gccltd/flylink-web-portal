@@ -306,4 +306,22 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(concept).toContain("grid-template-columns: calc(var(--web-rail-width) + 24px) minmax(0, 1fr)");
   });
 
+
+  test("finishes overview glass separators and keeps long plan notices out of CTA sizing", () => {
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const offer = readFileSync(resolve("src/features/user-portal/marketplace-offer-card.tsx"), "utf8");
+    expect(concept).toContain("Concept v4.2 — user-marked overview glass and resilient plan rows");
+    expect(concept).toContain(".portal-v2-hero-card::before");
+    expect(concept).toContain("border-left-color: rgba(104,125,185,.34);");
+    expect(concept).toContain('grid-template-areas: "identity price" "identity action" "reason reason" "context context";');
+    expect(concept).toContain("max-width: 184px;");
+    expect(concept).toContain("flex-direction: column;");
+    expect(concept).toContain("grid-area: auto;");
+    expect(concept).toContain('grid-template-areas: "identity" "price" "action" "reason" "context";');
+    expect(offer).toContain('const unavailableReasonText = planAction?.action === "unavailable"');
+    expect(offer).toContain('className="portal-marketplace-card__reason"');
+    expect(offer).toContain("dashboardAccent && unavailableReasonText");
+    expect(offer).toContain("!dashboardAccent && unavailableReasonText");
+  });
+
 });

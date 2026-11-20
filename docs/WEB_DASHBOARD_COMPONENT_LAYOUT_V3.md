@@ -342,3 +342,50 @@ so do not claim a full-body asset was reproduced.
 SSO-protected and Chat browser access is unavailable in this
 session, real screenshot validation still requires an authenticated
 browser. Do not re-label the UI visually approved based on CI alone.
+
+## v4.2 — user-marked overview background and plan-card finish (2026-11-20)
+
+**Source:** the user's annotated Dashboard screenshot. The requested scope is the
+top account/plan overview background and the three plan preview cards in the
+Marketplace panel. This is a visual/layout correction only.
+
+### Overview background
+
+- Finish the pale blue/lilac glass surface with layered static radial light,
+  a restrained upper sheen, and a clearer edge.
+- Strengthen the two metric separators so the plan, traffic and wallet cells
+  read as distinct groups without introducing another card.
+- Keep the four existing actions in one bounded row. Secondary actions use
+  dark navy labels on the pale action rail for readable contrast; the primary
+  renewal action retains its existing gradient and behavior.
+- Preserve the real account, traffic, expiry and Coins values. No decorative
+  background layer may intercept pointer or keyboard input.
+
+### Marketplace offer rows
+
+- Keep the existing icon + title/summary left, price + CTA right composition.
+  The title and summary are explicitly stacked; legacy named grid areas must
+  not create implicit columns inside the nested copy container.
+- Cap the action column at 184px on wide desktop and 152px at 1101–1439px.
+  A long unavailable reason is moved outside the CTA wrapper into its own
+  full-width note row, so it cannot widen the action track or squeeze the
+  product identity.
+- Current-plan expiry context remains a separate full-width note. Rows grow
+  naturally for long localized text; no nested scrolling or clipped copy.
+- At 721–1100px the offer icon and note indentation compact; at <=720px the
+  offer stacks into identity, price, action, unavailable reason and context.
+- The legacy /portal Marketplace retains the original unavailable-reason
+  placement. Only the /web Dashboard preview uses the new note row.
+
+### Data and release boundary
+
+Catalog titles, summaries, durations, Coins prices, plan-switch states,
+unavailable reason codes, purchase callbacks and renewal behavior remain
+server-authoritative and unchanged. No API, payment, wallet, authentication,
+Android or production configuration changes are included.
+
+**Acceptance:** exact-head Lint, Vitest, Desktop Build and Build Verify; then
+authorized Preview visual review at 768/1024/1280/1440/1920 CSS pixels in both
+themes, including unavailable, current-plan, long-copy and normal-purchase
+states. Keep PR #17 Draft and do not merge or promote production until the
+pixel review and independent review are complete.

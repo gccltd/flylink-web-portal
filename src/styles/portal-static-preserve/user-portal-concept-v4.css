@@ -702,3 +702,201 @@
 .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout .portal-marketplace-card__price dd {
   color:#1e2857;
 }
+
+
+/*
+ * Concept v4.2 — user-marked overview glass and resilient plan rows.
+ * Scope: standalone /web Dashboard only. Commerce data and actions are unchanged.
+ */
+@media (min-width: 721px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card {
+    background:
+      radial-gradient(420px 210px at 9% 0%, rgba(255,255,255,.56), transparent 76%),
+      radial-gradient(360px 180px at 66% 10%, rgba(124,154,255,.16), transparent 78%),
+      linear-gradient(112deg, rgba(235,244,255,.86), rgba(224,225,255,.78) 58%, rgba(210,205,255,.84));
+    border-color: rgba(159,183,236,.56);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.90), 0 14px 30px rgba(49,63,142,.10);
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: linear-gradient(118deg, rgba(255,255,255,.22), transparent 44%, rgba(144,130,245,.08));
+    pointer-events: none;
+  }
+
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__actions {
+    border-color: rgba(154,174,224,.38);
+    background: linear-gradient(110deg, rgba(186,205,255,.28), rgba(200,183,255,.23));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.56);
+  }
+
+  /* The action rail is pale glass, so secondary labels stay navy in either theme. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-action:not(.portal-v2-hero-action--primary) {
+    color: #33456f;
+    border-color: rgba(150,170,225,.22);
+    background: rgba(255,255,255,.42);
+  }
+
+  /* Preserve the dark glass Marketplace panel while restoring header contrast. */
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-marketplace .portal-v2-panel-header h3 {
+    color: #f2f6ff;
+  }
+  .portal-v2-shell.portal-v2-shell--web[data-portal-theme="dark"] .portal-v2-dashboard-marketplace .portal-v2-panel-header .portal-card-label {
+    color: #c4d4f5;
+  }
+
+  /* Keep the offer copy as a true vertical stack; legacy grid-area names
+     must not create implicit columns inside this nested grid. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__copy h3,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__copy p {
+    grid-area: auto;
+    min-width: 0;
+  }
+
+  /* Cap the CTA track. Long unavailability explanations occupy their own
+     full-width note row instead of expanding the button column. */
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace
+    .portal-marketplace-card article.portal-marketplace-card__dashboard-layout {
+    grid-template-columns: minmax(0,1fr) minmax(128px,184px);
+    grid-template-areas: "identity price" "identity action" "reason reason" "context context";
+    align-items: center;
+    gap: 6px 14px;
+    min-height: 122px;
+    padding: 12px 14px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__price {
+    grid-area: price;
+    align-self: end;
+    justify-self: end;
+    min-width: 0;
+    margin: 0;
+    text-align: right;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions {
+    grid-area: action;
+    align-self: start;
+    justify-self: stretch;
+    width: 100%;
+    min-width: 0;
+    max-width: 184px;
+    margin: 0;
+    padding: 0;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    max-width: none;
+    padding: 8px 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__reason {
+    grid-area: reason;
+    min-width: 0;
+    margin: 0;
+    padding-left: 41px;
+    color: #53648b;
+    font-size: 11px;
+    line-height: 1.45;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__context {
+    grid-area: context;
+    min-width: 0;
+    margin: 0;
+    padding-left: 41px;
+    color: #53648b;
+    font-size: 11px;
+    line-height: 1.45;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 1200px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-hero-card__cell + .portal-v2-hero-card__cell {
+    border-left-color: rgba(104,125,185,.34);
+    box-shadow: inset 1px 0 0 rgba(255,255,255,.55);
+  }
+}
+
+@media (min-width: 1101px) and (max-width: 1439px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__identity {
+    grid-template-columns: 84px minmax(0,1fr);
+    gap: 10px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__illustration {
+    width: 84px;
+    height: 86px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace
+    .portal-marketplace-card article.portal-marketplace-card__dashboard-layout {
+    grid-template-columns: minmax(0,1fr) minmax(116px,152px);
+    padding: 10px 12px;
+    gap: 6px 10px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions {
+    max-width: 152px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__reason,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__context {
+    padding-left: 94px;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1100px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__identity {
+    grid-template-columns: 94px minmax(0,1fr);
+    gap: 12px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__illustration {
+    width: 94px;
+    height: 86px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__reason,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__context {
+    padding-left: 106px;
+  }
+}
+
+@media (max-width: 720px) {
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace
+    .portal-marketplace-card article.portal-marketplace-card__dashboard-layout {
+    grid-template-columns: minmax(0,1fr);
+    grid-template-areas: "identity" "price" "action" "reason" "context";
+    gap: 8px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__identity {
+    grid-template-columns: 76px minmax(0,1fr);
+    gap: 10px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-marketplace-card__illustration {
+    width: 76px;
+    height: 72px;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__price {
+    justify-self: start;
+    text-align: left;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout .portal-marketplace-card__price dd {
+    text-align: left;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__actions {
+    max-width: none;
+  }
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__reason,
+  .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__dashboard-layout > .portal-marketplace-card__context {
+    padding-left: 0;
+  }
+}

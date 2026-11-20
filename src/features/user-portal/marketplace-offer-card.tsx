@@ -92,6 +92,9 @@ export function MarketplaceOfferCard({
       ? `当前套餐：${planAction.currentTitle}，有效期至 ${formatPortalDateTime(planAction.currentValidUntil, locale)}`
       : `Current plan: ${planAction.currentTitle}, expires ${formatPortalDateTime(planAction.currentValidUntil, locale)}`)
     : null;
+  const unavailableReasonText = planAction?.action === "unavailable"
+    ? unavailableReason(planAction, locale)
+    : null;
 
   return (
     <li
@@ -150,10 +153,11 @@ export function MarketplaceOfferCard({
               : primaryLabel}
             {dashboardAccent ? <ArrowUpRight aria-hidden="true" /> : null}
           </button>
-          {planAction?.action === "unavailable" ? (
-            <p>{unavailableReason(planAction, locale)}</p>
-          ) : null}
+          {!dashboardAccent && unavailableReasonText ? <p>{unavailableReasonText}</p> : null}
         </div>
+        {dashboardAccent && unavailableReasonText ? (
+          <p className="portal-marketplace-card__reason">{unavailableReasonText}</p>
+        ) : null}
       </article>
     </li>
   );
