@@ -1216,7 +1216,8 @@
 .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-icon-button:active,
 .portal-v2-shell.portal-v2-shell--web .portal-v2-topbar-user-button:active {
   transform: translateY(1px) scale(.97);
-  filter: brightness(.96);
+  filter: brightness(.90);
+  box-shadow: inset 0 2px 8px rgba(8, 18, 54, .28);
   transition-duration: 60ms;
 }
 
@@ -1261,7 +1262,8 @@
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-marketplace .portal-marketplace-card__actions button:hover:not(:disabled),
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-wallet > .portal-primary-button:hover:not(:disabled),
   .portal-v2-shell.portal-v2-shell--web .portal-v2-dashboard-start > .portal-primary-button:hover:not(:disabled) {
-    filter: brightness(1.07);
+    filter: brightness(1.12);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .55), 0 8px 22px rgba(62, 97, 221, .30);
   }
 }
 

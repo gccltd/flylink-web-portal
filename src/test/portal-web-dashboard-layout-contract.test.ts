@@ -434,13 +434,15 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(subscription).toContain(".portal-subscription-client:hover:not(:disabled)");
     expect(subscription).toContain(".portal-subscription-qr-download:hover:not(:disabled)");
     expect(subscription).toContain("@media (hover:hover) and (pointer:fine)");
-    expect(subscription).toContain("filter:brightness(1.07)");
+    expect(subscription).toContain("filter:brightness(1.10)");
     expect(subscription).toContain("scale(.97)");
     expect(subscription).toContain("filter:brightness(.96)");
     expect(subscription).toContain(".portal-subscription-qr-download:active:not(:disabled)");
-    expect(v44).toContain("filter: brightness(1.07);");
+    expect(v44).toContain("filter: brightness(1.12);");
+    expect(v44).toContain("box-shadow: 0 0 0 1px rgba(255, 255, 255, .55)");
     expect(v44).toContain("scale(.97)");
-    expect(v44).toContain("filter: brightness(.96);");
+    expect(v44).toContain("filter: brightness(.90);");
+    expect(v44).toContain("box-shadow: inset 0 2px 8px rgba(8, 18, 54, .28)");
   });
 
 });
