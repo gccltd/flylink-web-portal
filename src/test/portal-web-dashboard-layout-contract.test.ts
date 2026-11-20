@@ -325,4 +325,23 @@ describe("Web-only Dashboard concept v3 layout contract", () => {
     expect(offer).toContain("!dashboardAccent && unavailableReasonText");
   });
 
+
+  test("uses one rounded Web shell and keeps the topbar as integrated page chrome", () => {
+    const concept = readFileSync(resolve("src/styles/portal-static-preserve/user-portal-concept-v4.css"), "utf8");
+    const marker = "Concept v4.3 — one rounded Web application surface";
+    const v43 = concept.slice(concept.indexOf(marker));
+    expect(v43).toContain("margin: 12px;");
+    expect(v43).toContain("border-radius: 28px;");
+    expect(v43).toContain("grid-template-columns: var(--web-rail-width) minmax(0, 1fr);");
+    expect(v43).toContain("border-radius: 27px 0 0 27px;");
+    expect(v43).toContain("position: relative;");
+    expect(v43).toContain("border-radius: 0;");
+    expect(v43).toContain("background: transparent;");
+    expect(v43).toContain("box-shadow: none;");
+    expect(v43).toContain("padding-top: 0;");
+    expect(v43).toContain("border-bottom: 1px solid rgba(145, 165, 215, .30);");
+    expect(v43).not.toContain("position: fixed;");
+    expect(v43).toContain("prefers-reduced-transparency: reduce");
+  });
+
 });

@@ -389,3 +389,55 @@ authorized Preview visual review at 768/1024/1280/1440/1920 CSS pixels in both
 themes, including unavailable, current-plan, long-copy and normal-purchase
 states. Keep PR #17 Draft and do not merge or promote production until the
 pixel review and independent review are complete.
+
+## v4.3 — unified rounded application shell and integrated topbar (2026-11-20)
+
+**Source:** the user's newly supplied comparison set. The first image is the
+approved overall composition; the following red-marked images show the
+current split-card implementation and the exact topbar area to correct.
+
+### Corrected structural hierarchy
+
+- The entire desktop /web user center is one outer rounded application
+  surface with a thin glass edge and restrained outer shadow.
+- The existing indigo sidebar is the left region of that same shell. It
+  meets the outer top/left/bottom edges; its own brand and static robot scene
+  remain intact. The rail width is the actual first grid track, not an
+  independently inset floating card.
+- Notifications, help and account controls remain in the top-right of the
+  main region, but the topbar is now ordinary in-flow page chrome: no fixed
+  positioning, no separate rounded rectangle, no independent background
+  card, and no floating-card shadow. A subtle bottom divider is retained.
+- The greeting is the first content heading below the topbar, directly on
+  the page surface rather than inside a banner card. The account overview
+  card follows the greeting; Marketplace, Orders, Wallet and Start panels
+  continue below in their existing dashboard grid.
+- The outer shell supplies the unified rounded silhouette. The account
+  overview, Marketplace offer rows, Recent Orders and Start Using panels
+  remain separate functional cards; no business panels are merged or removed.
+
+### Responsive and behavior boundaries
+
+- Desktop shell uses 12px outer inset and 28px radius; compact tablet uses
+  8px inset and 22px radius. Sidebar width remains 196/206px on desktop
+  and 76px on compact tablet. At <=720px the established narrow-Web/mobile
+  layout is unchanged.
+- Topbar returns to normal document flow, so the main content no longer
+  reserves the old 88px fixed-header spacer. It remains above the greeting
+  and does not cover the sidebar.
+- The topbar user menu must remain visible; the shell does not introduce
+  overflow clipping. Reduced-transparency preference receives an opaque
+  header strip without restoring a floating card.
+
+### Data and release boundary
+
+No React component hierarchy, account data, plan/traffic/Coins values,
+checkout callbacks, navigation routes, authentication, API, Android or
+production settings change. This is a scoped /web shell and CSS correction.
+
+**Acceptance:** exact-head Lint, Vitest, Desktop Build and Build Verify;
+then authorized browser screenshots at 768/1024/1280/1440/1920 CSS px in
+both themes. Verify the outer rounded boundary, sidebar integration,
+topbar transparency/in-flow placement, user-menu visibility, greeting
+spacing and all dashboard cards. Keep PR #17 Draft until visual and
+independent reviews are complete.
